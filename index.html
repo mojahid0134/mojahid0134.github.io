@@ -60,7 +60,7 @@
   </div>
 
   <div class="playlist-bar" id="playlistBar">
-    <div class="playlist-chip active" onclick="showAllPosts()">সব দেখুন</div>
+    <div class="playlist-chip active" onclick="showAllPosts()">Show All</div>
     <!-- Playlist গুলো এখানে JavaScript দিয়ে যোগ হবে -->
   </div>
 
@@ -86,20 +86,44 @@
 
   let allPosts = [];
 
-  // ---- Session Timer ----
+  // ---- Session Timer (Pause on minimize, Resume on return) ----
   let seconds = 0;
-  setInterval(() => {
-    seconds++;
+  let timerInterval = null;
+
+  function updateTimerDisplay() {
     const m = String(Math.floor(seconds/60)).padStart(2,'0');
     const s = String(seconds%60).padStart(2,'0');
     document.getElementById('sessionTimer').innerText = m+":"+s;
-  }, 1000);
+  }
+
+  function startTimer() {
+    if (timerInterval) return;
+    timerInterval = setInterval(() => {
+      seconds++;
+      updateTimerDisplay();
+    }, 1000);
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopTimer();     // App minimize করলে Timer থেমে যাবে
+    } else {
+      startTimer();     // App এ ফিরে এলে Timer আবার চলবে
+    }
+  });
+
+  startTimer();
 
   // ---- Posts Load করা ----
   function renderPosts(posts) {
     const feed = document.getElementById('feedContainer');
     if (posts.length === 0) {
-      feed.innerHTML = '<div class="empty-msg">এখানে এখনো কোনো Post নেই</div>';
+      feed.innerHTML = '<div class="empty-msg">No posts yet</div>';
       return;
     }
     feed.innerHTML = "";
