@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, sans-serif; }
+  body { background:#f4f5f7; min-height:100vh; }
+
+  .topbar {
+    background:linear-gradient(135deg,#1A1A2E,#16213E);
+    color:#fff; padding:16px; text-align:center; font-size:18px; font-weight:600;
+  }
+
+  .center-box {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:60px 20px;
+  }
+  .login-btn {
+    background:#1A1A2E; color:#fff; border:none; padding:14px 28px;
+    border-radius:30px; font-size:15px; font-weight:600;
+  }
+  .denied { color:#c0392b; font-weight:600; margin-top:20px; text-align:center; }
+
+  .panel { padding:16px; display:none; flex-direction:column; gap:20px; }
+  .card { background:#fff; border-radius:14px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  .card h3 { margin-bottom:12px; font-size:16px; color:#1A1A2E; }
+  input, select, textarea {
+    width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;
+    font-size:14px; margin-bottom:10px;
+  }
+  button.action {
+    background:#0f3460; color:#fff; border:none; padding:12px;
+    border-radius:8px; width:100%; font-size:15px; font-weight:600;
+  }
+  .msg { font-size:13px; margin-top:8px; text-align:center; }
+  .msg.ok { color:#1e8e3e; }
+  .msg.err { color:#c0392b; }
+  .signout { text-align:center; margin-top:10px; }
+  .signout a { color:#666; font-size:13px; }
+</style>
+</head>
+<body>
+
+  <div class="topbar">StreamFeed — Admin Panel</div>
+
+  <div class="center-box" id="loginBox">
+    <button class="login-btn" onclick="loginWithGoogle()">Sign in with Google</button>
+    <div class="denied" id="deniedMsg"></div>
+  </div>
+
+  <div class="panel" id="adminPanel">
+
+    <div class="card">
+      <h3>নতুন Playlist তৈরি করো</h3>
+      <input type="text" id="playlistName" placeholder="Playlist এর নাম লিখ">
+      <button class="action" onclick="createPlaylist()">Playlist তৈরি করো</button>
+      <div class="msg" id="playlistMsg"></div>
+    </div>
+
+    <div class="card">
+      <h3>নতুন Post তৈরি করো</h3>
+      <input type="text" id="postLink" placeholder="Blog Post Link (https://...)">
+      <input type="text" id="postCustomText" placeholder="Custom Text (এটাই ইউজার দেখবে)">
+      <select id="postPlaylist">
+        <option value="">-- Playlist সিলেক্ট করো --</option>
+      </select>
+      <button class="action" onclick="createPost()">Post করো</button>
+      <div class="msg" id="postMsg"></div>
+    </div>
+
+    <div class="signout"><a href="#" onclick="signOutNow()">Sign out</a></div>
+
+  </div>
+
+<script>
+  // ================================
+  // ধাপ ২ এর Firebase Config এখানে বসাবি (index.html এ যা বসিয়েছিলি হুবহু একই)
+  // ================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyAJLBtnXO5B7t8XGJljMJBHSWOOoWEM7xs",
+    authDomain: "streamfeedapp.firebaseapp.com",
+    projectId: "streamfeedapp",
+    storageBucket: "streamfeedapp.firebasestorage.app",
+    messagingSenderId: "255931584141",
+    appId: "1:255931584141:web:9d62d1759e4ee8f280dcc4"
+  };
+
+  // ================================
+  // এখানে হুবহু তোর Admin Gmail টা বসাবি (যেটা দিয়ে Login করবি)
+  // ================================
+  const ADMIN_EMAIL = "mdmojahidhossain0134@gmail.com";
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  function loginWithGoogle() {
+    auth.signInWithPopup(provider).catch(err => {
+      document.getElementById('deniedMsg').innerText = "Login Error: " + err.message;
+    });
+  }
+
+  function signOutNow() {
+    auth.signOut();
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      if (user.email === ADMIN_EMAIL) {
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'flex';
+        loadPlaylistsIntoDropdown();
+      } else {
+        document.getElementById('deniedMsg').innerText =
+          "এই Gmail (" + user.email + ") দিয়ে Admin Panel এ ঢোকা যাবে না।";
+        auth.signOut();
+      }
+    } else {
+      document.getElementById('adminPanel').style.display = 'none';
+      document.getElementById('loginBox').style.display = 'flex';
+    }
+  });
+
+  // ---- Playlist তৈরি করা ----
+  function createPlaylist() {
+    const name = document.getElementById('playlistName').value.trim();
+    const msg = document.getElementById('playlistMsg');
+    if (!name) { msg.className = 'msg err'; msg.innerText = 'নাম লিখতে হবে'; return; }
+
+    db.collection('playlists').add({ name: name }).then(() => {
+      msg.className = 'msg ok'; msg.innerText = 'Playlist তৈরি হয়েছে ✅';
+      document.getElementById('playlistName').value = '';
+      loadPlaylistsIntoDropdown();
+    }).catch(err => {
+      msg.className = 'msg err'; msg.innerText = 'Error: ' + err.message;
+    });
+  }
+
+  // ---- Playlist Dropdown এ লোড করা ----
+  function loadPlaylistsIntoDropdown() {
+    const dropdown = document.getElementById('postPlaylist');
+    dropdown.innerHTML = '<option value="">-- Playlist সিলেক্ট করো --</option>';
+    db.collection('playlists').get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const opt = document.createElement('option');
+        opt.value = doc.id;
+        opt.innerText = doc.data().name;
+        dropdown.appendChild(opt);
+      });
+    });
+  }
+
+  // ---- Post তৈরি করা ----
+  function createPost() {
+    const link = document.getElementById('postLink').value.trim();
+    const customText = document.getElementById('postCustomText').value.trim();
+    const playlistId = document.getElementById('postPlaylist').value;
+    const msg = document.getElementById('postMsg');
+
+    if (!link || !customText || !playlistId) {
+      msg.className = 'msg err'; msg.innerText = 'সব ঘর পূরণ করতে হবে, Playlist ও সিলেক্ট করতে হবে';
+      return;
+    }
+
+    const now = new Date();
+    const timeText = now.toLocaleString();
+
+    db.collection('posts').add({
+      link: link,
+      customText: customText,
+      playlistId: playlistId,
+      time: firebase.firestore.FieldValue.serverTimestamp(),
+      timeText: timeText
+    }).then(() => {
+      msg.className = 'msg ok'; msg.innerText = 'Post সফলভাবে হয়ে গেছে ✅';
+      document.getElementById('postLink').value = '';
+      document.getElementById('postCustomText').value = '';
+      document.getElementById('postPlaylist').value = '';
+    }).catch(err => {
+      msg.className = 'msg err'; msg.innerText = 'Error: ' + err.message;
+    });
+  }
+</script>
+
+</body>
+  </html>
