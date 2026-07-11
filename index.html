@@ -61,7 +61,6 @@
 
   <div class="playlist-bar" id="playlistBar">
     <div class="playlist-chip active" onclick="showAllPosts()">Show All</div>
-    <!-- Playlist গুলো এখানে JavaScript দিয়ে যোগ হবে -->
   </div>
 
   <div class="feed" id="feedContainer">
@@ -69,9 +68,6 @@
   </div>
 
 <script>
-  // ================================
-  // এখানে ধাপ ২ তে সেভ করা তোর Firebase Config বসাবি
-  // ================================
   const firebaseConfig = {
     apiKey: "AIzaSyAJLBtnX05B7t8XGJljMJBHSW0OoWEM7xs",
     authDomain: "streamfeedapp.firebaseapp.com",
@@ -111,9 +107,9 @@
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      stopTimer();     // App minimize করলে Timer থেমে যাবে
+      stopTimer();
     } else {
-      startTimer();     // App এ ফিরে এলে Timer আবার চলবে
+      startTimer();
     }
   });
 
@@ -132,7 +128,7 @@
       card.className = 'post-card';
       card.innerHTML = `
         <div class="post-time">${post.timeText || ''}</div>
-        <a class="post-link" href="view.html?id=${post.id}">${post.customText}</a>
+        <a class="post-link" href="view.html?url=${encodeURIComponent(post.link)}&title=${encodeURIComponent(post.customText)}">${post.customText}</a>
       `;
       feed.appendChild(card);
     });
@@ -185,4 +181,4 @@
 </script>
 
 </body>
-  </html>
+</html>
