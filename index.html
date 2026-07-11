@@ -64,12 +64,13 @@
 <body>
 
   <div class="topbar">
-    <h1>StreamFeed</h1>
+    <h1 id="appTitle">StreamFeed</h1>
     <div class="timer" id="sessionTimer">00:00</div>
   </div>
 
   <div class="playlist-bar" id="playlistBar">
-    <div class="playlist-chip active" onclick="showAllPosts()">Show All</div>
+    <div class="playlist-chip active" onclick="showAllPosts()">Your Feeds</div>
+    <div class="playlist-chip" onclick="showHistory(this)">History</div>
   </div>
 
   <div class="feed" id="feedContainer">
@@ -77,6 +78,13 @@
   </div>
 
 <script>
+  // ================================
+  // এখানে তোর App এর আসল নাম বসাবি (একটাই জায়গা, বাকি সব জায়গায় নিজে থেকেই বসে যাবে)
+  // ================================
+  const APP_NAME = "StreamFeed";
+  document.getElementById('appTitle').innerText = APP_NAME;
+  document.title = APP_NAME;
+
   const firebaseConfig = {
     apiKey: "AIzaSyAJLBtnX05B7t8XGJljMJBHSW0OoWEM7xs",
     authDomain: "streamfeedapp.firebaseapp.com",
@@ -138,7 +146,7 @@
       card.className = 'post-card';
       card.innerHTML = `
         <div class="post-time">${post.timeText || ''}</div>
-        <a class="post-link" href="view.html?url=${encodeURIComponent(post.link)}&title=${encodeURIComponent(post.customText)}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>
+        <a class="post-link" href="view.html?url=${encodeURIComponent(post.link)}&title=${encodeURIComponent(post.customText)}&id=${post.id}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>
         <div class="post-footer">
           <button class="share-btn" onclick="sharePost('${post.id}')">🔗 Share</button>
         </div>
@@ -162,6 +170,17 @@
     document.querySelectorAll('.playlist-chip').forEach(c => c.classList.remove('active'));
     document.querySelector('.playlist-chip').classList.add('active');
     renderPosts(allPosts);
+  }
+
+  // ---- History দেখানো (এই ফোনে আগে যা যা দেখা হয়েছে) ----
+  function showHistory(chipEl) {
+    document.querySelectorAll('.playlist-chip').forEach(c => c.classList.remove('active'));
+    chipEl.classList.add('active');
+    const historyIds = JSON.parse(localStorage.getItem('visitHistory') || '[]');
+    const historyPosts = historyIds
+      .map(id => allPosts.find(p => p.id === id))
+      .filter(p => p);
+    renderPosts(historyPosts);
   }
 
   function filterByPlaylist(playlistId, chipEl) {
