@@ -58,20 +58,20 @@
   <div class="panel" id="adminPanel">
 
     <div class="card">
-      <h3>নতুন Playlist তৈরি করো</h3>
-      <input type="text" id="playlistName" placeholder="Playlist এর নাম লিখ">
-      <button class="action" onclick="createPlaylist()">Playlist তৈরি করো</button>
+      <h3>Create New Playlist</h3>
+      <input type="text" id="playlistName" placeholder="Enter playlist name"
+      <button class="action" onclick="createPlaylist()">Create Playlist</button>
       <div class="msg" id="playlistMsg"></div>
     </div>
 
     <div class="card">
-      <h3>নতুন Post তৈরি করো</h3>
+      <h3>Create New Post</h3>
       <input type="text" id="postLink" placeholder="Blog Post Link (https://...)">
-      <input type="text" id="postCustomText" placeholder="Custom Text (এটাই ইউজার দেখবে)">
+      <input type="text" id="postCustomText" placeholder="Custom Text (this is what users will see)"
       <select id="postPlaylist">
-        <option value="">-- Playlist সিলেক্ট করো --</option>
+        <option value="">-- Select Playlist --</option>
       </select>
-      <button class="action" onclick="createPost()">Post করো</button>
+      <button class="action" onclick="createPost()">Post</button>
       <div class="msg" id="postMsg"></div>
     </div>
 
@@ -120,7 +120,7 @@
         loadPlaylistsIntoDropdown();
       } else {
         document.getElementById('deniedMsg').innerText =
-          "এই Gmail (" + user.email + ") দিয়ে Admin Panel এ ঢোকা যাবে না।";
+          "This Gmail (" + user.email + ") is not allowed to access the Admin Panel.";
         auth.signOut();
       }
     } else {
@@ -133,10 +133,10 @@
   function createPlaylist() {
     const name = document.getElementById('playlistName').value.trim();
     const msg = document.getElementById('playlistMsg');
-    if (!name) { msg.className = 'msg err'; msg.innerText = 'নাম লিখতে হবে'; return; }
+    if (!name) { msg.className = 'msg err'; msg.innerText = 'Name is required'; return; }
 
     db.collection('playlists').add({ name: name }).then(() => {
-      msg.className = 'msg ok'; msg.innerText = 'Playlist তৈরি হয়েছে ✅';
+      msg.className = 'msg ok'; msg.innerText = 'Playlist created ✅';
       document.getElementById('playlistName').value = '';
       loadPlaylistsIntoDropdown();
     }).catch(err => {
@@ -147,7 +147,7 @@
   // ---- Playlist Dropdown এ লোড করা ----
   function loadPlaylistsIntoDropdown() {
     const dropdown = document.getElementById('postPlaylist');
-    dropdown.innerHTML = '<option value="">-- Playlist সিলেক্ট করো --</option>';
+    dropdown.innerHTML = '<option value="">-- Select Playlist --</option>';
     db.collection('playlists').get().then(snapshot => {
       snapshot.forEach(doc => {
         const opt = document.createElement('option');
@@ -166,7 +166,7 @@
     const msg = document.getElementById('postMsg');
 
     if (!link || !customText || !playlistId) {
-      msg.className = 'msg err'; msg.innerText = 'সব ঘর পূরণ করতে হবে, Playlist ও সিলেক্ট করতে হবে';
+      msg.className = 'msg err'; msg.innerText = 'All fields are required, please select a playlist too';
       return;
     }
 
@@ -180,7 +180,7 @@
       time: firebase.firestore.FieldValue.serverTimestamp(),
       timeText: timeText
     }).then(() => {
-      msg.className = 'msg ok'; msg.innerText = 'Post সফলভাবে হয়ে গেছে ✅';
+      msg.className = 'msg ok'; msg.innerText = 'Post created successfully ✅';
       document.getElementById('postLink').value = '';
       document.getElementById('postCustomText').value = '';
       document.getElementById('postPlaylist').value = '';
