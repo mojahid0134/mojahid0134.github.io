@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post View</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, sans-serif; }
+  html, body { height:100%; }
+
+  .topbar {
+    background:linear-gradient(135deg,#1A1A2E,#16213E);
+    color:#fff; padding:14px 16px; display:flex; align-items:center; gap:12px;
+    position:fixed; top:0; left:0; right:0; height:52px; z-index:10;
+  }
+  .back-btn {
+    background:rgba(255,255,255,0.15); border:none; color:#fff;
+    width:34px; height:34px; border-radius:50%; font-size:18px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .page-title {
+    font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    max-width:calc(100% - 60px);
+  }
+
+  .content-frame {
+    position:fixed; top:52px; left:0; right:0; bottom:0;
+    width:100%; height:calc(100% - 52px); border:none;
+  }
+
+  .loading {
+    position:fixed; top:52px; left:0; right:0; bottom:0;
+    display:flex; align-items:center; justify-content:center;
+    color:#999; font-size:14px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="page-title" id="pageTitle">Loading...</div>
+  </div>
+
+  <div class="loading" id="loadingMsg">Loading post...</div>
+  <iframe class="content-frame" id="contentFrame" style="display:none;"></iframe>
+
+<script>
+  function goBack() {
+    if (document.referrer) {
+      history.back();
+    } else {
+      window.location.href = "index.html";
+    }
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const url = params.get('url');
+  const title = params.get('title');
+
+  if (title) {
+    document.getElementById('pageTitle').innerText = title;
+  }
+
+  if (url) {
+    const frame = document.getElementById('contentFrame');
+    frame.src = url;
+    frame.onload = () => {
+      document.getElementById('loadingMsg').style.display = 'none';
+      frame.style.display = 'block';
+    };
+  } else {
+    document.getElementById('loadingMsg').innerText = 'No link found.';
+  }
+</script>
+
+</body>
+</html>
