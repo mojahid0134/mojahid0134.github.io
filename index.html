@@ -78,9 +78,13 @@
   </div>
 
 <script>
-  // ================================
-  // এখানে তোর App এর আসল নাম বসাবি (একটাই জায়গা, বাকি সব জায়গায় নিজে থেকেই বসে যাবে)
-  // ================================
+  // ---- বার বার এই পেজে ফিরে এলে (Back বাটনে) পুরনো Cache করা ভাঙা অবস্থা যেন না দেখায় ----
+  window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+      window.location.reload();
+    }
+  });
+
   const APP_NAME = "StreamFeed";
   document.getElementById('appTitle').innerText = APP_NAME;
   document.title = APP_NAME;
@@ -100,8 +104,10 @@
   let allPosts = [];
   const APP_MODE = new URLSearchParams(window.location.search).get('app') === '1';
 
-  // ---- Session Timer (Pause on minimize, Resume on return) ----
-  let seconds = 0;
+  // ---- Session Timer ----
+  // sessionStorage ব্যবহার করা হচ্ছে যাতে Post এ গিয়ে আবার Home এ ফিরলে Timer 0 না হয়ে যায়,
+  // কিন্তু App সম্পূর্ণ বন্ধ করে আবার খুললে (নতুন Session শুরু হলে) ঠিকই 0 থেকে শুরু হবে।
+  let seconds = parseInt(sessionStorage.getItem('appTimerSeconds') || '0', 10);
   let timerInterval = null;
 
   function updateTimerDisplay() {
@@ -109,11 +115,13 @@
     const s = String(seconds%60).padStart(2,'0');
     document.getElementById('sessionTimer').innerText = m+":"+s;
   }
+  updateTimerDisplay();
 
   function startTimer() {
     if (timerInterval) return;
     timerInterval = setInterval(() => {
       seconds++;
+      sessionStorage.setItem('appTimerSeconds', seconds);
       updateTimerDisplay();
     }, 1000);
   }
@@ -172,7 +180,6 @@
     renderPosts(allPosts);
   }
 
-  // ---- History দেখানো (এই ফোনে আগে যা যা দেখা হয়েছে) ----
   function showHistory(chipEl) {
     document.querySelectorAll('.playlist-chip').forEach(c => c.classList.remove('active'));
     chipEl.classList.add('active');
