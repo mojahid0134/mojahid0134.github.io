@@ -20,6 +20,21 @@
   }
   .topbar-decor { position:absolute; inset:0; pointer-events:none; }
   .topbar-content { position:relative; z-index:2; }
+  .topbar-menu { position:relative; margin-bottom:6px; display:flex; }
+  .topbar-dots-btn {
+    background:rgba(255,255,255,0.18); border:none; color:#fff;
+    width:30px; height:30px; border-radius:50%; font-size:18px; line-height:1;
+  }
+  .topbar-dropdown {
+    display:none; position:absolute; top:36px; left:0;
+    background:#fff; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.25);
+    min-width:150px; z-index:50; overflow:hidden;
+  }
+  .topbar-dropdown.open { display:block; }
+  .topbar-dropdown div {
+    padding:12px 16px; font-size:14px; color:#3B0764; font-weight:700;
+    display:flex; align-items:center; gap:8px;
+  }
   .topbar-row { display:flex; justify-content:space-between; align-items:flex-start; }
   .topbar h1 { font-size:26px; font-weight:800; letter-spacing:0.5px; color:#fff; }
   .topbar h1 .accent { color:#e0b8ff; }
@@ -131,6 +146,15 @@
     </div>
 
     <div class="topbar-content">
+      <div class="topbar-menu">
+        <button class="topbar-dots-btn" id="topDotsBtn">⋮</button>
+        <div class="topbar-dropdown" id="topDropdown">
+          <div id="shareAppBtn">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Share App
+          </div>
+        </div>
+      </div>
       <div class="topbar-row">
         <div>
           <h1 id="appTitle">Stream<span class="accent">Feed</span></h1>
@@ -204,8 +228,26 @@
 
   const APP_NAME = "StreamFeed";
   const APP_SUBTITLE = "Stay Inspired, Stay Connected";
+  // App পাবলিশ হওয়ার পর এখানে আসল Play Store Link বসাবি
+  const APP_SHARE_LINK = "https://play.google.com/store/apps/details?id=com.yourname.streamfeed";
   document.getElementById('appSubtitle').innerText = APP_SUBTITLE;
   document.title = APP_NAME;
+
+  document.getElementById('topDotsBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('topDropdown').classList.toggle('open');
+  });
+  document.addEventListener('click', () => {
+    document.getElementById('topDropdown').classList.remove('open');
+  });
+  document.getElementById('shareAppBtn').addEventListener('click', () => {
+    if (navigator.share) {
+      navigator.share({ title: APP_NAME, text: 'Install ' + APP_NAME + ' App', url: APP_SHARE_LINK }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(APP_SHARE_LINK).then(() => alert('App link copied to clipboard!'));
+    }
+    document.getElementById('topDropdown').classList.remove('open');
+  });
 
   // Category (Folder of Playlists) হিসেবে ধরা হবে এই ৪টা Section কে
   const CATEGORY_SECTIONS = ['Lives of the Prophets', 'Dua', 'Life of the Sahabah', 'Nasheed'];
