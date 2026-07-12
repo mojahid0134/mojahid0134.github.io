@@ -44,6 +44,37 @@
   .msg.err { color:#c0392b; }
   .signout { text-align:center; margin-top:10px; }
   .signout a { color:#666; font-size:13px; }
+
+  .list-item {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 0; border-bottom:1px solid #f0f0f0; gap:10px;
+    position:relative;
+  }
+  .list-item:last-child { border-bottom:none; }
+  .list-item-text {
+    font-size:14px; color:#333; flex:1;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .list-item-tag {
+    font-size:11px; color:#999; display:block; margin-top:2px;
+  }
+  .empty-list { color:#999; font-size:13px; text-align:center; padding:10px 0; }
+
+  .menu-wrap { position:relative; flex-shrink:0; }
+  .dots-btn {
+    background:#eee; border:none; width:32px; height:32px; border-radius:50%;
+    font-size:18px; color:#333; line-height:1;
+  }
+  .dropdown-menu {
+    display:none; position:absolute; right:0; top:38px;
+    background:#fff; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.15);
+    min-width:130px; z-index:20; overflow:hidden;
+  }
+  .dropdown-menu.open { display:block; }
+  .dropdown-menu div {
+    padding:12px 16px; font-size:14px; color:#333; border-bottom:1px solid #f5f5f5;
+  }
+  .dropdown-menu div:last-child { border-bottom:none; color:#c0392b; }
 </style>
 </head>
 <body>
@@ -60,19 +91,35 @@
     <div class="card">
       <h3>Create New Playlist</h3>
       <input type="text" id="playlistName" placeholder="Enter playlist name">
+      <select id="playlistSection">
+        <option value="">Standalone (No Section)</option>
+        <option value="Daily Hadith">Inside: Daily Hadith</option>
+        <option value="Dua">Inside: Dua</option>
+        <option value="World's Update">Inside: World's Update</option>
+      </select>
       <button class="action" onclick="createPlaylist()">Create Playlist</button>
       <div class="msg" id="playlistMsg"></div>
     </div>
 
     <div class="card">
       <h3>Create New Post</h3>
-      <input type="text" id="postLink" placeholder="Blog Post Link (https://...)">
+      <input type="text" id="postLink" placeholder="Blog/Video Post Link (https://...)">
       <input type="text" id="postCustomText" placeholder="Custom Text (this is what users will see)">
       <select id="postPlaylist">
         <option value="">-- Select Playlist --</option>
       </select>
       <button class="action" onclick="createPost()">Post</button>
       <div class="msg" id="postMsg"></div>
+    </div>
+
+    <div class="card">
+      <h3>Manage Playlists</h3>
+      <div id="playlistListBox"></div>
+    </div>
+
+    <div class="card">
+      <h3>Manage Posts</h3>
+      <div id="postListBox"></div>
     </div>
 
     <div class="signout"><a href="#" onclick="signOutNow()">Sign out</a></div>
@@ -96,15 +143,15 @@
   const db = firebase.firestore();
   const provider = new firebase.auth.GoogleAuthProvider();
 
+  let postsCache = {};
+  let playlistsCache = {};
+
   function loginWithGoogle() {
     auth.signInWithPopup(provider).catch(err => {
       document.getElementById('deniedMsg').innerText = "Login Error: " + err.message;
     });
   }
-
-  function signOutNow() {
-    auth.signOut();
-  }
+  function signOutNow() { auth.signOut(); }
 
   auth.onAuthStateChanged(user => {
     if (user) {
@@ -112,6 +159,8 @@
         document.getElementById('loginBox').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'flex';
         loadPlaylistsIntoDropdown();
+        loadPlaylistsList();
+        loadPostsList();
       } else {
         document.getElementById('deniedMsg').innerText =
           "This Gmail (" + user.email + ") is not allowed to access the Admin Panel.";
@@ -123,15 +172,47 @@
     }
   });
 
+  function toggleMenu(menuId) {
+    document.querySelectorAll('.dropdown-menu').forEach(m => {
+      if (m.id !== menuId) m.classList.remove('open');
+    });
+    document.getElementById(menuId).classList.toggle('open');
+  }
+  document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('dots-btn')) {
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+    }
+  });
+
+  function sharePost(id) {
+    const post = postsCache[id];
+    if (!post) return;
+    const shareUrl = window.location.origin + "/view.html?url=" + encodeURIComponent(post.link) + "&title=" + encodeURIComponent(post.customText);
+    if (navigator.share) navigator.share({ title: post.customText, url: shareUrl }).catch(() => {});
+    else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
+  }
+
+  function sharePlaylist(id) {
+    const pl = playlistsCache[id];
+    if (!pl) return;
+    const shareUrl = window.location.origin + "/index.html?section=" + encodeURIComponent(pl.name);
+    if (navigator.share) navigator.share({ title: pl.name, url: shareUrl }).catch(() => {});
+    else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
+  }
+
+  // ---- Create Playlist ----
   function createPlaylist() {
     const name = document.getElementById('playlistName').value.trim();
+    const section = document.getElementById('playlistSection').value;
     const msg = document.getElementById('playlistMsg');
     if (!name) { msg.className = 'msg err'; msg.innerText = 'Name is required'; return; }
 
-    db.collection('playlists').add({ name: name }).then(() => {
+    db.collection('playlists').add({ name: name, section: section || null }).then(() => {
       msg.className = 'msg ok'; msg.innerText = 'Playlist created ✅';
       document.getElementById('playlistName').value = '';
+      document.getElementById('playlistSection').value = '';
       loadPlaylistsIntoDropdown();
+      loadPlaylistsList();
     }).catch(err => {
       msg.className = 'msg err'; msg.innerText = 'Error: ' + err.message;
     });
@@ -150,6 +231,46 @@
     });
   }
 
+  function loadPlaylistsList() {
+    const box = document.getElementById('playlistListBox');
+    db.collection('playlists').get().then(snapshot => {
+      playlistsCache = {};
+      if (snapshot.empty) {
+        box.innerHTML = '<div class="empty-list">No playlists yet</div>';
+        return;
+      }
+      box.innerHTML = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        playlistsCache[doc.id] = data;
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+          <div>
+            <div class="list-item-text">${data.name}</div>
+            ${data.section ? `<span class="list-item-tag">📁 Inside: ${data.section}</span>` : `<span class="list-item-tag">Standalone</span>`}
+          </div>
+          <div class="menu-wrap">
+            <button class="dots-btn" onclick="toggleMenu('pl-menu-${doc.id}')">⋮</button>
+            <div class="dropdown-menu" id="pl-menu-${doc.id}">
+              <div onclick="sharePlaylist('${doc.id}')">Share</div>
+              <div onclick="deletePlaylist('${doc.id}')">Delete</div>
+            </div>
+          </div>
+        `;
+        box.appendChild(item);
+      });
+    });
+  }
+
+  function deletePlaylist(id) {
+    if (!confirm("Are you sure you want to delete this playlist? (Posts inside it will not be deleted automatically)")) return;
+    db.collection('playlists').doc(id).delete().then(() => {
+      loadPlaylistsIntoDropdown();
+      loadPlaylistsList();
+    });
+  }
+
   function createPost() {
     const link = document.getElementById('postLink').value.trim();
     const customText = document.getElementById('postCustomText').value.trim();
@@ -165,18 +286,52 @@
     const timeText = now.toLocaleString();
 
     db.collection('posts').add({
-      link: link,
-      customText: customText,
-      playlistId: playlistId,
-      time: firebase.firestore.FieldValue.serverTimestamp(),
-      timeText: timeText
+      link: link, customText: customText, playlistId: playlistId,
+      time: firebase.firestore.FieldValue.serverTimestamp(), timeText: timeText
     }).then(() => {
       msg.className = 'msg ok'; msg.innerText = 'Post created successfully ✅';
       document.getElementById('postLink').value = '';
       document.getElementById('postCustomText').value = '';
       document.getElementById('postPlaylist').value = '';
+      loadPostsList();
     }).catch(err => {
       msg.className = 'msg err'; msg.innerText = 'Error: ' + err.message;
+    });
+  }
+
+  function loadPostsList() {
+    const box = document.getElementById('postListBox');
+    db.collection('posts').orderBy('time','desc').get().then(snapshot => {
+      postsCache = {};
+      if (snapshot.empty) {
+        box.innerHTML = '<div class="empty-list">No posts yet</div>';
+        return;
+      }
+      box.innerHTML = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        postsCache[doc.id] = data;
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+          <div class="list-item-text">${data.customText}</div>
+          <div class="menu-wrap">
+            <button class="dots-btn" onclick="toggleMenu('post-menu-${doc.id}')">⋮</button>
+            <div class="dropdown-menu" id="post-menu-${doc.id}">
+              <div onclick="sharePost('${doc.id}')">Share</div>
+              <div onclick="deletePost('${doc.id}')">Delete</div>
+            </div>
+          </div>
+        `;
+        box.appendChild(item);
+      });
+    });
+  }
+
+  function deletePost(id) {
+    if (!confirm("Are you sure you want to delete this post?")) return;
+    db.collection('posts').doc(id).delete().then(() => {
+      loadPostsList();
     });
   }
 </script>
