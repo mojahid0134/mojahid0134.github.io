@@ -31,7 +31,7 @@
   .loading {
     position:fixed; top:52px; left:0; right:0; bottom:0;
     display:flex; align-items:center; justify-content:center;
-    color:#999; font-size:14px;
+    color:#999; font-size:14px; background:#f4f5f7; z-index:5;
   }
 
   /* Install Prompt Screen */
@@ -52,6 +52,13 @@
 <body>
 
 <script>
+  // ---- Back বাটনে ফিরে এলে পুরনো Cache করা ভাঙা অবস্থা যেন না দেখায় ----
+  window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+      window.location.reload();
+    }
+  });
+
   // ================================
   // App পাবলিশ হওয়ার পর, এখানে আসল Play Store Link বসাবি
   // ================================
@@ -64,7 +71,6 @@
   const isAppMode = params.get('app') === '1';
 
   if (!isAppMode) {
-    // App এর বাইরে (Browser এ) খোলা হয়েছে — Install Prompt দেখাও
     document.body.innerHTML = `
       <div class="install-screen">
         <h2>📱 Install the App</h2>
@@ -73,14 +79,13 @@
       </div>
     `;
   } else {
-    // App এর ভিতর থেকে খোলা হয়েছে — Post দেখাও + History তে সেভ কর
     document.body.innerHTML = `
       <div class="topbar">
         <button class="back-btn" onclick="goBack()">←</button>
         <div class="page-title">${title || 'Loading...'}</div>
       </div>
+      <iframe class="content-frame" id="contentFrame"></iframe>
       <div class="loading" id="loadingMsg">Loading post...</div>
-      <iframe class="content-frame" id="contentFrame" style="display:none;"></iframe>
     `;
 
     if (postId) {
@@ -90,30 +95,35 @@
     if (url) {
       const frame = document.getElementById('contentFrame');
       frame.src = url;
+
+      // Loading Message সরানোর ২টা উপায় — যেটা আগে ঘটে সেটাই কাজ করবে
+      // ১) Iframe ঠিকমতো Load হলে
       frame.onload = () => {
-        document.getElementById('loadingMsg').style.display = 'none';
-        frame.style.display = 'block';
+        hideLoading();
       };
+      // ২) ৪ সেকেন্ড পার হয়ে গেলে Safety হিসেবে জোর করে সরিয়ে দেওয়া
+      // (কিছু কিছু সময় Android WebView এ Iframe এর onload Signal ঠিকমতো না-ও আসতে পারে)
+      setTimeout(hideLoading, 4000);
     } else {
       document.getElementById('loadingMsg').innerText = 'No link found.';
     }
   }
 
-  // ---- Visit History তে যোগ করা (এই ফোনেই সেভ থাকবে) ----
+  function hideLoading() {
+    const msg = document.getElementById('loadingMsg');
+    if (msg) msg.style.display = 'none';
+  }
+
   function addToHistory(id) {
     let history = JSON.parse(localStorage.getItem('visitHistory') || '[]');
-    history = history.filter(h => h !== id);   // আগে থাকলে সরিয়ে
-    history.unshift(id);                        // সবার সামনে (সবচেয়ে নতুন) বসানো
-    if (history.length > 200) history = history.slice(0, 200); // বেশি বড় হয়ে যাওয়া আটকানো
+    history = history.filter(h => h !== id);
+    history.unshift(id);
+    if (history.length > 200) history = history.slice(0, 200);
     localStorage.setItem('visitHistory', JSON.stringify(history));
   }
 
   function goBack() {
-    if (document.referrer) {
-      history.back();
-    } else {
-      window.location.href = "index.html?app=1";
-    }
+    window.location.href = "index.html?app=1";
   }
 </script>
 
