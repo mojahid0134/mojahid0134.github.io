@@ -13,7 +13,6 @@
   * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
   body { background:#f4f5f7; padding-bottom:30px; }
 
-  /* Top Bar */
   .topbar {
     background: linear-gradient(135deg,#1A1A2E,#16213E);
     color:#fff; padding:14px 16px;
@@ -23,7 +22,6 @@
   .topbar h1 { font-size:20px; letter-spacing:1px; }
   .timer { background:#0f3460; padding:6px 12px; border-radius:20px; font-size:13px; }
 
-  /* Playlist Bar */
   .playlist-bar {
     display:flex; gap:10px; overflow-x:auto;
     padding:14px 12px; background:#fff;
@@ -36,7 +34,6 @@
   }
   .playlist-chip.active { background:#1A1A2E; color:#fff; }
 
-  /* Feed */
   .feed { padding:14px; display:flex; flex-direction:column; gap:14px; }
   .post-card {
     background:#fff; border-radius:14px; padding:16px;
@@ -70,7 +67,7 @@
 
   <div class="playlist-bar" id="playlistBar">
     <div class="playlist-chip active" onclick="showAllPosts()">Your Feeds</div>
-    <div class="playlist-chip" onclick="showHistory(this)">History</div>
+    <div class="playlist-chip" onclick="showHistory()">History</div>
   </div>
 
   <div class="feed" id="feedContainer">
@@ -78,7 +75,6 @@
   </div>
 
 <script>
-  // ---- বার বার এই পেজে ফিরে এলে (Back বাটনে) পুরনো Cache করা ভাঙা অবস্থা যেন না দেখায় ----
   window.addEventListener('pageshow', function(event) {
     if (event.persisted) {
       window.location.reload();
@@ -102,11 +98,14 @@
   const db = firebase.firestore();
 
   let allPosts = [];
+  let allPlaylists = [];
+  let currentFilter = { type: 'all' };
   const APP_MODE = new URLSearchParams(window.location.search).get('app') === '1';
 
+  const CACHE_POSTS_KEY = 'cachedPostsData';
+  const CACHE_PLAYLISTS_KEY = 'cachedPlaylistsData';
+
   // ---- Session Timer ----
-  // sessionStorage ব্যবহার করা হচ্ছে যাতে Post এ গিয়ে আবার Home এ ফিরলে Timer 0 না হয়ে যায়,
-  // কিন্তু App সম্পূর্ণ বন্ধ করে আবার খুললে (নতুন Session শুরু হলে) ঠিকই 0 থেকে শুরু হবে।
   let seconds = parseInt(sessionStorage.getItem('appTimerSeconds') || '0', 10);
   let timerInterval = null;
 
@@ -125,23 +124,16 @@
       updateTimerDisplay();
     }, 1000);
   }
-
   function stopTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
   }
-
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      stopTimer();
-    } else {
-      startTimer();
-    }
+    if (document.hidden) stopTimer(); else startTimer();
   });
-
   startTimer();
 
-  // ---- Posts Load করা ----
+  // ---- Posts আঁকা ----
   function renderPosts(posts) {
     const feed = document.getElementById('feedContainer');
     if (posts.length === 0) {
@@ -163,6 +155,47 @@
     });
   }
 
+  // ---- Playlist Chip গুলো আঁকা ----
+  function renderPlaylistChips(playlists) {
+    const bar = document.getElementById('playlistBar');
+    // প্রথম দুইটা (Your Feeds, History) রেখে বাকি পুরনো Chip মুছে ফেলা
+    while (bar.children.length > 2) {
+      bar.removeChild(bar.lastChild);
+    }
+    playlists.forEach(pl => {
+      const chip = document.createElement('div');
+      chip.className = 'playlist-chip';
+      chip.innerText = pl.name || 'Playlist';
+      chip.setAttribute('data-playlist-id', pl.id);
+      chip.onclick = () => filterByPlaylist(pl.id);
+      bar.appendChild(chip);
+    });
+  }
+
+  // ---- বর্তমান Filter অনুযায়ী Feed দেখানো ----
+  function applyFilterState() {
+    document.querySelectorAll('.playlist-chip').forEach(c => c.classList.remove('active'));
+    const chips = document.querySelectorAll('.playlist-chip');
+
+    if (currentFilter.type === 'all') {
+      chips[0].classList.add('active');
+      renderPosts(allPosts);
+    } else if (currentFilter.type === 'history') {
+      chips[1].classList.add('active');
+      const historyIds = JSON.parse(localStorage.getItem('visitHistory') || '[]');
+      const historyPosts = historyIds.map(id => allPosts.find(p => p.id === id)).filter(p => p);
+      renderPosts(historyPosts);
+    } else if (currentFilter.type === 'playlist') {
+      const chip = document.querySelector(`.playlist-chip[data-playlist-id="${currentFilter.id}"]`);
+      if (chip) chip.classList.add('active');
+      renderPosts(allPosts.filter(p => p.playlistId === currentFilter.id));
+    }
+  }
+
+  function showAllPosts() { currentFilter = { type: 'all' }; applyFilterState(); }
+  function showHistory() { currentFilter = { type: 'history' }; applyFilterState(); }
+  function filterByPlaylist(playlistId) { currentFilter = { type: 'playlist', id: playlistId }; applyFilterState(); }
+
   function sharePost(postId) {
     const post = allPosts.find(p => p.id === postId);
     if (!post) return;
@@ -174,35 +207,28 @@
     }
   }
 
-  function showAllPosts() {
-    document.querySelectorAll('.playlist-chip').forEach(c => c.classList.remove('active'));
-    document.querySelector('.playlist-chip').classList.add('active');
-    renderPosts(allPosts);
-  }
+  // ---- ধাপ ১: আগে Cache থেকে সাথে সাথে দেখানো (Loading ছাড়াই) ----
+  try {
+    const cachedPosts = JSON.parse(localStorage.getItem(CACHE_POSTS_KEY) || 'null');
+    const cachedPlaylists = JSON.parse(localStorage.getItem(CACHE_PLAYLISTS_KEY) || 'null');
+    if (cachedPosts) {
+      allPosts = cachedPosts;
+      renderPosts(allPosts);
+    }
+    if (cachedPlaylists) {
+      allPlaylists = cachedPlaylists;
+      renderPlaylistChips(allPlaylists);
+    }
+  } catch (e) {}
 
-  function showHistory(chipEl) {
-    document.querySelectorAll('.playlist-chip').forEach(c => c.classList.remove('active'));
-    chipEl.classList.add('active');
-    const historyIds = JSON.parse(localStorage.getItem('visitHistory') || '[]');
-    const historyPosts = historyIds
-      .map(id => allPosts.find(p => p.id === id))
-      .filter(p => p);
-    renderPosts(historyPosts);
-  }
+  // ---- ধাপ ২: Background এ Firestore থেকে আসল/নতুন Data আনা ----
+  const sharedPlaylistId = new URLSearchParams(window.location.search).get('playlist');
 
-  function filterByPlaylist(playlistId, chipEl) {
-    document.querySelectorAll('.playlist-chip').forEach(c => c.classList.remove('active'));
-    chipEl.classList.add('active');
-    const filtered = allPosts.filter(p => p.playlistId === playlistId);
-    renderPosts(filtered);
-  }
-
-  // ---- Firestore থেকে Posts আনা ----
   db.collection('posts').orderBy('time','desc').get().then(snapshot => {
-    allPosts = [];
+    const freshPosts = [];
     snapshot.forEach(doc => {
       const data = doc.data();
-      allPosts.push({
+      freshPosts.push({
         id: doc.id,
         customText: data.customText || 'Untitled Post',
         link: data.link || '',
@@ -210,27 +236,29 @@
         timeText: data.timeText || ''
       });
     });
-    renderPosts(allPosts);
+    allPosts = freshPosts;
+    localStorage.setItem(CACHE_POSTS_KEY, JSON.stringify(freshPosts));
+    applyFilterState();
   }).catch(err => {
-    document.getElementById('feedContainer').innerHTML =
-      '<div class="empty-msg">Error loading posts: '+err.message+'</div>';
+    if (allPosts.length === 0) {
+      document.getElementById('feedContainer').innerHTML =
+        '<div class="empty-msg">Error loading posts: '+err.message+'</div>';
+    }
   });
 
-  // ---- Firestore থেকে Playlists আনা ----
   db.collection('playlists').get().then(snapshot => {
-    const bar = document.getElementById('playlistBar');
-    const sharedPlaylistId = new URLSearchParams(window.location.search).get('playlist');
+    const freshPlaylists = [];
     snapshot.forEach(doc => {
-      const data = doc.data();
-      const chip = document.createElement('div');
-      chip.className = 'playlist-chip';
-      chip.innerText = data.name || 'Playlist';
-      chip.onclick = () => filterByPlaylist(doc.id, chip);
-      bar.appendChild(chip);
-      if (sharedPlaylistId === doc.id) {
-        setTimeout(() => filterByPlaylist(doc.id, chip), 300);
-      }
+      freshPlaylists.push({ id: doc.id, name: doc.data().name || 'Playlist' });
     });
+    allPlaylists = freshPlaylists;
+    localStorage.setItem(CACHE_PLAYLISTS_KEY, JSON.stringify(freshPlaylists));
+    renderPlaylistChips(allPlaylists);
+
+    if (sharedPlaylistId) {
+      currentFilter = { type: 'playlist', id: sharedPlaylistId };
+    }
+    applyFilterState();
   });
 </script>
 
