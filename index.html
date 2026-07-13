@@ -69,7 +69,7 @@
   .post-link { display:block; color:#4a2a6d; font-size:16px; font-weight:600;
     text-decoration:none; line-height:1.6; margin-top:10px; }
 
-  .post-footer { display:flex; gap:10px; margin-top:14px; }
+  .post-footer { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
   .action-btn { background:#f1eefc; color:#5b21b6; border:none;
     padding:8px 14px; border-radius:16px; font-size:13px; font-weight:700;
     display:flex; align-items:center; gap:6px; }
@@ -286,9 +286,16 @@
 
   const heartIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.5z"/></svg>`;
   const sendIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+  const copyIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
   const globeIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20z"/></svg>`;
   const avatarIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M9 21v-4a3 3 0 0 1 6 0v4"/><path d="M4 21v-3a8 8 0 0 1 16 0v3"/><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10z" fill="#fff" stroke="none" opacity="0"/><path fill="#fff" stroke="none" d="M12 3.5 A18 18 0 1 0 12 10.5 A14 14 0 1 1 12 3.5 Z"/></svg>`;
   const folderIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+
+  function copyPostText(id) {
+    const post = allPosts.find(p => p.id === id);
+    if (!post) return;
+    navigator.clipboard.writeText(post.customText).then(() => alert('Text copied to clipboard!'));
+  }
 
   function renderPosts(posts) {
     document.getElementById('sectionTitleBox').innerHTML = '';
@@ -309,6 +316,9 @@
       const titleHtml = hasLink
         ? `<a class="post-link" href="view.html?url=${encodeURIComponent(post.link)}&title=${encodeURIComponent(post.customText)}&id=${post.id}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`
         : `<div class="post-link" style="cursor:default;">${post.customText}</div>`;
+      const copyBtnHtml = sectionName === 'Bangla Caption'
+        ? `<button class="action-btn" onclick="copyPostText('${post.id}')">${copyIcon} Copy</button>`
+        : '';
       card.innerHTML = `
         <div class="post-header">
           <div class="post-avatar">${avatarIcon}</div>
@@ -321,6 +331,7 @@
         <div class="post-footer">
           <button class="action-btn fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${post.id}', this)">${heartIcon} Favorite</button>
           <button class="action-btn" onclick="sharePost('${post.id}')">${sendIcon} Share</button>
+          ${copyBtnHtml}
         </div>
       `;
       feed.appendChild(card);
