@@ -38,6 +38,17 @@
   .divider-ornament .line { height:1px; width:36px; background:#d9b878; }
   .divider-ornament .dot { width:5px; height:5px; border-radius:50%; background:#d9b878; }
 
+  /* ===== Pull to Refresh ===== */
+  .pull-indicator {
+    display:flex; align-items:center; justify-content:center;
+    height:0; overflow:hidden; transition:height 0.15s ease; background:#fff;
+  }
+  .pull-indicator .spinner {
+    width:22px; height:22px; border:3px solid #e0d6f7; border-top-color:#6D28D9;
+    border-radius:50%; animation:spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   /* ===== Section Cards ===== */
   .section-panel { position:relative; z-index:3; background:#fff; margin-top:14px;
     border-radius:22px 22px 0 0; padding:18px 14px 6px; }
@@ -83,29 +94,35 @@
   .empty-msg { text-align:center; color:#999; padding:40px 0; }
   .section-title { padding:14px 14px 0; font-size:16px; font-weight:800; color:#3B0764;
     display:flex; align-items:center; gap:8px; }
+
+  /* ===== Scroll to Top Button ===== */
+  .scroll-top-btn {
+    position:fixed; bottom:20px; right:20px; z-index:150;
+    width:44px; height:44px; border-radius:50%; border:none;
+    background:#6D28D9; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.25);
+    display:none; align-items:center; justify-content:center;
+    opacity:0; transform:translateY(10px); transition:opacity 0.2s, transform 0.2s;
+  }
+  .scroll-top-btn.visible { display:flex; opacity:1; transform:translateY(0); }
+  .scroll-top-btn svg { width:22px; height:22px; }
 </style>
 </head>
 <body>
 
   <div class="topbar">
     <div class="topbar-decor">
-      <!-- Stars + Crescent Moon -->
       <svg viewBox="0 0 100 100" style="position:absolute; top:60px; right:110px; width:55px; height:55px; opacity:0.95;">
         <path fill="#fff" d="M60 15 A28 28 0 1 0 60 85 A22 22 0 1 1 60 15 Z"/>
       </svg>
       <circle cx="40" cy="30" r="1.4" fill="#fff"/>
       <circle cx="230" cy="45" r="1.2" fill="#fff"/>
       <circle cx="260" cy="70" r="1.6" fill="#fff"/>
-      <!-- Mountains -->
       <svg viewBox="0 0 400 100" preserveAspectRatio="none" style="position:absolute; bottom:0; left:0; width:100%; height:35%; opacity:0.45;">
         <path fill="#2a1650" d="M0,100 L40,55 L80,90 L130,40 L170,85 L220,50 L270,95 L320,45 L360,80 L400,60 L400,100 Z"/>
       </svg>
-      <!-- Palm Trees (নিচে বামে) -->
       <svg viewBox="0 0 100 100" style="position:absolute; bottom:0; left:0; width:80px; height:80px; opacity:0.85;">
-        <path fill="#1a1033" d="M15 100 L18 55 M18 55 Q5 45 2 35 M18 55 Q30 48 35 38 M18 55 Q10 40 20 30 M18 55 Q22 40 15 28"/>
-        <path fill="none" stroke="#1a1033" stroke-width="3" d="M15 100 L18 55"/>
+        <path fill="none" stroke="#1a1033" stroke-width="3" d="M15 100 L18 55 M18 55 Q5 45 2 35 M18 55 Q30 48 35 38 M18 55 Q10 40 20 30 M18 55 Q22 40 15 28"/>
       </svg>
-      <!-- Mosque Silhouette (ডান নিচে, বড়) -->
       <svg viewBox="0 0 300 130" preserveAspectRatio="xMaxYMax slice"
            style="position:absolute; bottom:-4px; right:0; width:72%; height:65%; opacity:0.55;">
         <path fill="#1a1033" d="M0,130 L0,100 L20,100 L20,80 L30,80 L30,60 Q30,40 48,40 Q66,40 66,60 L66,80 L78,80 L78,100 L106,100 L106,65 Q106,20 148,10 Q190,20 190,65 L190,100 L218,100 L218,80 L230,80 L230,60 Q230,40 248,40 Q266,40 266,60 L266,80 L278,80 L278,100 L300,100 L300,130 Z"/>
@@ -136,6 +153,8 @@
     </div>
   </div>
 
+  <div class="pull-indicator" id="pullIndicator"><div class="spinner"></div></div>
+
   <div class="section-panel">
     <div class="section-scroll" id="sectionScroll"></div>
 
@@ -160,6 +179,10 @@
     <div class="empty-msg">Loading posts...</div>
   </div>
 
+  <button class="scroll-top-btn" id="scrollTopBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+  </button>
+
 <script>
   window.addEventListener('pageshow', function(event) {
     if (event.persisted) window.location.reload();
@@ -180,11 +203,8 @@
     document.getElementById('topDropdown').classList.remove('open');
   });
 
-  // Category (একাধিক Playlist ধারণ করে) vs Flat (সরাসরি Playlist)
   const CATEGORY_SECTIONS = ['Lives of the Prophets', 'Lives of the Sahabah', 'Dua', 'Nasheed'];
-  const FLAT_SECTIONS = ['Daily Hadith', '99 Names', 'Bangla Caption'];
 
-  // প্রতিটা Section এর Icon ও রঙ (ছবির মতো)
   const SECTION_STYLES = {
     'Daily Hadith': { bg:'#e9f5e8', color:'#2e7d32', svg:`<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>` },
     'Lives of the Prophets': { bg:'#eeeafc', color:'#4a2a8d', svg:`<path d="M12 2v3"/><circle cx="12" cy="2.3" r="0.8" fill="currentColor" stroke="none"/><path d="M6 21v-6a6 6 0 0 1 12 0v6"/><line x1="4" y1="21" x2="20" y2="21"/>` },
@@ -200,19 +220,13 @@
   SECTION_ORDER.forEach(name => {
     const st = SECTION_STYLES[name];
     let iconHtml;
-    if (st.emoji) {
-      iconHtml = `<span style="font-size:26px; line-height:1;">${st.emoji}</span>`;
-    } else if (st.text) {
-      iconHtml = `<span style="font-size:24px; font-weight:700; line-height:1; font-family:'Traditional Arabic','Noto Naskh Arabic',serif;">${st.text}</span>`;
-    } else {
-      iconHtml = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${st.svg}</svg>`;
-    }
+    if (st.emoji) iconHtml = `<span style="font-size:26px; line-height:1;">${st.emoji}</span>`;
+    else if (st.text) iconHtml = `<span style="font-size:24px; font-weight:700; line-height:1; font-family:'Traditional Arabic','Noto Naskh Arabic',serif;">${st.text}</span>`;
+    else iconHtml = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${st.svg}</svg>`;
     const card = document.createElement('div');
     card.className = 'section-card';
     card.innerHTML = `
-      <div class="section-icon-box" style="background:${st.bg}; color:${st.color};">
-        ${iconHtml}
-      </div>
+      <div class="section-icon-box" style="background:${st.bg}; color:${st.color};">${iconHtml}</div>
       <div class="section-label">${name}</div>
     `;
     card.addEventListener('click', () => navSection(name));
@@ -264,6 +278,14 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopTimer(); else startTimer(); });
   startTimer();
 
+  // ---- Scroll to Top Button ----
+  const scrollTopBtn = document.getElementById('scrollTopBtn');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 400) scrollTopBtn.classList.add('visible');
+    else scrollTopBtn.classList.remove('visible');
+  });
+  scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
   function getFavorites() { return JSON.parse(localStorage.getItem('favoritePosts') || '[]'); }
   function toggleFavorite(id, btnEl) {
     let favs = getFavorites();
@@ -288,7 +310,7 @@
   const sendIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
   const copyIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
   const globeIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20z"/></svg>`;
-  const avatarIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M9 21v-4a3 3 0 0 1 6 0v4"/><path d="M4 21v-3a8 8 0 0 1 16 0v3"/><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10z" fill="#fff" stroke="none" opacity="0"/><path fill="#fff" stroke="none" d="M12 3.5 A18 18 0 1 0 12 10.5 A14 14 0 1 1 12 3.5 Z"/></svg>`;
+  const avatarIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path fill="#fff" stroke="none" d="M12 3.5 A18 18 0 1 0 12 10.5 A14 14 0 1 1 12 3.5 Z"/></svg>`;
   const folderIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
 
   function copyPostText(id) {
@@ -405,20 +427,30 @@
     else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
   }
 
+  // ---- Post Scheduling: শুধু যেই Post এর সময় হয়ে গেছে সেগুলোই দেখানো ----
+  function isVisibleNow(post) {
+    if (!post.rawPublishAt) return true; // পুরনো Post (Schedule ছাড়া) সবসময় দেখাবে
+    return post.rawPublishAt <= Date.now();
+  }
+
   function refreshData() {
     Promise.all([
       db.collection('posts').orderBy('time','desc').get(),
       db.collection('playlists').get()
     ]).then(([postSnap, plSnap]) => {
-      const freshPosts = [];
+      let freshPosts = [];
       postSnap.forEach(doc => {
         const d = doc.data();
         freshPosts.push({
           id: doc.id, customText: d.customText || 'Untitled Post',
           link: d.link || '', playlistId: d.playlistId || '',
-          timeText: d.timeText || '', rawTime: d.time ? d.time.toMillis() : null
+          timeText: d.timeText || '', rawTime: d.time ? d.time.toMillis() : null,
+          rawPublishAt: d.publishAt ? d.publishAt.toMillis() : null
         });
       });
+      freshPosts = freshPosts.filter(isVisibleNow)
+        .sort((a,b) => (b.rawPublishAt || b.rawTime || 0) - (a.rawPublishAt || a.rawTime || 0));
+
       const freshPlaylists = [];
       plSnap.forEach(doc => {
         const d = doc.data();
@@ -429,13 +461,15 @@
       localStorage.setItem(CACHE_POSTS_KEY, JSON.stringify(freshPosts));
       localStorage.setItem(CACHE_PLAYLISTS_KEY, JSON.stringify(freshPlaylists));
       applyFilterState();
+    }).finally(() => {
+      setTimeout(() => { pullIndicator.style.height = '0px'; }, 400);
     });
   }
 
   try {
     const cachedPosts = JSON.parse(localStorage.getItem(CACHE_POSTS_KEY) || 'null');
     const cachedPlaylists = JSON.parse(localStorage.getItem(CACHE_PLAYLISTS_KEY) || 'null');
-    if (cachedPosts) allPosts = cachedPosts;
+    if (cachedPosts) allPosts = cachedPosts.filter(isVisibleNow);
     if (cachedPlaylists) allPlaylists = cachedPlaylists;
   } catch (e) {}
 
@@ -445,6 +479,39 @@
     else currentFilter = { type: 'playlist', name: sectionParam };
   }
   applyFilterState();
+
+  // ---- Pull to Refresh ----
+  let touchStartY = 0;
+  let pulling = false;
+  const pullIndicator = document.getElementById('pullIndicator');
+  const PULL_THRESHOLD = 70;
+
+  window.addEventListener('touchstart', (e) => {
+    if (window.scrollY === 0) { touchStartY = e.touches[0].clientY; pulling = true; }
+    else { pulling = false; }
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!pulling) return;
+    const diff = e.touches[0].clientY - touchStartY;
+    if (diff > 0) {
+      const height = Math.min(diff * 0.5, PULL_THRESHOLD);
+      pullIndicator.style.height = height + 'px';
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchend', () => {
+    if (!pulling) return;
+    const currentHeight = parseInt(pullIndicator.style.height || '0', 10);
+    pulling = false;
+    if (currentHeight >= PULL_THRESHOLD - 5) {
+      pullIndicator.style.height = '50px';
+      refreshData();
+    } else {
+      pullIndicator.style.height = '0px';
+    }
+  });
+
   refreshData();
 </script>
 
