@@ -109,6 +109,9 @@
       <select id="postPlaylist">
         <option value="">-- Select Playlist --</option>
       </select>
+      <label style="font-size:13px; color:#555; display:block; margin-bottom:4px;">Schedule for later (optional)</label>
+      <input type="datetime-local" id="postSchedule">
+      <div class="hint">খালি রাখলে সাথে সাথে Post হবে। ভবিষ্যতের সময় দিলে সেই সময় হলেই Feed এ দেখাবে (তবে ঠিক সেই সময়ে Notification যাবে না, শুধু তখনই Post করলে Notification যায়)</div>
       <button class="action" onclick="createPost()">Post</button>
       <div class="msg" id="postMsg"></div>
     </div>
@@ -271,14 +274,14 @@
     });
   }
 
-  // ---- Post তৈরি করা (Link এখন Optional) ----
+  // ---- Post তৈরি করা (Link Optional, Schedule Optional) ----
   function createPost() {
     const link = document.getElementById('postLink').value.trim();
     const customText = document.getElementById('postCustomText').value.trim();
     const playlistId = document.getElementById('postPlaylist').value;
+    const scheduleValue = document.getElementById('postSchedule').value;
     const msg = document.getElementById('postMsg');
 
-    // এখন শুধু Text আর Playlist লাগবে, Link লাগবে না
     if (!customText || !playlistId) {
       msg.className = 'msg err'; msg.innerText = 'Text ও Playlist অবশ্যই দিতে হবে';
       return;
@@ -286,18 +289,22 @@
 
     const now = new Date();
     const timeText = now.toLocaleString();
+    const publishAt = scheduleValue ? new Date(scheduleValue) : now;
 
     db.collection('posts').add({
-      link: link,              // খালি থাকলে '' হিসেবেই সেভ হবে
+      link: link,
       customText: customText,
       playlistId: playlistId,
       time: firebase.firestore.FieldValue.serverTimestamp(),
-      timeText: timeText
+      timeText: timeText,
+      publishAt: firebase.firestore.Timestamp.fromDate(publishAt)
     }).then(() => {
-      msg.className = 'msg ok'; msg.innerText = 'Post created successfully ✅';
+      msg.className = 'msg ok';
+      msg.innerText = publishAt > now ? 'Post Scheduled ✅ (' + publishAt.toLocaleString() + ')' : 'Post created successfully ✅';
       document.getElementById('postLink').value = '';
       document.getElementById('postCustomText').value = '';
       document.getElementById('postPlaylist').value = '';
+      document.getElementById('postSchedule').value = '';
       loadPostsList();
     }).catch(err => {
       msg.className = 'msg err'; msg.innerText = 'Error: ' + err.message;
