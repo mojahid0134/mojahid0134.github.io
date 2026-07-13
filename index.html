@@ -10,178 +10,148 @@
 
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-  body { background:#f4f5f7; padding-bottom:90px; }
-  svg.icon { width:18px; height:18px; flex-shrink:0; }
+  body { background:#f4f5f7; }
+  svg.icon { width:16px; height:16px; flex-shrink:0; }
 
-  /* Header (Mosque Scene, CSS/SVG দিয়ে বানানো) */
-  .topbar {
-    position:relative; overflow:hidden; padding:24px 20px 30px;
-    background: linear-gradient(160deg, #241540 0%, #4a2a6d 35%, #8a5a8a 65%, #d99a6c 100%);
-  }
+  /* ===== Header Scene ===== */
+  .topbar { position:relative; overflow:hidden; padding:18px 20px 48px;
+    background: linear-gradient(180deg, #2a1650 0%, #4a2a6d 30%, #8a5a8a 60%, #e0a06c 100%); }
   .topbar-decor { position:absolute; inset:0; pointer-events:none; }
-  .topbar-content { position:relative; z-index:2; }
-  .topbar-menu { position:relative; margin-bottom:6px; display:flex; }
-  .topbar-dots-btn {
-    background:rgba(255,255,255,0.18); border:none; color:#fff;
-    width:30px; height:30px; border-radius:50%; font-size:18px; line-height:1;
-  }
-  .topbar-dropdown {
-    display:none; position:absolute; top:36px; left:0;
+  .topbar-content { position:relative; z-index:3; }
+
+  .top-toprow { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
+  .hamburger-wrap { position:relative; }
+  .hamburger-btn { background:rgba(255,255,255,0.18); border:none; color:#fff;
+    width:36px; height:36px; border-radius:10px; font-size:18px; }
+  .topbar-dropdown { display:none; position:absolute; top:42px; left:0;
     background:#fff; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.25);
-    min-width:150px; z-index:50; overflow:hidden;
-  }
+    min-width:150px; z-index:50; overflow:hidden; }
   .topbar-dropdown.open { display:block; }
-  .topbar-dropdown div {
-    padding:12px 16px; font-size:14px; color:#3B0764; font-weight:700;
-    display:flex; align-items:center; gap:8px;
-  }
-  .topbar-row { display:flex; justify-content:space-between; align-items:flex-start; }
-  .topbar h1 { font-size:26px; font-weight:800; letter-spacing:0.5px; color:#fff; }
-  .topbar h1 .accent { color:#e0b8ff; }
-  .topbar .subtitle { font-size:14px; color:#e6dcff; margin-top:4px; }
-  .timer {
-    background:rgba(255,255,255,0.18); padding:8px 14px; border-radius:20px;
-    font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; color:#fff;
-  }
+  .topbar-dropdown div { padding:12px 16px; font-size:14px; color:#3B0764; font-weight:700;
+    display:flex; align-items:center; gap:8px; }
+  .timer { background:rgba(255,255,255,0.2); padding:7px 13px; border-radius:20px;
+    font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px; color:#fff; }
 
-  .pull-indicator {
-    display:flex; align-items:center; justify-content:center;
-    height:0; overflow:hidden; transition:height 0.15s ease; background:#fff;
-  }
-  .pull-indicator .spinner {
-    width:22px; height:22px; border:3px solid #e0d6f7; border-top-color:#6D28D9;
-    border-radius:50%; animation:spin 0.7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .topbar h1 { font-size:34px; font-weight:800; color:#fff; line-height:1; }
+  .topbar .subtitle { font-size:14px; color:#efe6ff; margin-top:10px; line-height:1.5; }
+  .divider-ornament { display:flex; align-items:center; gap:6px; margin-top:12px; }
+  .divider-ornament .line { height:1px; width:36px; background:#d9b878; }
+  .divider-ornament .dot { width:5px; height:5px; border-radius:50%; background:#d9b878; }
 
-  .chip-bar {
-    display:flex; gap:10px; padding:16px; background:#fff;
-    border-bottom-left-radius:20px; border-bottom-right-radius:20px;
-    overflow-x:auto;
-  }
-  .chip {
-    flex-shrink:0; display:flex; align-items:center; gap:6px;
-    background:#f1eefc; color:#3B0764;
-    padding:10px 16px; border-radius:20px; font-size:14px; font-weight:700;
-    white-space:nowrap;
-  }
-  .chip.active { background:#6D28D9; color:#fff; }
+  /* ===== Section Cards ===== */
+  .section-panel { position:relative; z-index:3; background:#fff; margin-top:14px;
+    border-radius:22px 22px 0 0; padding:18px 14px 6px; }
+  .section-scroll { display:flex; gap:10px; overflow-x:auto; padding-bottom:8px; }
+  .section-card { flex-shrink:0; width:78px; display:flex; flex-direction:column;
+    align-items:center; gap:8px; cursor:pointer; }
+  .section-icon-box { width:60px; height:60px; border-radius:16px; display:flex;
+    align-items:center; justify-content:center; }
+  .section-icon-box svg { width:28px; height:28px; }
+  .section-label { font-size:11.5px; font-weight:700; color:#333; text-align:center; line-height:1.2; }
 
-  .section-title {
-    padding:16px 16px 0; font-size:16px; font-weight:800; color:#3B0764;
-    display:flex; align-items:center; gap:8px;
-  }
+  /* ===== Filter Row ===== */
+  .filter-row { display:flex; background:#f4f2fb; border-radius:16px; margin:14px 0 4px; padding:5px; }
+  .filter-item { flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    padding:10px 6px; border-radius:12px; font-size:13.5px; font-weight:700; color:#777; }
+  .filter-item.active { background:#fff; color:#5b21b6; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
 
-  .feed { padding:16px; display:flex; flex-direction:column; gap:16px; }
-  .post-card {
-    background:#fff; border-radius:16px; padding:18px;
-    box-shadow:0 2px 10px rgba(0,0,0,0.06);
-  }
-  .post-time {
-    display:flex; align-items:center; gap:6px;
-    font-size:13px; color:#999; margin-bottom:10px;
-  }
-  .post-time svg { color:#6D28D9; }
-  .post-link {
-    display:block; color:#1a1a2e; font-size:17px; font-weight:700;
-    text-decoration:none; line-height:1.5;
-  }
-  .post-footer {
-    display:flex; justify-content:flex-end; gap:10px; margin-top:14px;
-  }
-  .action-btn {
-    background:#f1eefc; color:#3B0764; border:none;
+  /* ===== Feed ===== */
+  .feed { padding:14px; display:flex; flex-direction:column; gap:14px; }
+  .post-card { background:#fff; border-radius:16px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,0.06); }
+  .post-header { display:flex; align-items:flex-start; gap:10px; }
+  .post-avatar { width:42px; height:42px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,#4a2a6d,#8a5a8a); display:flex; align-items:center; justify-content:center; }
+  .post-avatar svg { width:22px; height:22px; }
+  .post-meta { flex:1; }
+  .post-section-name { font-size:14.5px; font-weight:800; color:#1a1a2e; }
+  .post-sub { font-size:12px; color:#999; display:flex; align-items:center; gap:5px; margin-top:2px; }
+
+  .post-link { display:block; color:#4a2a6d; font-size:16px; font-weight:600;
+    text-decoration:none; line-height:1.6; margin-top:10px; }
+
+  .post-footer { display:flex; gap:10px; margin-top:14px; }
+  .action-btn { background:#f1eefc; color:#5b21b6; border:none;
     padding:8px 14px; border-radius:16px; font-size:13px; font-weight:700;
-    display:flex; align-items:center; gap:6px;
-  }
+    display:flex; align-items:center; gap:6px; }
   .action-btn.fav-btn.active { color:#e0245e; }
   .action-btn.fav-btn.active svg { fill:#e0245e; }
 
-  .playlist-folder {
-    background:#fff; border-radius:14px; padding:16px 18px;
+  .playlist-folder { background:#fff; border-radius:14px; padding:16px 18px;
     display:flex; align-items:center; gap:10px; font-weight:700; color:#1a1a2e;
-    box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer;
-  }
+    box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; }
 
   .empty-msg { text-align:center; color:#999; padding:40px 0; }
-
-  /* Bottom Nav */
-  .bottom-nav {
-    position:fixed; bottom:0; left:0; right:0; z-index:200;
-    background:#fff; border-top:1px solid #eee;
-    display:flex; justify-content:space-around;
-    padding:8px 1px 10px;
-  }
-  .nav-item {
-    display:flex; flex-direction:column; align-items:center;
-    gap:3px; color:#333; font-size:9.5px; font-weight:600; flex:1;
-    text-align:center; padding:0 1px;
-  }
-  .nav-item.active { color:#6D28D9; }
-  .nav-icon-wrap { height:22px; display:flex; align-items:center; justify-content:center; }
-  .nav-icon-wrap svg { width:21px; height:21px; flex-shrink:0; }
-  .nav-label {
-    min-height:22px; display:flex; align-items:flex-start; justify-content:center;
-    line-height:1.1; width:100%;
-  }
+  .section-title { padding:14px 14px 0; font-size:16px; font-weight:800; color:#3B0764;
+    display:flex; align-items:center; gap:8px; }
 </style>
 </head>
 <body>
 
   <div class="topbar">
     <div class="topbar-decor">
-      <!-- Crescent Moon + Stars -->
-      <svg viewBox="0 0 100 100" style="position:absolute; top:8px; left:10px; width:60px; height:60px; opacity:0.95;">
+      <!-- Stars + Crescent Moon -->
+      <svg viewBox="0 0 100 100" style="position:absolute; top:60px; right:110px; width:55px; height:55px; opacity:0.95;">
         <path fill="#fff" d="M60 15 A28 28 0 1 0 60 85 A22 22 0 1 1 60 15 Z"/>
-        <circle cx="88" cy="12" r="1.6" fill="#fff"/>
-        <circle cx="78" cy="28" r="1.1" fill="#fff"/>
-        <circle cx="93" cy="32" r="1.3" fill="#fff"/>
-        <circle cx="70" cy="10" r="1" fill="#fff"/>
       </svg>
-      <!-- Mosque Silhouette (ডান নিচে) -->
-      <svg viewBox="0 0 300 110" preserveAspectRatio="xMaxYMax slice"
-           style="position:absolute; bottom:-2px; right:0; width:65%; height:75%; opacity:0.5;">
-        <path fill="#1a1033" d="M0,110 L0,85 L18,85 L18,68 L28,68 L28,50 Q28,32 46,32 Q64,32 64,50 L64,68 L76,68 L76,85 L104,85 L104,55 Q104,15 145,6 Q186,15 186,55 L186,85 L214,85 L214,68 L226,68 L226,50 Q226,32 244,32 Q262,32 262,50 L262,68 L274,68 L274,85 L300,85 L300,110 Z"/>
+      <circle cx="40" cy="30" r="1.4" fill="#fff"/>
+      <circle cx="230" cy="45" r="1.2" fill="#fff"/>
+      <circle cx="260" cy="70" r="1.6" fill="#fff"/>
+      <!-- Mountains -->
+      <svg viewBox="0 0 400 100" preserveAspectRatio="none" style="position:absolute; bottom:0; left:0; width:100%; height:35%; opacity:0.45;">
+        <path fill="#2a1650" d="M0,100 L40,55 L80,90 L130,40 L170,85 L220,50 L270,95 L320,45 L360,80 L400,60 L400,100 Z"/>
+      </svg>
+      <!-- Palm Trees (নিচে বামে) -->
+      <svg viewBox="0 0 100 100" style="position:absolute; bottom:0; left:0; width:80px; height:80px; opacity:0.85;">
+        <path fill="#1a1033" d="M15 100 L18 55 M18 55 Q5 45 2 35 M18 55 Q30 48 35 38 M18 55 Q10 40 20 30 M18 55 Q22 40 15 28"/>
+        <path fill="none" stroke="#1a1033" stroke-width="3" d="M15 100 L18 55"/>
+      </svg>
+      <!-- Mosque Silhouette (ডান নিচে, বড়) -->
+      <svg viewBox="0 0 300 130" preserveAspectRatio="xMaxYMax slice"
+           style="position:absolute; bottom:-4px; right:0; width:72%; height:65%; opacity:0.55;">
+        <path fill="#1a1033" d="M0,130 L0,100 L20,100 L20,80 L30,80 L30,60 Q30,40 48,40 Q66,40 66,60 L66,80 L78,80 L78,100 L106,100 L106,65 Q106,20 148,10 Q190,20 190,65 L190,100 L218,100 L218,80 L230,80 L230,60 Q230,40 248,40 Q266,40 266,60 L266,80 L278,80 L278,100 L300,100 L300,130 Z"/>
+        <circle cx="148" cy="5" r="3" fill="#1a1033"/>
       </svg>
     </div>
 
     <div class="topbar-content">
-      <div class="topbar-menu">
-        <button class="topbar-dots-btn" id="topDotsBtn">⋮</button>
-        <div class="topbar-dropdown" id="topDropdown">
-          <div id="shareAppBtn">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            Share App
+      <div class="top-toprow">
+        <div class="hamburger-wrap">
+          <button class="hamburger-btn" id="topDotsBtn">☰</button>
+          <div class="topbar-dropdown" id="topDropdown">
+            <div id="shareAppBtn">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              Share App
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="topbar-row">
-        <div>
-          <h1 id="appTitle">Stream<span class="accent">Feed</span></h1>
-          <div class="subtitle" id="appSubtitle">Stay Inspired, Stay Connected</div>
         </div>
         <div class="timer">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           <span id="sessionTimer">00:00</span>
         </div>
       </div>
+
+      <h1 id="appTitle">StreamFeed</h1>
+      <div class="subtitle" id="appSubtitle">Learn. Reflect. Grow.<br>In the light of Islam.</div>
+      <div class="divider-ornament"><div class="line"></div><div class="dot"></div><div class="line"></div></div>
     </div>
   </div>
 
-  <div class="pull-indicator" id="pullIndicator"><div class="spinner"></div></div>
+  <div class="section-panel">
+    <div class="section-scroll" id="sectionScroll"></div>
 
-  <div class="chip-bar">
-    <div class="chip active" onclick="showAllPosts()">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-      Your Feeds
-    </div>
-    <div class="chip" onclick="showHistory()">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
-      History
-    </div>
-    <div class="chip" onclick="showFavorites()">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.5z"/></svg>
-      Favorite
+    <div class="filter-row">
+      <div class="filter-item active" id="filterYourFeeds">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Your Feeds
+      </div>
+      <div class="filter-item" id="filterFavourite">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.5z"/></svg>
+        Favourite
+      </div>
+      <div class="filter-item" id="filterHistory">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+        History
+      </div>
     </div>
   </div>
 
@@ -190,67 +160,64 @@
     <div class="empty-msg">Loading posts...</div>
   </div>
 
-  <div class="bottom-nav" id="bottomNav">
-    <div class="nav-item active" id="navHomeItem">
-      <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-      <div class="nav-label">Home</div>
-    </div>
-    <div class="nav-item" data-section="Daily Hadith">
-      <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
-      <div class="nav-label">Daily Hadith</div>
-    </div>
-    <div class="nav-item" data-section="Lives of the Prophets">
-      <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v3"/><circle cx="12" cy="2.3" r="0.8" fill="currentColor" stroke="none"/><path d="M6 21v-6a6 6 0 0 1 12 0v6"/><line x1="4" y1="21" x2="20" y2="21"/></svg></div>
-      <div class="nav-label">Lives of the Prophets</div>
-    </div>
-    <div class="nav-item" data-section="Dua">
-      <div class="nav-icon-wrap"><span style="font-size:20px; line-height:1;">🤲</span></div>
-      <div class="nav-label">Dua</div>
-    </div>
-    <div class="nav-item" data-section="Life of the Sahabah">
-      <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-      <div class="nav-label">Life of the Sahabah</div>
-    </div>
-    <div class="nav-item" data-section="Bangla Caption">
-      <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
-      <div class="nav-label">Bangla Caption</div>
-    </div>
-    <div class="nav-item" data-section="Nasheed">
-      <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
-      <div class="nav-label">Nasheed</div>
-    </div>
-  </div>
-
 <script>
   window.addEventListener('pageshow', function(event) {
     if (event.persisted) window.location.reload();
   });
 
   const APP_NAME = "StreamFeed";
-  const APP_SUBTITLE = "Stay Inspired, Stay Connected";
-  // App পাবলিশ হওয়ার পর এখানে আসল Play Store Link বসাবি
   const APP_SHARE_LINK = "https://play.google.com/store/apps/details?id=com.yourname.streamfeed";
-  document.getElementById('appSubtitle').innerText = APP_SUBTITLE;
   document.title = APP_NAME;
 
   document.getElementById('topDotsBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     document.getElementById('topDropdown').classList.toggle('open');
   });
-  document.addEventListener('click', () => {
-    document.getElementById('topDropdown').classList.remove('open');
-  });
+  document.addEventListener('click', () => document.getElementById('topDropdown').classList.remove('open'));
   document.getElementById('shareAppBtn').addEventListener('click', () => {
-    if (navigator.share) {
-      navigator.share({ title: APP_NAME, text: 'Install ' + APP_NAME + ' App', url: APP_SHARE_LINK }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(APP_SHARE_LINK).then(() => alert('App link copied to clipboard!'));
-    }
+    if (navigator.share) navigator.share({ title: APP_NAME, text: 'Install ' + APP_NAME + ' App', url: APP_SHARE_LINK }).catch(() => {});
+    else navigator.clipboard.writeText(APP_SHARE_LINK).then(() => alert('App link copied to clipboard!'));
     document.getElementById('topDropdown').classList.remove('open');
   });
 
-  // Category (Folder of Playlists) হিসেবে ধরা হবে এই ৪টা Section কে
-  const CATEGORY_SECTIONS = ['Lives of the Prophets', 'Dua', 'Life of the Sahabah', 'Nasheed'];
+  // Category (একাধিক Playlist ধারণ করে) vs Flat (সরাসরি Playlist)
+  const CATEGORY_SECTIONS = ['Lives of the Prophets', 'Lives of the Sahabah', 'Dua', 'Nasheed'];
+  const FLAT_SECTIONS = ['Daily Hadith', '99 Names', 'Bangla Caption'];
+
+  // প্রতিটা Section এর Icon ও রঙ (ছবির মতো)
+  const SECTION_STYLES = {
+    'Daily Hadith': { bg:'#e9f5e8', color:'#2e7d32', svg:`<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>` },
+    'Lives of the Prophets': { bg:'#eeeafc', color:'#4a2a8d', svg:`<path d="M12 2v3"/><circle cx="12" cy="2.3" r="0.8" fill="currentColor" stroke="none"/><path d="M6 21v-6a6 6 0 0 1 12 0v6"/><line x1="4" y1="21" x2="20" y2="21"/>` },
+    'Lives of the Sahabah': { bg:'#fdf1e0', color:'#c9820a', svg:`<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>` },
+    'Dua': { bg:'#e8f0fb', color:'#1e56b3', emoji:'🤲' },
+    '99 Names': { bg:'#e3f6f2', color:'#0e8f7a', text:'الله' },
+    'Bangla Caption': { bg:'#fbeaf1', color:'#c22a72', svg:`<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>` },
+    'Nasheed': { bg:'#eaf4e6', color:'#4d8a2e', svg:`<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>` }
+  };
+  const SECTION_ORDER = ['Daily Hadith','Lives of the Prophets','Lives of the Sahabah','Dua','99 Names','Bangla Caption','Nasheed'];
+
+  const scrollBox = document.getElementById('sectionScroll');
+  SECTION_ORDER.forEach(name => {
+    const st = SECTION_STYLES[name];
+    let iconHtml;
+    if (st.emoji) {
+      iconHtml = `<span style="font-size:26px; line-height:1;">${st.emoji}</span>`;
+    } else if (st.text) {
+      iconHtml = `<span style="font-size:24px; font-weight:700; line-height:1; font-family:'Traditional Arabic','Noto Naskh Arabic',serif;">${st.text}</span>`;
+    } else {
+      iconHtml = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${st.svg}</svg>`;
+    }
+    const card = document.createElement('div');
+    card.className = 'section-card';
+    card.innerHTML = `
+      <div class="section-icon-box" style="background:${st.bg}; color:${st.color};">
+        ${iconHtml}
+      </div>
+      <div class="section-label">${name}</div>
+    `;
+    card.addEventListener('click', () => navSection(name));
+    scrollBox.appendChild(card);
+  });
 
   const firebaseConfig = {
     apiKey: "AIzaSyAJLBtnX05B7t8XGJljMJBHSW0OoWEM7xs",
@@ -272,11 +239,11 @@
   const CACHE_POSTS_KEY = 'cachedPostsData';
   const CACHE_PLAYLISTS_KEY = 'cachedPlaylistsData';
 
-  document.getElementById('navHomeItem').addEventListener('click', navHome);
-  document.querySelectorAll('.nav-item[data-section]').forEach(item => {
-    item.addEventListener('click', () => navSection(item, item.getAttribute('data-section')));
-  });
+  document.getElementById('filterYourFeeds').addEventListener('click', showAllPosts);
+  document.getElementById('filterFavourite').addEventListener('click', showFavorites);
+  document.getElementById('filterHistory').addEventListener('click', showHistory);
 
+  // ---- Session Timer ----
   let seconds = parseInt(sessionStorage.getItem('appTimerSeconds') || '0', 10);
   let timerInterval = null;
   function updateTimerDisplay() {
@@ -294,9 +261,7 @@
     }, 1000);
   }
   function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) stopTimer(); else startTimer();
-  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopTimer(); else startTimer(); });
   startTimer();
 
   function getFavorites() { return JSON.parse(localStorage.getItem('favoritePosts') || '[]'); }
@@ -309,9 +274,20 @@
     if (currentFilter.type === 'favorite') applyFilterState();
   }
 
+  function timeAgo(ms) {
+    if (!ms) return '';
+    const diff = Math.floor((Date.now() - ms) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff/60) + ' minutes ago';
+    if (diff < 86400) return Math.floor(diff/3600) + ' hours ago';
+    if (diff < 604800) return Math.floor(diff/86400) + ' days ago';
+    return Math.floor(diff/604800) + ' weeks ago';
+  }
+
   const heartIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.5z"/></svg>`;
-  const shareIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
-  const calIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+  const sendIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+  const globeIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20z"/></svg>`;
+  const avatarIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M9 21v-4a3 3 0 0 1 6 0v4"/><path d="M4 21v-3a8 8 0 0 1 16 0v3"/><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10z" fill="#fff" stroke="none" opacity="0"/><path fill="#fff" stroke="none" d="M12 3.5 A18 18 0 1 0 12 10.5 A14 14 0 1 1 12 3.5 Z"/></svg>`;
   const folderIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
 
   function renderPosts(posts) {
@@ -326,17 +302,25 @@
     posts.forEach(post => {
       const isFav = favs.includes(post.id);
       const hasLink = post.link && post.link.trim() !== '';
+      const pl = allPlaylists.find(p => p.id === post.playlistId);
+      const sectionName = pl ? pl.name : 'General';
       const card = document.createElement('div');
       card.className = 'post-card';
       const titleHtml = hasLink
         ? `<a class="post-link" href="view.html?url=${encodeURIComponent(post.link)}&title=${encodeURIComponent(post.customText)}&id=${post.id}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`
         : `<div class="post-link" style="cursor:default;">${post.customText}</div>`;
       card.innerHTML = `
-        <div class="post-time">${calIcon}${post.timeText || ''}</div>
+        <div class="post-header">
+          <div class="post-avatar">${avatarIcon}</div>
+          <div class="post-meta">
+            <div class="post-section-name">${sectionName}</div>
+            <div class="post-sub">${timeAgo(post.rawTime)} · ${globeIcon}</div>
+          </div>
+        </div>
         ${titleHtml}
         <div class="post-footer">
           <button class="action-btn fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${post.id}', this)">${heartIcon} Favorite</button>
-          <button class="action-btn" onclick="sharePost('${post.id}')">${shareIcon} Share</button>
+          <button class="action-btn" onclick="sharePost('${post.id}')">${sendIcon} Share</button>
         </div>
       `;
       feed.appendChild(card);
@@ -344,8 +328,7 @@
   }
 
   function renderSectionPlaylists(section) {
-    document.getElementById('sectionTitleBox').innerHTML =
-      `<div class="section-title">📁 ${section} — Choose a Playlist</div>`;
+    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title">📁 ${section} — Choose a Playlist</div>`;
     const feed = document.getElementById('feedContainer');
     const items = allPlaylists.filter(p => p.section === section);
     if (items.length === 0) {
@@ -357,65 +340,50 @@
       const card = document.createElement('div');
       card.className = 'playlist-folder';
       card.innerHTML = `${folderIcon} ${pl.name}`;
-      card.onclick = () => {
-        currentFilter = { type: 'playlistById', id: pl.id, parentSection: section };
-        applyFilterState();
-      };
+      card.onclick = () => { currentFilter = { type: 'playlistById', id: pl.id }; applyFilterState(); };
       feed.appendChild(card);
     });
   }
 
-  function applyFilterState() {
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    const chips = document.querySelectorAll('.chip');
+  function setFilterTabs(active) {
+    document.querySelectorAll('.filter-item').forEach(f => f.classList.remove('active'));
+    if (active) document.getElementById(active).classList.add('active');
+  }
 
+  function applyFilterState() {
     if (currentFilter.type === 'all') {
-      chips[0].classList.add('active');
+      setFilterTabs('filterYourFeeds');
       renderPosts(allPosts);
     } else if (currentFilter.type === 'history') {
-      chips[1].classList.add('active');
+      setFilterTabs('filterHistory');
       const ids = JSON.parse(localStorage.getItem('visitHistory') || '[]');
       renderPosts(ids.map(id => allPosts.find(p => p.id === id)).filter(p => p));
     } else if (currentFilter.type === 'favorite') {
-      chips[2].classList.add('active');
+      setFilterTabs('filterFavourite');
       const ids = getFavorites();
       renderPosts(ids.map(id => allPosts.find(p => p.id === id)).filter(p => p));
     } else if (currentFilter.type === 'playlist') {
+      setFilterTabs(null);
       const pl = allPlaylists.find(p => p.name === currentFilter.name);
       renderPosts(pl ? allPosts.filter(p => p.playlistId === pl.id) : []);
     } else if (currentFilter.type === 'playlistById') {
+      setFilterTabs(null);
       renderPosts(allPosts.filter(p => p.playlistId === currentFilter.id));
     } else if (currentFilter.type === 'sectionBrowse') {
+      setFilterTabs(null);
       renderSectionPlaylists(currentFilter.section);
     }
   }
 
-  function showAllPosts() { currentFilter = { type: 'all' }; setActiveNav('Home'); applyFilterState(); }
-  function showHistory() { currentFilter = { type: 'history' }; setActiveNav(null); applyFilterState(); }
-  function showFavorites() { currentFilter = { type: 'favorite' }; setActiveNav(null); applyFilterState(); }
+  function showAllPosts() { currentFilter = { type: 'all' }; applyFilterState(); }
+  function showHistory() { currentFilter = { type: 'history' }; applyFilterState(); }
+  function showFavorites() { currentFilter = { type: 'favorite' }; applyFilterState(); }
 
-  function navHome() {
-    currentFilter = { type: 'all' };
-    setActiveNav('Home');
+  function navSection(name) {
+    if (CATEGORY_SECTIONS.includes(name)) currentFilter = { type: 'sectionBrowse', section: name };
+    else currentFilter = { type: 'playlist', name: name };
     applyFilterState();
     window.scrollTo(0,0);
-  }
-
-  function navSection(el, name) {
-    setActiveNav(name, el);
-    if (CATEGORY_SECTIONS.includes(name)) {
-      currentFilter = { type: 'sectionBrowse', section: name };
-    } else {
-      currentFilter = { type: 'playlist', name: name };
-    }
-    applyFilterState();
-    window.scrollTo(0,0);
-  }
-
-  function setActiveNav(name, el) {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    if (el) { el.classList.add('active'); return; }
-    if (name === 'Home') document.getElementById('navHomeItem').classList.add('active');
   }
 
   function sharePost(postId) {
@@ -425,37 +393,6 @@
     if (navigator.share) navigator.share({ title: post.customText, url: shareUrl }).catch(() => {});
     else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
   }
-
-  let touchStartY = 0;
-  let pulling = false;
-  const pullIndicator = document.getElementById('pullIndicator');
-  const PULL_THRESHOLD = 70;
-
-  window.addEventListener('touchstart', (e) => {
-    if (window.scrollY === 0) { touchStartY = e.touches[0].clientY; pulling = true; }
-    else { pulling = false; }
-  }, { passive: true });
-
-  window.addEventListener('touchmove', (e) => {
-    if (!pulling) return;
-    const diff = e.touches[0].clientY - touchStartY;
-    if (diff > 0) {
-      const height = Math.min(diff * 0.5, PULL_THRESHOLD);
-      pullIndicator.style.height = height + 'px';
-    }
-  }, { passive: true });
-
-  window.addEventListener('touchend', () => {
-    if (!pulling) return;
-    const currentHeight = parseInt(pullIndicator.style.height || '0', 10);
-    pulling = false;
-    if (currentHeight >= PULL_THRESHOLD - 5) {
-      pullIndicator.style.height = '50px';
-      refreshData();
-    } else {
-      pullIndicator.style.height = '0px';
-    }
-  });
 
   function refreshData() {
     Promise.all([
@@ -467,7 +404,8 @@
         const d = doc.data();
         freshPosts.push({
           id: doc.id, customText: d.customText || 'Untitled Post',
-          link: d.link || '', playlistId: d.playlistId || '', timeText: d.timeText || ''
+          link: d.link || '', playlistId: d.playlistId || '',
+          timeText: d.timeText || '', rawTime: d.time ? d.time.toMillis() : null
         });
       });
       const freshPlaylists = [];
@@ -480,8 +418,6 @@
       localStorage.setItem(CACHE_POSTS_KEY, JSON.stringify(freshPosts));
       localStorage.setItem(CACHE_PLAYLISTS_KEY, JSON.stringify(freshPlaylists));
       applyFilterState();
-    }).finally(() => {
-      setTimeout(() => { pullIndicator.style.height = '0px'; }, 400);
     });
   }
 
@@ -494,14 +430,10 @@
 
   const sectionParam = new URLSearchParams(window.location.search).get('section');
   if (sectionParam) {
-    if (CATEGORY_SECTIONS.includes(sectionParam)) {
-      currentFilter = { type: 'sectionBrowse', section: sectionParam };
-    } else {
-      currentFilter = { type: 'playlist', name: sectionParam };
-    }
+    if (CATEGORY_SECTIONS.includes(sectionParam)) currentFilter = { type: 'sectionBrowse', section: sectionParam };
+    else currentFilter = { type: 'playlist', name: sectionParam };
   }
   applyFilterState();
-
   refreshData();
 </script>
 
