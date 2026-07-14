@@ -142,6 +142,28 @@
 
   const ADMIN_EMAIL = "mdmojahidhossain0134@gmail.com";
 
+  // ================================
+  // OneSignal Push Notification (তোর App ID ও REST API Key)
+  // ================================
+  const ONESIGNAL_APP_ID = "a56e019d-90c8-44a2-bc48-c9852d0f978c";
+  const ONESIGNAL_REST_KEY = "os_v2_app_uvxadhmqzbckfpcizgcs2d4xrrfw2vnzihqueyvjvujcu5xyj2i7jec6uuxrgo22wt5vtvwstpp2bq3e7h5lq2xlyef7noky2iiogca";
+
+  function sendPushNotification(title, message) {
+    fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': 'Basic ' + ONESIGNAL_REST_KEY
+      },
+      body: JSON.stringify({
+        app_id: ONESIGNAL_APP_ID,
+        included_segments: ['All'],
+        headings: { en: title },
+        contents: { en: message }
+      })
+    }).catch(err => console.log('Push notification error:', err));
+  }
+
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
@@ -300,7 +322,12 @@
       publishAt: firebase.firestore.Timestamp.fromDate(publishAt)
     }).then(() => {
       msg.className = 'msg ok';
-      msg.innerText = publishAt > now ? 'Post Scheduled ✅ (' + publishAt.toLocaleString() + ')' : 'Post created successfully ✅';
+      if (publishAt > now) {
+        msg.innerText = 'Post Scheduled ✅ (' + publishAt.toLocaleString() + ')';
+      } else {
+        msg.innerText = 'Post created successfully ✅';
+        sendPushNotification('New Post on StreamFeed', customText);
+      }
       document.getElementById('postLink').value = '';
       document.getElementById('postCustomText').value = '';
       document.getElementById('postPlaylist').value = '';
