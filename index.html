@@ -13,52 +13,76 @@
   body { background:#f4f5f7; }
   svg.icon { width:16px; height:16px; flex-shrink:0; }
 
-  /* ===== Header Scene ===== */
-  .topbar { position:relative; overflow:hidden; padding:18px 20px 48px;
-    background: linear-gradient(180deg, #2a1650 0%, #4a2a6d 30%, #8a5a8a 60%, #e0a06c 100%); }
-  .topbar-decor { position:absolute; inset:0; pointer-events:none; }
-  .topbar-content { position:relative; z-index:3; }
+  /* ===== Header (Image Background, 1280x563 Ratio) ===== */
+  .topbar { position:relative; overflow:hidden; aspect-ratio: 1280 / 563; width:100%;
+    padding:14px 18px; background:#2a1650; }
+  .topbar-bg-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
+  .topbar-overlay { position:absolute; inset:0; z-index:2;
+    background: linear-gradient(180deg, rgba(42,22,80,0.55) 0%, rgba(74,42,109,0.3) 55%, rgba(224,160,108,0.15) 100%); }
+  .topbar-content { position:relative; z-index:3; height:100%; display:flex; flex-direction:column; }
 
-  .top-toprow { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
-  .hamburger-wrap { position:relative; }
-  .hamburger-btn { background:rgba(255,255,255,0.18); border:none; color:#fff;
-    width:36px; height:36px; border-radius:10px; font-size:18px; }
+  .top-toprow { display:flex; justify-content:space-between; align-items:center; margin-bottom:auto; }
+  .top-left-btns { display:flex; gap:8px; }
+  .hamburger-wrap, .donate-wrap { position:relative; }
+  .hamburger-btn, .donate-btn { background:rgba(255,255,255,0.18); border:none; color:#fff;
+    width:36px; height:36px; border-radius:10px; font-size:18px; display:flex; align-items:center; justify-content:center; }
   .topbar-dropdown { display:none; position:absolute; top:42px; left:0;
     background:#fff; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.25);
     min-width:150px; z-index:50; overflow:hidden; }
   .topbar-dropdown.open { display:block; }
   .topbar-dropdown div { padding:12px 16px; font-size:14px; color:#3B0764; font-weight:700;
     display:flex; align-items:center; gap:8px; }
+
+  .top-right-info { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
   .timer { background:rgba(255,255,255,0.2); padding:7px 13px; border-radius:20px;
     font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px; color:#fff; }
+  .date-pill { background:rgba(255,255,255,0.12); padding:5px 11px; border-radius:14px;
+    font-size:11px; font-weight:600; color:#fff; }
 
-  .topbar h1 { font-size:34px; font-weight:800; color:#fff; line-height:1; }
-  .topbar .subtitle { font-size:14px; color:#efe6ff; margin-top:10px; line-height:1.5; }
-  .divider-ornament { display:flex; align-items:center; gap:6px; margin-top:12px; }
+  .topbar h1 { font-size:26px; font-weight:800; color:#fff; line-height:1; }
+  .topbar .subtitle { font-size:12px; color:#efe6ff; margin-top:6px; line-height:1.4; }
+  .divider-ornament { display:flex; align-items:center; gap:6px; margin-top:8px; }
   .divider-ornament .line { height:1px; width:36px; background:#d9b878; }
   .divider-ornament .dot { width:5px; height:5px; border-radius:50%; background:#d9b878; }
 
+  /* ===== Modals (Date / Donate / More Sections) ===== */
+  .modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:300;
+    align-items:flex-end; justify-content:center; }
+  .modal-backdrop.open { display:flex; }
+  .modal-sheet { background:#fff; width:100%; max-width:480px; border-radius:20px 20px 0 0;
+    padding:20px; max-height:80vh; overflow-y:auto; }
+  .modal-title { font-size:17px; font-weight:800; color:#1a1a2e; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; }
+  .modal-close { background:#f1eefc; border:none; width:30px; height:30px; border-radius:50%; font-size:16px; color:#5b21b6; }
+  .date-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #f0f0f0; }
+  .date-row:last-child { border-bottom:none; }
+  .date-row .label { font-size:13px; color:#888; font-weight:600; }
+  .date-row .value { font-size:15px; color:#1a1a2e; font-weight:700; }
+  .donate-method { padding:14px; background:#f9f6ff; border-radius:12px; margin-bottom:10px; }
+  .donate-method .name { font-size:14px; font-weight:800; color:#5b21b6; margin-bottom:4px; }
+  .donate-method .num-row { display:flex; justify-content:space-between; align-items:center; }
+  .donate-method .num { font-size:16px; font-weight:700; color:#1a1a2e; }
+  .copy-btn { background:#6D28D9; color:#fff; border:none; padding:6px 12px; border-radius:10px; font-size:12px; font-weight:700; }
+  .more-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .more-item { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
+  .more-item .icon-box { width:54px; height:54px; border-radius:14px; display:flex; align-items:center; justify-content:center; }
+  .more-item .icon-box svg { width:24px; height:24px; }
+  .more-item .lbl { font-size:10.5px; font-weight:700; color:#333; text-align:center; line-height:1.2; }
+
   /* ===== Pull to Refresh ===== */
-  .pull-indicator {
-    display:flex; align-items:center; justify-content:center;
-    height:0; overflow:hidden; transition:height 0.15s ease; background:#fff;
-  }
-  .pull-indicator .spinner {
-    width:22px; height:22px; border:3px solid #e0d6f7; border-top-color:#6D28D9;
-    border-radius:50%; animation:spin 0.7s linear infinite;
-  }
+  .pull-indicator { display:flex; align-items:center; justify-content:center; height:0; overflow:hidden;
+    transition:height 0.15s ease; background:#fff; }
+  .pull-indicator .spinner { width:22px; height:22px; border:3px solid #e0d6f7; border-top-color:#6D28D9;
+    border-radius:50%; animation:spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ===== Section Cards ===== */
   .section-panel { position:relative; z-index:3; background:#fff; margin-top:14px;
     border-radius:22px 22px 0 0; padding:18px 14px 6px; }
-  .section-scroll { display:flex; gap:10px; overflow-x:auto; padding-bottom:8px; }
-  .section-card { flex-shrink:0; width:78px; display:flex; flex-direction:column;
-    align-items:center; gap:8px; cursor:pointer; }
-  .section-icon-box { width:60px; height:60px; border-radius:16px; display:flex;
-    align-items:center; justify-content:center; }
-  .section-icon-box svg { width:28px; height:28px; }
-  .section-label { font-size:11.5px; font-weight:700; color:#333; text-align:center; line-height:1.2; }
+  .section-scroll { display:flex; gap:10px; justify-content:space-between; }
+  .section-card { flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; min-width:0; }
+  .section-icon-box { width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; }
+  .section-icon-box svg { width:26px; height:26px; }
+  .section-label { font-size:10.5px; font-weight:700; color:#333; text-align:center; line-height:1.2; }
 
   /* ===== Filter Row ===== */
   .filter-row { display:flex; background:#f4f2fb; border-radius:16px; margin:14px 0 4px; padding:5px; }
@@ -96,13 +120,11 @@
     display:flex; align-items:center; gap:8px; }
 
   /* ===== Scroll to Top Button ===== */
-  .scroll-top-btn {
-    position:fixed; bottom:20px; right:20px; z-index:150;
+  .scroll-top-btn { position:fixed; bottom:20px; right:20px; z-index:150;
     width:44px; height:44px; border-radius:50%; border:none;
     background:#6D28D9; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.25);
     display:none; align-items:center; justify-content:center;
-    opacity:0; transform:translateY(10px); transition:opacity 0.2s, transform 0.2s;
-  }
+    opacity:0; transform:translateY(10px); transition:opacity 0.2s, transform 0.2s; }
   .scroll-top-btn.visible { display:flex; opacity:1; transform:translateY(0); }
   .scroll-top-btn svg { width:22px; height:22px; }
 </style>
@@ -110,46 +132,80 @@
 <body>
 
   <div class="topbar">
-    <div class="topbar-decor">
-      <svg viewBox="0 0 100 100" style="position:absolute; top:60px; right:110px; width:55px; height:55px; opacity:0.95;">
-        <path fill="#fff" d="M60 15 A28 28 0 1 0 60 85 A22 22 0 1 1 60 15 Z"/>
-      </svg>
-      <circle cx="40" cy="30" r="1.4" fill="#fff"/>
-      <circle cx="230" cy="45" r="1.2" fill="#fff"/>
-      <circle cx="260" cy="70" r="1.6" fill="#fff"/>
-      <svg viewBox="0 0 400 100" preserveAspectRatio="none" style="position:absolute; bottom:0; left:0; width:100%; height:35%; opacity:0.45;">
-        <path fill="#2a1650" d="M0,100 L40,55 L80,90 L130,40 L170,85 L220,50 L270,95 L320,45 L360,80 L400,60 L400,100 Z"/>
-      </svg>
-      <svg viewBox="0 0 100 100" style="position:absolute; bottom:0; left:0; width:80px; height:80px; opacity:0.85;">
-        <path fill="none" stroke="#1a1033" stroke-width="3" d="M15 100 L18 55 M18 55 Q5 45 2 35 M18 55 Q30 48 35 38 M18 55 Q10 40 20 30 M18 55 Q22 40 15 28"/>
-      </svg>
-      <svg viewBox="0 0 300 130" preserveAspectRatio="xMaxYMax slice"
-           style="position:absolute; bottom:-4px; right:0; width:72%; height:65%; opacity:0.55;">
-        <path fill="#1a1033" d="M0,130 L0,100 L20,100 L20,80 L30,80 L30,60 Q30,40 48,40 Q66,40 66,60 L66,80 L78,80 L78,100 L106,100 L106,65 Q106,20 148,10 Q190,20 190,65 L190,100 L218,100 L218,80 L230,80 L230,60 Q230,40 248,40 Q266,40 266,60 L266,80 L278,80 L278,100 L300,100 L300,130 Z"/>
-        <circle cx="148" cy="5" r="3" fill="#1a1033"/>
-      </svg>
-    </div>
+    <!-- ================================
+    Image Background: এখানে তোর Upload করা banner-bg.jpg ফাইলটা লোড হবে (Size: 1280x563)
+    ফাইলের নাম ঠিক এভাবেই Repository এর মূল ফোল্ডারে বসাবি।
+    ================================ -->
+    <img class="topbar-bg-img" src="banner-bg.jpg" alt="">
+    <div class="topbar-overlay"></div>
 
     <div class="topbar-content">
       <div class="top-toprow">
-        <div class="hamburger-wrap">
-          <button class="hamburger-btn" id="topDotsBtn">☰</button>
-          <div class="topbar-dropdown" id="topDropdown">
-            <div id="shareAppBtn">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-              Share App
+        <div class="top-left-btns">
+          <div class="hamburger-wrap">
+            <button class="hamburger-btn" id="topDotsBtn">☰</button>
+            <div class="topbar-dropdown" id="topDropdown">
+              <div id="shareAppBtn">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Share App
+              </div>
             </div>
           </div>
+          <div class="donate-wrap">
+            <button class="donate-btn" id="donateBtn">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.5z"/></svg>
+            </button>
+          </div>
         </div>
-        <div class="timer">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span id="sessionTimer">00:00</span>
+        <div class="top-right-info">
+          <div class="timer">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span id="sessionTimer">00:00</span>
+          </div>
+          <div class="date-pill" id="dateBtn">Loading date...</div>
         </div>
       </div>
 
       <h1 id="appTitle">StreamFeed</h1>
       <div class="subtitle" id="appSubtitle">Learn. Reflect. Grow.<br>In the light of Islam.</div>
       <div class="divider-ornament"><div class="line"></div><div class="dot"></div><div class="line"></div></div>
+    </div>
+  </div>
+
+  <!-- Date Modal -->
+  <div class="modal-backdrop" id="dateModal">
+    <div class="modal-sheet">
+      <div class="modal-title">📅 Today's Date <button class="modal-close" id="dateModalClose">✕</button></div>
+      <div class="date-row"><div class="label">English</div><div class="value" id="dateEnglish">-</div></div>
+      <div class="date-row"><div class="label">Arabic (Hijri)</div><div class="value" id="dateArabic">-</div></div>
+      <div class="date-row"><div class="label">বাংলা</div><div class="value" id="dateBangla">-</div></div>
+    </div>
+  </div>
+
+  <!-- Donate Modal -->
+  <div class="modal-backdrop" id="donateModal">
+    <div class="modal-sheet">
+      <div class="modal-title">💜 Support Us <button class="modal-close" id="donateModalClose">✕</button></div>
+      <div class="donate-method">
+        <div class="name">bKash (Personal)</div>
+        <div class="num-row"><div class="num">+8801342059227</div><button class="copy-btn" onclick="copyNumber()">Copy</button></div>
+      </div>
+      <div class="donate-method">
+        <div class="name">Rocket (Personal)</div>
+        <div class="num-row"><div class="num">+8801342059227</div><button class="copy-btn" onclick="copyNumber()">Copy</button></div>
+      </div>
+      <div class="donate-method">
+        <div class="name">Nagad (Personal)</div>
+        <div class="num-row"><div class="num">+8801342059227</div><button class="copy-btn" onclick="copyNumber()">Copy</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- More Sections Modal -->
+  <div class="modal-backdrop" id="moreModal">
+    <div class="modal-sheet">
+      <div class="modal-title">All Sections <button class="modal-close" id="moreModalClose">✕</button></div>
+      <div class="more-grid" id="moreGrid"></div>
     </div>
   </div>
 
@@ -184,9 +240,7 @@
   </button>
 
 <script>
-  window.addEventListener('pageshow', function(event) {
-    if (event.persisted) window.location.reload();
-  });
+  window.addEventListener('pageshow', function(event) { if (event.persisted) window.location.reload(); });
 
   const APP_NAME = "StreamFeed";
   const APP_SHARE_LINK = "https://play.google.com/store/apps/details?id=com.yourname.streamfeed";
@@ -203,7 +257,50 @@
     document.getElementById('topDropdown').classList.remove('open');
   });
 
-  const CATEGORY_SECTIONS = ['Lives of the Prophets', 'Lives of the Sahabah', 'Dua', 'Nasheed'];
+  document.getElementById('donateBtn').addEventListener('click', () => document.getElementById('donateModal').classList.add('open'));
+  document.getElementById('donateModalClose').addEventListener('click', () => document.getElementById('donateModal').classList.remove('open'));
+  function copyNumber() { navigator.clipboard.writeText('+8801342059227').then(() => alert('Number copied!')); }
+
+  const banglaMonths = ['বৈশাখ','জ্যৈষ্ঠ','আষাঢ়','শ্রাবণ','ভাদ্র','আশ্বিন','কার্তিক','অগ্রহায়ণ','পৌষ','মাঘ','ফাল্গুন','চৈত্র'];
+  const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  function toBnNumber(num) { return String(num).split('').map(d => bnDigits[d] || d).join(''); }
+  function getBanglaDate(date) {
+    const y = date.getFullYear();
+    const thisNewYear = new Date(y, 3, 14);
+    let startYear, banglaYear;
+    if (date >= thisNewYear) { startYear = y; banglaYear = y - 593; }
+    else { startYear = y - 1; banglaYear = y - 594; }
+    const newYearDate = new Date(startYear, 3, 14);
+    const diffDays = Math.floor((date - newYearDate) / 86400000);
+    const febYear = startYear + 1;
+    const isLeap = (febYear % 4 === 0 && febYear % 100 !== 0) || (febYear % 400 === 0);
+    const monthLengths = [31,31,31,31,31,30,30,30,30,30, isLeap ? 31 : 30, 30];
+    let remaining = diffDays, monthIndex = 0;
+    for (let i = 0; i < monthLengths.length; i++) {
+      if (remaining < monthLengths[i]) { monthIndex = i; break; }
+      remaining -= monthLengths[i]; monthIndex = i + 1;
+    }
+    const banglaDay = remaining + 1;
+    return toBnNumber(banglaDay) + ' ' + (banglaMonths[monthIndex] || banglaMonths[11]) + ', ' + toBnNumber(banglaYear);
+  }
+  function updateDateDisplays() {
+    const now = new Date();
+    const englishStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+    document.getElementById('dateBtn').innerText = englishStr;
+    document.getElementById('dateEnglish').innerText = englishStr;
+    try {
+      const hijri = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', { day:'numeric', month:'long', year:'numeric' }).format(now);
+      document.getElementById('dateArabic').innerText = hijri;
+    } catch (e) { document.getElementById('dateArabic').innerText = 'Not supported on this device'; }
+    document.getElementById('dateBangla').innerText = getBanglaDate(now);
+  }
+  updateDateDisplays();
+  setInterval(updateDateDisplays, 60000);
+  document.getElementById('dateBtn').addEventListener('click', () => document.getElementById('dateModal').classList.add('open'));
+  document.getElementById('dateModalClose').addEventListener('click', () => document.getElementById('dateModal').classList.remove('open'));
+  document.getElementById('moreModalClose').addEventListener('click', () => document.getElementById('moreModal').classList.remove('open'));
+
+  const CATEGORY_SECTIONS = ['Lives of the Prophets', 'Lives of the Sahabah', 'Dua', 'মাসআলা', 'প্রচলিত ভুল', 'মাসনুন আমল', 'কুরআনের শিক্ষা', 'Nasheed'];
 
   const SECTION_STYLES = {
     'Daily Hadith': { bg:'#e9f5e8', color:'#2e7d32', svg:`<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>` },
@@ -211,26 +308,53 @@
     'Lives of the Sahabah': { bg:'#fdf1e0', color:'#c9820a', svg:`<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>` },
     'Dua': { bg:'#e8f0fb', color:'#1e56b3', emoji:'🤲' },
     '99 Names': { bg:'#e3f6f2', color:'#0e8f7a', text:'الله' },
+    'Tasbih': { bg:'#f5ebe0', color:'#8a5a2e', svg:`<circle cx="12" cy="4" r="1.6"/><circle cx="18.5" cy="7.5" r="1.6"/><circle cx="20.5" cy="14" r="1.6"/><circle cx="17" cy="19.5" r="1.6"/><circle cx="10.5" cy="21" r="1.6"/><circle cx="5" cy="17" r="1.6"/><circle cx="3.5" cy="10.5" r="1.6"/><circle cx="7" cy="4.5" r="1.6"/>` },
+    'মাসআলা': { bg:'#e3f2f8', color:'#0e6e8f', svg:`<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>` },
+    'প্রচলিত ভুল': { bg:'#fdeaea', color:'#c0392b', svg:`<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>` },
+    'মাসনুন আমল': { bg:'#eafaf0', color:'#1e8a5f', svg:`<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7"/><path d="M9 11h7"/>` },
+    'কুরআনের শিক্ষা': { bg:'#fbf3e2', color:'#a8790a', svg:`<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>` },
     'Bangla Caption': { bg:'#fbeaf1', color:'#c22a72', svg:`<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>` },
+    'Islamic Caption Images': { bg:'#fef0e6', color:'#c4650f', svg:`<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>` },
     'Nasheed': { bg:'#eaf4e6', color:'#4d8a2e', svg:`<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>` }
   };
-  const SECTION_ORDER = ['Daily Hadith','Lives of the Prophets','Lives of the Sahabah','Dua','99 Names','Bangla Caption','Nasheed'];
+  const SECTION_ORDER = ['Daily Hadith','Lives of the Prophets','Lives of the Sahabah','Dua','99 Names','Tasbih','মাসআলা','প্রচলিত ভুল','মাসনুন আমল','কুরআনের শিক্ষা','Bangla Caption','Islamic Caption Images','Nasheed'];
+  const MORE_ICON = { bg:'#efeef2', color:'#555', svg:`<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>` };
+
+  function buildIconHtml(st) {
+    if (st.emoji) return `<span style="font-size:24px; line-height:1;">${st.emoji}</span>`;
+    if (st.text) return `<span style="font-size:22px; font-weight:700; line-height:1; font-family:'Traditional Arabic','Noto Naskh Arabic',serif;">${st.text}</span>`;
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${st.svg}</svg>`;
+  }
+
+  function handleSectionClick(name) {
+    if (name === 'Tasbih') { window.location.href = 'tasbih.html' + (APP_MODE ? '?app=1' : ''); return; }
+    navSection(name);
+  }
 
   const scrollBox = document.getElementById('sectionScroll');
-  SECTION_ORDER.forEach(name => {
+  const firstFour = SECTION_ORDER.slice(0, 4);
+  firstFour.forEach(name => {
     const st = SECTION_STYLES[name];
-    let iconHtml;
-    if (st.emoji) iconHtml = `<span style="font-size:26px; line-height:1;">${st.emoji}</span>`;
-    else if (st.text) iconHtml = `<span style="font-size:24px; font-weight:700; line-height:1; font-family:'Traditional Arabic','Noto Naskh Arabic',serif;">${st.text}</span>`;
-    else iconHtml = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${st.svg}</svg>`;
     const card = document.createElement('div');
     card.className = 'section-card';
-    card.innerHTML = `
-      <div class="section-icon-box" style="background:${st.bg}; color:${st.color};">${iconHtml}</div>
-      <div class="section-label">${name}</div>
-    `;
-    card.addEventListener('click', () => navSection(name));
+    card.innerHTML = `<div class="section-icon-box" style="background:${st.bg}; color:${st.color};">${buildIconHtml(st)}</div><div class="section-label">${name}</div>`;
+    card.addEventListener('click', () => handleSectionClick(name));
     scrollBox.appendChild(card);
+  });
+  const moreCard = document.createElement('div');
+  moreCard.className = 'section-card';
+  moreCard.innerHTML = `<div class="section-icon-box" style="background:${MORE_ICON.bg}; color:${MORE_ICON.color};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${MORE_ICON.svg}</svg></div><div class="section-label">More</div>`;
+  moreCard.addEventListener('click', () => document.getElementById('moreModal').classList.add('open'));
+  scrollBox.appendChild(moreCard);
+
+  const moreGrid = document.getElementById('moreGrid');
+  SECTION_ORDER.forEach(name => {
+    const st = SECTION_STYLES[name];
+    const item = document.createElement('div');
+    item.className = 'more-item';
+    item.innerHTML = `<div class="icon-box" style="background:${st.bg}; color:${st.color};">${buildIconHtml(st)}</div><div class="lbl">${name}</div>`;
+    item.addEventListener('click', () => { document.getElementById('moreModal').classList.remove('open'); handleSectionClick(name); });
+    moreGrid.appendChild(item);
   });
 
   const firebaseConfig = {
@@ -257,7 +381,6 @@
   document.getElementById('filterFavourite').addEventListener('click', showFavorites);
   document.getElementById('filterHistory').addEventListener('click', showHistory);
 
-  // ---- Session Timer ----
   let seconds = parseInt(sessionStorage.getItem('appTimerSeconds') || '0', 10);
   let timerInterval = null;
   function updateTimerDisplay() {
@@ -268,21 +391,15 @@
   updateTimerDisplay();
   function startTimer() {
     if (timerInterval) return;
-    timerInterval = setInterval(() => {
-      seconds++;
-      sessionStorage.setItem('appTimerSeconds', seconds);
-      updateTimerDisplay();
-    }, 1000);
+    timerInterval = setInterval(() => { seconds++; sessionStorage.setItem('appTimerSeconds', seconds); updateTimerDisplay(); }, 1000);
   }
   function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopTimer(); else startTimer(); });
   startTimer();
 
-  // ---- Scroll to Top Button ----
   const scrollTopBtn = document.getElementById('scrollTopBtn');
   window.addEventListener('scroll', () => {
-    if (window.scrollY > 400) scrollTopBtn.classList.add('visible');
-    else scrollTopBtn.classList.remove('visible');
+    if (window.scrollY > 400) scrollTopBtn.classList.add('visible'); else scrollTopBtn.classList.remove('visible');
   });
   scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
@@ -309,6 +426,7 @@
   const heartIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.5z"/></svg>`;
   const sendIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
   const copyIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+  const downloadIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
   const globeIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20z"/></svg>`;
   const avatarIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path fill="#fff" stroke="none" d="M12 3.5 A18 18 0 1 0 12 10.5 A14 14 0 1 1 12 3.5 Z"/></svg>`;
   const folderIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
@@ -319,13 +437,17 @@
     navigator.clipboard.writeText(post.customText).then(() => alert('Text copied to clipboard!'));
   }
 
+  function downloadImage(id) {
+    const post = allPosts.find(p => p.id === id);
+    if (!post || !post.link) return;
+    if (APP_MODE && window.Kodular) window.Kodular.setWebViewString('DOWNLOAD_IMAGE:' + post.link);
+    else window.open(post.link, '_blank');
+  }
+
   function renderPosts(posts) {
     document.getElementById('sectionTitleBox').innerHTML = '';
     const feed = document.getElementById('feedContainer');
-    if (posts.length === 0) {
-      feed.innerHTML = '<div class="empty-msg">No posts yet</div>';
-      return;
-    }
+    if (posts.length === 0) { feed.innerHTML = '<div class="empty-msg">No posts yet</div>'; return; }
     const favs = getFavorites();
     feed.innerHTML = "";
     posts.forEach(post => {
@@ -338,9 +460,8 @@
       const titleHtml = hasLink
         ? `<a class="post-link" href="view.html?url=${encodeURIComponent(post.link)}&title=${encodeURIComponent(post.customText)}&id=${post.id}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`
         : `<div class="post-link" style="cursor:default;">${post.customText}</div>`;
-      const copyBtnHtml = sectionName === 'Bangla Caption'
-        ? `<button class="action-btn" onclick="copyPostText('${post.id}')">${copyIcon} Copy</button>`
-        : '';
+      const copyBtnHtml = sectionName === 'Bangla Caption' ? `<button class="action-btn" onclick="copyPostText('${post.id}')">${copyIcon} Copy</button>` : '';
+      const downloadBtnHtml = sectionName === 'Islamic Caption Images' ? `<button class="action-btn" onclick="downloadImage('${post.id}')">${downloadIcon} Download Image</button>` : '';
       card.innerHTML = `
         <div class="post-header">
           <div class="post-avatar">${avatarIcon}</div>
@@ -354,6 +475,7 @@
           <button class="action-btn fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${post.id}', this)">${heartIcon} Favorite</button>
           <button class="action-btn" onclick="sharePost('${post.id}')">${sendIcon} Share</button>
           ${copyBtnHtml}
+          ${downloadBtnHtml}
         </div>
       `;
       feed.appendChild(card);
@@ -364,10 +486,7 @@
     document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title">📁 ${section} — Choose a Playlist</div>`;
     const feed = document.getElementById('feedContainer');
     const items = allPlaylists.filter(p => p.section === section);
-    if (items.length === 0) {
-      feed.innerHTML = '<div class="empty-msg">No playlists added in this section yet</div>';
-      return;
-    }
+    if (items.length === 0) { feed.innerHTML = '<div class="empty-msg">No playlists added in this section yet</div>'; return; }
     feed.innerHTML = '';
     items.forEach(pl => {
       const card = document.createElement('div');
@@ -384,10 +503,8 @@
   }
 
   function applyFilterState() {
-    if (currentFilter.type === 'all') {
-      setFilterTabs('filterYourFeeds');
-      renderPosts(allPosts);
-    } else if (currentFilter.type === 'history') {
+    if (currentFilter.type === 'all') { setFilterTabs('filterYourFeeds'); renderPosts(allPosts); }
+    else if (currentFilter.type === 'history') {
       setFilterTabs('filterHistory');
       const ids = JSON.parse(localStorage.getItem('visitHistory') || '[]');
       renderPosts(ids.map(id => allPosts.find(p => p.id === id)).filter(p => p));
@@ -427,9 +544,8 @@
     else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
   }
 
-  // ---- Post Scheduling: শুধু যেই Post এর সময় হয়ে গেছে সেগুলোই দেখানো ----
   function isVisibleNow(post) {
-    if (!post.rawPublishAt) return true; // পুরনো Post (Schedule ছাড়া) সবসময় দেখাবে
+    if (!post.rawPublishAt) return true;
     return post.rawPublishAt <= Date.now();
   }
 
@@ -448,8 +564,7 @@
           rawPublishAt: d.publishAt ? d.publishAt.toMillis() : null
         });
       });
-      freshPosts = freshPosts.filter(isVisibleNow)
-        .sort((a,b) => (b.rawPublishAt || b.rawTime || 0) - (a.rawPublishAt || a.rawTime || 0));
+      freshPosts = freshPosts.filter(isVisibleNow).sort((a,b) => (b.rawPublishAt || b.rawTime || 0) - (a.rawPublishAt || a.rawTime || 0));
 
       const freshPlaylists = [];
       plSnap.forEach(doc => {
@@ -480,36 +595,23 @@
   }
   applyFilterState();
 
-  // ---- Pull to Refresh ----
-  let touchStartY = 0;
-  let pulling = false;
+  let touchStartY = 0, pulling = false;
   const pullIndicator = document.getElementById('pullIndicator');
   const PULL_THRESHOLD = 70;
-
   window.addEventListener('touchstart', (e) => {
-    if (window.scrollY === 0) { touchStartY = e.touches[0].clientY; pulling = true; }
-    else { pulling = false; }
+    if (window.scrollY === 0) { touchStartY = e.touches[0].clientY; pulling = true; } else { pulling = false; }
   }, { passive: true });
-
   window.addEventListener('touchmove', (e) => {
     if (!pulling) return;
     const diff = e.touches[0].clientY - touchStartY;
-    if (diff > 0) {
-      const height = Math.min(diff * 0.5, PULL_THRESHOLD);
-      pullIndicator.style.height = height + 'px';
-    }
+    if (diff > 0) pullIndicator.style.height = Math.min(diff * 0.5, PULL_THRESHOLD) + 'px';
   }, { passive: true });
-
   window.addEventListener('touchend', () => {
     if (!pulling) return;
     const currentHeight = parseInt(pullIndicator.style.height || '0', 10);
     pulling = false;
-    if (currentHeight >= PULL_THRESHOLD - 5) {
-      pullIndicator.style.height = '50px';
-      refreshData();
-    } else {
-      pullIndicator.style.height = '0px';
-    }
+    if (currentHeight >= PULL_THRESHOLD - 5) { pullIndicator.style.height = '50px'; refreshData(); }
+    else pullIndicator.style.height = '0px';
   });
 
   refreshData();
