@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Tasbih Counter</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+  html, body { height:100%; overflow:hidden; }
+  body { background: linear-gradient(180deg,#2a1650,#4a2a6d); display:flex; flex-direction:column; }
+
+  .topbar { padding:14px 16px; display:flex; align-items:center; gap:12px; flex-shrink:0; }
+  .back-btn { background:rgba(255,255,255,0.15); border:none; color:#fff;
+    width:34px; height:34px; border-radius:50%; font-size:18px; display:flex; align-items:center; justify-content:center; }
+  .page-title { color:#fff; font-size:16px; font-weight:700; }
+
+  .counter-display { text-align:center; padding:20px 0 10px; flex-shrink:0; }
+  .counter-number { font-size:72px; font-weight:800; color:#fff; line-height:1; transition:transform 0.1s; }
+  .counter-number.bump { transform:scale(1.15); }
+  .counter-label { color:#d9c9f7; font-size:14px; margin-top:8px; }
+
+  .tap-area { flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; user-select:none; }
+  .hand-icon { width:140px; height:140px; opacity:0.95; transition:transform 0.1s; }
+  .hand-icon.bump { transform:scale(0.85); }
+  .tap-hint { color:#efe6ff; font-size:14px; opacity:0.8; }
+
+  .bottom-bar { padding:20px; flex-shrink:0; }
+  .reset-btn { width:100%; background:rgba(255,255,255,0.15); color:#fff; border:none;
+    padding:14px; border-radius:16px; font-size:15px; font-weight:700; }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <button class="back-btn" id="backBtn">←</button>
+    <div class="page-title">তাসবিহ (Tasbih Counter)</div>
+  </div>
+
+  <div class="counter-display">
+    <div class="counter-number" id="counterNum">0</div>
+    <div class="counter-label">Total Count</div>
+  </div>
+
+  <div class="tap-area" id="tapArea">
+    <svg class="hand-icon" id="handIcon" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+      <path d="M9 11.5V6a1.5 1.5 0 0 1 3 0v5"/>
+      <path d="M12 11.5V4.5a1.5 1.5 0 0 1 3 0v7"/>
+      <path d="M15 11.5V6a1.5 1.5 0 0 1 3 0v8c0 4-2.5 7-6.5 7S3 18 3 15v-2.5a1.5 1.5 0 0 1 3 0V14"/>
+      <path d="M9 11.5a1.5 1.5 0 0 0-3 0V13"/>
+    </svg>
+    <div class="tap-hint">Tap anywhere below to count</div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="reset-btn" id="resetBtn">Reset Counter</button>
+  </div>
+
+<script>
+  window.addEventListener('pageshow', function(event) { if (event.persisted) window.location.reload(); });
+
+  const params = new URLSearchParams(window.location.search);
+  const APP_MODE = params.get('app') === '1';
+
+  let count = parseInt(localStorage.getItem('tasbihCount') || '0', 10);
+  const counterNum = document.getElementById('counterNum');
+  const handIcon = document.getElementById('handIcon');
+  counterNum.innerText = count;
+
+  document.getElementById('tapArea').addEventListener('click', () => {
+    count++;
+    localStorage.setItem('tasbihCount', count);
+    counterNum.innerText = count;
+    counterNum.classList.add('bump');
+    handIcon.classList.add('bump');
+    setTimeout(() => { counterNum.classList.remove('bump'); handIcon.classList.remove('bump'); }, 100);
+    if (navigator.vibrate) navigator.vibrate(15);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (confirm('Counter reset করতে চাও?')) {
+      count = 0;
+      localStorage.setItem('tasbihCount', 0);
+      counterNum.innerText = 0;
+    }
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    window.location.href = 'index.html' + (APP_MODE ? '?app=1' : '');
+  });
+</script>
+
+</body>
+</html>
