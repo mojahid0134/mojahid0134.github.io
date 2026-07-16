@@ -311,6 +311,7 @@
 
   const SECTION_STYLES = {
     'Daily Hadith': { bg:'#e9f5e8', color:'#2e7d32', svg:`<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>` },
+    'Al Hadith': { bg:'#fdf3e7', color:'#a8630a', svg:`<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>` },
     'Lives of the Prophets': { bg:'#eeeafc', color:'#4a2a8d', svg:`<path d="M12 2v3"/><circle cx="12" cy="2.3" r="0.8" fill="currentColor" stroke="none"/><path d="M6 21v-6a6 6 0 0 1 12 0v6"/><line x1="4" y1="21" x2="20" y2="21"/>` },
     'Lives of the Sahabah': { bg:'#fdf1e0', color:'#c9820a', svg:`<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>` },
     'Dua': { bg:'#e8f0fb', color:'#1e56b3', emoji:'🤲' },
@@ -323,7 +324,7 @@
     'Bangla Caption': { bg:'#fbeaf1', color:'#c22a72', svg:`<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>` },
     'Nasheed': { bg:'#eaf4e6', color:'#4d8a2e', svg:`<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>` }
   };
-  const SECTION_ORDER = ['Daily Hadith','Lives of the Prophets','Lives of the Sahabah','Dua','99 Names','Tasbih','মাসআলা','প্রচলিত ভুল','মাসনুন আমল','কুরআনের শিক্ষা','Bangla Caption','Nasheed'];
+  const SECTION_ORDER = ['Daily Hadith','Al Hadith','Lives of the Prophets','Lives of the Sahabah','Dua','99 Names','Tasbih','মাসআলা','প্রচলিত ভুল','মাসনুন আমল','কুরআনের শিক্ষা','Bangla Caption','Nasheed'];
   const MORE_ICON = { bg:'#efeef2', color:'#555', svg:`<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>` };
 
   function buildIconHtml(st) {
@@ -334,6 +335,7 @@
 
   function handleSectionClick(name) {
     if (name === 'Tasbih') { window.location.href = 'tasbih.html' + (APP_MODE ? '?app=1' : ''); return; }
+    if (name === 'Al Hadith') { currentFilter = { type: 'hadithGroups' }; applyFilterState(); window.scrollTo(0,0); return; }
     navSection(name);
   }
 
@@ -377,6 +379,7 @@
 
   let allPosts = [];
   let allPlaylists = [];
+  let allHadithGroups = [];
   let currentFilter = { type: 'all' };
   const APP_MODE = new URLSearchParams(window.location.search).get('app') === '1';
 
@@ -440,7 +443,7 @@
   function copyPostText(id) {
     const post = allPosts.find(p => p.id === id);
     if (!post) return;
-    navigator.clipboard.writeText(post.customText).then(() => alert('Text copied to clipboard!'));
+    navigator.clipboard.writeText(post.customTextPlain || post.customText).then(() => alert('Text copied to clipboard!'));
   }
 
   function downloadImage(id) {
@@ -463,9 +466,18 @@
       const sectionName = pl ? pl.name : 'General';
       const card = document.createElement('div');
       card.className = 'post-card';
-      const titleHtml = hasLink
-        ? `<a class="post-link" href="view.html?url=${encodeURIComponent(post.link)}&title=${encodeURIComponent(post.customText)}&id=${post.id}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`
-        : `<div class="post-link" style="cursor:default;">${post.customText}</div>`;
+      let bodyHtml;
+      if (sectionName === 'Daily Hadith') {
+        // Daily Hadith: শুধু Title দেখাবে, Title-এ click করলে পুরো text খুলবে
+        const titleText = post.title || '(শিরোনাম নেই — Title দেওয়া হয়নি)';
+        bodyHtml = `<a class="post-link" style="font-weight:800;" href="view.html?id=${post.id}${APP_MODE ? '&app=1' : ''}">${titleText}</a>`;
+      } else if (hasLink) {
+        const titlePrefix = post.title ? `<div style="font-weight:800;color:#1a1a2e;margin-bottom:6px;">${post.title}</div>` : '';
+        bodyHtml = `${titlePrefix}<a class="post-link" href="view.html?id=${post.id}&url=${encodeURIComponent(post.link)}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`;
+      } else {
+        const titlePrefix = post.title ? `<div style="font-weight:800;color:#1a1a2e;margin-bottom:6px;">${post.title}</div>` : '';
+        bodyHtml = `${titlePrefix}<div class="post-link" style="cursor:default;">${post.customText}</div>`;
+      }
       const copyBtnHtml = sectionName === 'Bangla Caption' ? `<button class="action-btn" onclick="copyPostText('${post.id}')">${copyIcon} Copy</button>` : '';
       const postSubHtml = sectionName === 'Daily Hadith'
         ? `<div class="post-sub">${timeAgo(post.rawTime)} · ${globeIcon}</div>`
@@ -478,7 +490,7 @@
             ${postSubHtml}
           </div>
         </div>
-        ${titleHtml}
+        ${bodyHtml}
         <div class="post-footer">
           <button class="action-btn fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${post.id}', this)">${heartIcon} Favorite</button>
           <button class="action-btn" onclick="sharePost('${post.id}')">${sendIcon} Share</button>
@@ -494,6 +506,35 @@
     const feed = document.getElementById('feedContainer');
     const items = allPlaylists.filter(p => p.section === section);
     if (items.length === 0) { feed.innerHTML = '<div class="empty-msg">No playlists added in this section yet</div>'; return; }
+    feed.innerHTML = '';
+    items.forEach(pl => {
+      const card = document.createElement('div');
+      card.className = 'playlist-folder';
+      card.innerHTML = `${folderIcon} ${pl.name}`;
+      card.onclick = () => { currentFilter = { type: 'playlistById', id: pl.id }; applyFilterState(); };
+      feed.appendChild(card);
+    });
+  }
+
+  function renderHadithGroups() {
+    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title">📖 Al Hadith — Choose a Group</div>`;
+    const feed = document.getElementById('feedContainer');
+    if (allHadithGroups.length === 0) { feed.innerHTML = '<div class="empty-msg">এখনো কোনো Al Hadith Group যোগ করা হয়নি</div>'; return; }
+    feed.innerHTML = '';
+    allHadithGroups.forEach(group => {
+      const card = document.createElement('div');
+      card.className = 'playlist-folder';
+      card.innerHTML = `${folderIcon} ${group.name}`;
+      card.onclick = () => { currentFilter = { type: 'hadithPlaylists', groupId: group.id, groupName: group.name }; applyFilterState(); };
+      feed.appendChild(card);
+    });
+  }
+
+  function renderHadithPlaylists(groupId, groupName) {
+    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title">📁 ${groupName || 'Al Hadith'} — Choose a Playlist</div>`;
+    const feed = document.getElementById('feedContainer');
+    const items = allPlaylists.filter(p => p.hadithGroupId === groupId);
+    if (items.length === 0) { feed.innerHTML = '<div class="empty-msg">No playlists added in this group yet</div>'; return; }
     feed.innerHTML = '';
     items.forEach(pl => {
       const card = document.createElement('div');
@@ -529,6 +570,12 @@
     } else if (currentFilter.type === 'sectionBrowse') {
       setFilterTabs(null);
       renderSectionPlaylists(currentFilter.section);
+    } else if (currentFilter.type === 'hadithGroups') {
+      setFilterTabs(null);
+      renderHadithGroups();
+    } else if (currentFilter.type === 'hadithPlaylists') {
+      setFilterTabs(null);
+      renderHadithPlaylists(currentFilter.groupId, currentFilter.groupName);
     }
   }
 
@@ -546,8 +593,9 @@
   function sharePost(postId) {
     const post = allPosts.find(p => p.id === postId);
     if (!post) return;
-    const shareUrl = window.location.origin + "/view.html?url=" + encodeURIComponent(post.link) + "&title=" + encodeURIComponent(post.customText);
-    if (navigator.share) navigator.share({ title: post.customText, url: shareUrl }).catch(() => {});
+    const shareUrl = window.location.origin + "/view.html?id=" + postId + (post.link ? "&url=" + encodeURIComponent(post.link) : "");
+    const shareTitle = post.title || post.customTextPlain || 'StreamFeed Post';
+    if (navigator.share) navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
     else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
   }
 
@@ -559,13 +607,15 @@
   function refreshData() {
     Promise.all([
       db.collection('posts').orderBy('time','desc').get(),
-      db.collection('playlists').get()
-    ]).then(([postSnap, plSnap]) => {
+      db.collection('playlists').get(),
+      db.collection('hadithGroups').get()
+    ]).then(([postSnap, plSnap, groupSnap]) => {
       let freshPosts = [];
       postSnap.forEach(doc => {
         const d = doc.data();
         freshPosts.push({
-          id: doc.id, customText: d.customText || 'Untitled Post',
+          id: doc.id, title: d.title || '', customText: d.customText || 'Untitled Post',
+          customTextPlain: d.customTextPlain || '',
           link: d.link || '', playlistId: d.playlistId || '',
           timeText: d.timeText || '', rawTime: d.time ? d.time.toMillis() : null,
           rawPublishAt: d.publishAt ? d.publishAt.toMillis() : null
@@ -576,10 +626,18 @@
       const freshPlaylists = [];
       plSnap.forEach(doc => {
         const d = doc.data();
-        freshPlaylists.push({ id: doc.id, name: d.name || 'Playlist', section: d.section || null });
+        freshPlaylists.push({ id: doc.id, name: d.name || 'Playlist', section: d.section || null, hadithGroupId: d.hadithGroupId || null });
       });
+
+      const freshHadithGroups = [];
+      groupSnap.forEach(doc => {
+        const d = doc.data();
+        freshHadithGroups.push({ id: doc.id, name: d.name || 'Group' });
+      });
+
       allPosts = freshPosts;
       allPlaylists = freshPlaylists;
+      allHadithGroups = freshHadithGroups;
       localStorage.setItem(CACHE_POSTS_KEY, JSON.stringify(freshPosts));
       localStorage.setItem(CACHE_PLAYLISTS_KEY, JSON.stringify(freshPlaylists));
       applyFilterState();
