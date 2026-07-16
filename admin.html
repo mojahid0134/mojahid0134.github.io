@@ -74,6 +74,27 @@
     padding:12px 16px; font-size:14px; color:#333; border-bottom:1px solid #f5f5f5;
   }
   .dropdown-menu div:last-child { border-bottom:none; color:#c0392b; }
+
+  .rt-toolbar {
+    display:flex; flex-wrap:wrap; gap:6px; background:#f4f5f7; border:1px solid #ddd;
+    border-radius:8px 8px 0 0; padding:8px; border-bottom:none;
+  }
+  .rt-toolbar button {
+    background:#fff; border:1px solid #ddd; border-radius:6px; padding:6px 10px;
+    font-size:13px; font-weight:700; color:#333; cursor:pointer; width:auto; margin-bottom:0;
+  }
+  .rt-toolbar button:active { background:#e8e8e8; }
+  .rt-toolbar input[type=color] {
+    width:34px; height:32px; padding:2px; border:1px solid #ddd; border-radius:6px; margin-bottom:0; cursor:pointer;
+  }
+  .rt-toolbar select { width:auto; padding:6px; margin-bottom:0; font-size:13px; border-radius:6px; }
+  .rt-toolbar .rt-label { font-size:11px; color:#888; align-self:center; margin-right:-2px; }
+  .rt-editor {
+    min-height:220px; max-height:500px; overflow-y:auto; border:1px solid #ddd;
+    border-top:none; border-radius:0 0 8px 8px; padding:12px; font-size:15px;
+    line-height:1.6; margin-bottom:10px; background:#fff;
+  }
+  .rt-editor:empty:before { content: attr(data-placeholder); color:#aaa; }
 </style>
 </head>
 <body>
@@ -100,17 +121,62 @@
         <option value="মাসনুন আমল">Inside: মাসনুন আমল</option>
         <option value="কুরআনের শিক্ষা">Inside: কুরআনের শিক্ষা</option>
         <option value="Nasheed">Inside: Nasheed</option>
+        <optgroup label="Inside Al Hadith" id="hadithGroupOptions"></optgroup>
       </select>
       <button class="action" onclick="createPlaylist()">Create Playlist</button>
       <div class="msg" id="playlistMsg"></div>
     </div>
 
     <div class="card">
+      <h3>Al Hadith — Manage Groups</h3>
+      <div class="hint">এখানে Group তৈরি করো (যেমন: বুখারী শরীফ, মুসলিম শরীফ)। তারপর উপরের "Create New Playlist"-এ গিয়ে সেই Group-এর ভেতরে Playlist বসাতে পারবে।</div>
+      <input type="text" id="hadithGroupName" placeholder="Group name (e.g. বুখারী শরীফ)">
+      <button class="action" onclick="createHadithGroup()">Create Group</button>
+      <div class="msg" id="hadithGroupMsg"></div>
+      <div id="hadithGroupListBox" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="card">
       <h3>Create New Post</h3>
       <input type="text" id="postLink" placeholder="Blog/Video Post Link (optional — leave empty for text-only post)">
       <div class="hint">Link খালি রাখলে এটা শুধু Text Post হবে (কোথাও Click করে যাবে না)</div>
-      <input type="text" id="postCustomText" placeholder="Custom Text (this is what users will see)">
-      <select id="postPlaylist">
+
+      <div id="postTitleWrap">
+        <input type="text" id="postTitle" placeholder="Title (optional)">
+        <div class="hint">Daily Hadith section-এ Feed-এ শুধু এই Title-টাই দেখাবে, Title-এ click করলে পুরো লেখা খুলবে। অন্য section-এ Title আর নিচে পুরো লেখা দুটোই দেখাবে।</div>
+      </div>
+
+      <label style="font-size:13px; color:#555; display:block; margin-bottom:4px;">Post Text</label>
+      <div class="rt-toolbar">
+        <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('bold')"><b>B</b></button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('italic')"><i>I</i></button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('underline')"><u>U</u></button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('strikeThrough')"><s>S</s></button>
+        <span class="rt-label">Text</span>
+        <input type="color" id="rtColorInput" value="#1a1a2e" onchange="restoreSelection(); applyColor(this.value)">
+        <span class="rt-label">Highlight</span>
+        <input type="color" id="rtHighlightInput" value="#fff59d" onchange="restoreSelection(); applyHighlight(this.value)">
+        <select onchange="restoreSelection(); applyFontSize(this.value); this.selectedIndex=0;">
+          <option value="">Size</option>
+          <option value="12">ছোট (12px)</option>
+          <option value="16">স্বাভাবিক (16px)</option>
+          <option value="20">বড় (20px)</option>
+          <option value="26">অনেক বড় (26px)</option>
+          <option value="32">Huge (32px)</option>
+        </select>
+        <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('justifyLeft')">⬅</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('justifyCenter')">↔</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('justifyRight')">➡</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('indent')">Indent »</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('outdent')">« Outdent</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="restoreSelection(); applyShadow()">Shadow</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="restoreSelection(); applyStroke()">Outline</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="restoreSelection(); insertLinkAtCursor()">🔗 Link</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('removeFormat')">Clear</button>
+      </div>
+      <div id="postCustomTextEditor" class="rt-editor" contenteditable="true" data-placeholder="এখানে তোমার Post-এর লেখা লেখো... (কোনো length limit নেই)" onmouseup="saveSelection()" onkeyup="saveSelection()"></div>
+
+      <select id="postPlaylist" onchange="onPlaylistSelectChange()">
         <option value="">-- Select Playlist --</option>
       </select>
       <label style="font-size:13px; color:#555; display:block; margin-bottom:4px;">Schedule for later (optional)</label>
@@ -175,6 +241,7 @@
 
   let postsCache = {};
   let playlistsCache = {};
+  let hadithGroupsCache = {};
 
   function loginWithGoogle() {
     auth.signInWithPopup(provider).catch(err => {
@@ -189,6 +256,7 @@
         document.getElementById('loginBox').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'flex';
         loadPlaylistsIntoDropdown();
+        loadHadithGroupsList();
         loadPlaylistsList();
         loadPostsList();
       } else {
@@ -217,8 +285,9 @@
   function sharePost(id) {
     const post = postsCache[id];
     if (!post) return;
-    const shareUrl = window.location.origin + "/view.html?url=" + encodeURIComponent(post.link || '') + "&title=" + encodeURIComponent(post.customText);
-    if (navigator.share) navigator.share({ title: post.customText, url: shareUrl }).catch(() => {});
+    const shareUrl = window.location.origin + "/view.html?id=" + id + (post.link ? "&url=" + encodeURIComponent(post.link) : "");
+    const shareTitle = post.title || post.customTextPlain || 'StreamFeed Post';
+    if (navigator.share) navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
     else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
   }
 
@@ -232,11 +301,18 @@
 
   function createPlaylist() {
     const name = document.getElementById('playlistName').value.trim();
-    const section = document.getElementById('playlistSection').value;
+    const sectionValue = document.getElementById('playlistSection').value;
     const msg = document.getElementById('playlistMsg');
     if (!name) { msg.className = 'msg err'; msg.innerText = 'Name is required'; return; }
 
-    db.collection('playlists').add({ name: name, section: section || null }).then(() => {
+    let playlistData = { name: name, section: null, hadithGroupId: null };
+    if (sectionValue.startsWith('hadith:')) {
+      playlistData.hadithGroupId = sectionValue.replace('hadith:', '');
+    } else {
+      playlistData.section = sectionValue || null;
+    }
+
+    db.collection('playlists').add(playlistData).then(() => {
       msg.className = 'msg ok'; msg.innerText = 'Playlist created ✅';
       document.getElementById('playlistName').value = '';
       document.getElementById('playlistSection').value = '';
@@ -244,6 +320,64 @@
       loadPlaylistsList();
     }).catch(err => {
       msg.className = 'msg err'; msg.innerText = 'Error: ' + err.message;
+    });
+  }
+
+  function createHadithGroup() {
+    const name = document.getElementById('hadithGroupName').value.trim();
+    const msg = document.getElementById('hadithGroupMsg');
+    if (!name) { msg.className = 'msg err'; msg.innerText = 'Group name is required'; return; }
+
+    db.collection('hadithGroups').add({ name: name }).then(() => {
+      msg.className = 'msg ok'; msg.innerText = 'Group created ✅';
+      document.getElementById('hadithGroupName').value = '';
+      loadHadithGroupsList();
+    }).catch(err => {
+      msg.className = 'msg err'; msg.innerText = 'Error: ' + err.message;
+    });
+  }
+
+  function loadHadithGroupsList() {
+    const box = document.getElementById('hadithGroupListBox');
+    const optgroup = document.getElementById('hadithGroupOptions');
+    db.collection('hadithGroups').get().then(snapshot => {
+      hadithGroupsCache = {};
+      optgroup.innerHTML = '';
+      if (snapshot.empty) {
+        box.innerHTML = '<div class="empty-list">এখনো কোনো Group তৈরি করা হয়নি</div>';
+        return;
+      }
+      box.innerHTML = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        hadithGroupsCache[doc.id] = data;
+
+        const opt = document.createElement('option');
+        opt.value = 'hadith:' + doc.id;
+        opt.innerText = 'Al Hadith → ' + data.name;
+        optgroup.appendChild(opt);
+
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+          <div><div class="list-item-text">📖 ${data.name}</div></div>
+          <div class="menu-wrap">
+            <button class="dots-btn" onclick="toggleMenu('hg-menu-${doc.id}')">⋮</button>
+            <div class="dropdown-menu" id="hg-menu-${doc.id}">
+              <div onclick="deleteHadithGroup('${doc.id}')">Delete</div>
+            </div>
+          </div>
+        `;
+        box.appendChild(item);
+      });
+    });
+  }
+
+  function deleteHadithGroup(id) {
+    if (!confirm("এই Group মুছে ফেলতে চাও? (ভেতরের Playlist গুলো standalone হয়ে যাবে, মুছে যাবে না)")) return;
+    db.collection('hadithGroups').doc(id).delete().then(() => {
+      loadHadithGroupsList();
+      loadPlaylistsList();
     });
   }
 
@@ -274,10 +408,13 @@
         playlistsCache[doc.id] = data;
         const item = document.createElement('div');
         item.className = 'list-item';
+        const tagHtml = data.hadithGroupId
+          ? `<span class="list-item-tag">📖 Al Hadith → ${(hadithGroupsCache[data.hadithGroupId] && hadithGroupsCache[data.hadithGroupId].name) || '...'}</span>`
+          : (data.section ? `<span class="list-item-tag">📁 Inside: ${data.section}</span>` : `<span class="list-item-tag">Standalone</span>`);
         item.innerHTML = `
           <div>
             <div class="list-item-text">${data.name}</div>
-            ${data.section ? `<span class="list-item-tag">📁 Inside: ${data.section}</span>` : `<span class="list-item-tag">Standalone</span>`}
+            ${tagHtml}
           </div>
           <div class="menu-wrap">
             <button class="dots-btn" onclick="toggleMenu('pl-menu-${doc.id}')">⋮</button>
@@ -300,15 +437,77 @@
     });
   }
 
-  // ---- Post তৈরি করা (Link Optional, Schedule Optional) ----
+  // ---- Rich Text Editor Helper Functions ----
+  let savedRange = null;
+  function saveSelection() {
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0 && document.getElementById('postCustomTextEditor').contains(sel.anchorNode)) {
+      savedRange = sel.getRangeAt(0).cloneRange();
+    }
+  }
+  function restoreSelection() {
+    document.getElementById('postCustomTextEditor').focus();
+    if (savedRange) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+    }
+  }
+  function wrapSelectionWithStyle(styleText) {
+    const sel = window.getSelection();
+    if (!sel.rangeCount || sel.isCollapsed) { alert('আগে editor-এর মধ্যে যে টেক্সটে এটা apply করতে চাও সেটা সিলেক্ট (select/highlight) করো'); return; }
+    const range = sel.getRangeAt(0);
+    const span = document.createElement('span');
+    span.style.cssText = styleText;
+    try {
+      range.surroundContents(span);
+    } catch (e) {
+      const content = range.extractContents();
+      span.appendChild(content);
+      range.insertNode(span);
+    }
+    sel.removeAllRanges();
+  }
+  function applyColor(color) { document.execCommand('foreColor', false, color); }
+  function applyHighlight(color) { document.execCommand('hiliteColor', false, color); }
+  function applyFontSize(px) { if (px) wrapSelectionWithStyle('font-size:' + px + 'px;'); }
+  function applyShadow() { wrapSelectionWithStyle('text-shadow: 2px 2px 4px rgba(0,0,0,0.5);'); }
+  function applyStroke() { wrapSelectionWithStyle('-webkit-text-stroke: 1px #000; text-stroke: 1px #000;'); }
+  function insertLinkAtCursor() {
+    const url = prompt('Link URL দাও (https:// সহ):');
+    if (!url) return;
+    const linkText = prompt('Link-এ কী লেখা দেখাবে (subtext):', url);
+    document.getElementById('postCustomTextEditor').focus();
+    document.execCommand('insertHTML', false,
+      '<a href="' + url.replace(/"/g, '&quot;') + '" target="_blank" style="color:#1e56b3;text-decoration:underline;">' + (linkText || url) + '</a>'
+    );
+  }
+
+  // ---- Playlist select হলে Title field দরকার কিনা check করা ----
+  function onPlaylistSelectChange() {
+    const id = document.getElementById('postPlaylist').value;
+    const pl = playlistsCache[id];
+    const titleWrap = document.getElementById('postTitleWrap');
+    if (pl && (pl.name === 'Bangla Caption' || pl.name === 'Nasheed')) {
+      titleWrap.style.display = 'none';
+      document.getElementById('postTitle').value = '';
+    } else {
+      titleWrap.style.display = 'block';
+    }
+  }
+
+  // ---- Post তৈরি করা (Link Optional, Title Optional, Schedule Optional) ----
   function createPost() {
     const link = document.getElementById('postLink').value.trim();
-    const customText = document.getElementById('postCustomText').value.trim();
+    const title = document.getElementById('postTitle').value.trim();
+    const editor = document.getElementById('postCustomTextEditor');
+    const customText = editor.innerHTML.trim();
+    const customTextPlain = editor.innerText.trim();
     const playlistId = document.getElementById('postPlaylist').value;
     const scheduleValue = document.getElementById('postSchedule').value;
     const msg = document.getElementById('postMsg');
 
-    if (!customText || !playlistId) {
+    if (!customTextPlain || !playlistId) {
       msg.className = 'msg err'; msg.innerText = 'Text ও Playlist অবশ্যই দিতে হবে';
       return;
     }
@@ -319,7 +518,9 @@
 
     db.collection('posts').add({
       link: link,
+      title: title || null,
       customText: customText,
+      customTextPlain: customTextPlain,
       playlistId: playlistId,
       time: firebase.firestore.FieldValue.serverTimestamp(),
       timeText: timeText,
@@ -330,10 +531,11 @@
         msg.innerText = 'Post Scheduled ✅ (' + publishAt.toLocaleString() + ')';
       } else {
         msg.innerText = 'Post created successfully ✅';
-        sendPushNotification('New Post on StreamFeed', customText);
+        sendPushNotification('New Post on StreamFeed', title || customTextPlain.slice(0, 120));
       }
       document.getElementById('postLink').value = '';
-      document.getElementById('postCustomText').value = '';
+      document.getElementById('postTitle').value = '';
+      editor.innerHTML = '';
       document.getElementById('postPlaylist').value = '';
       document.getElementById('postSchedule').value = '';
       loadPostsList();
@@ -358,7 +560,7 @@
         item.className = 'list-item';
         item.innerHTML = `
           <div>
-            <div class="list-item-text">${data.customText}</div>
+            <div class="list-item-text">${data.title ? '📌 ' + data.title : (data.customTextPlain || 'Untitled Post')}</div>
             ${!data.link ? '<span class="list-item-tag">📝 Text-only</span>' : ''}
           </div>
           <div class="menu-wrap">
