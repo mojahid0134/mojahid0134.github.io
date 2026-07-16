@@ -177,7 +177,7 @@
     <div class="modal-sheet">
       <div class="modal-title">📅 Today's Date <button class="modal-close" id="dateModalClose">✕</button></div>
       <div class="date-row"><div class="label">English</div><div class="value" id="dateEnglish">-</div></div>
-      <div class="date-row"><div class="label">Arabic (Hijri)</div><div class="value" id="dateArabic">-</div></div>
+      <div class="date-row"><div class="label">Hijri (আরবি বছর)</div><div class="value" id="dateArabic">-</div></div>
       <div class="date-row"><div class="label">বাংলা</div><div class="value" id="dateBangla">-</div></div>
     </div>
   </div>
@@ -283,21 +283,31 @@
     const banglaDay = remaining + 1;
     return toBnNumber(banglaDay) + ' ' + (banglaMonths[monthIndex] || banglaMonths[11]) + ', ' + toBnNumber(banglaYear);
   }
+  const hijriMonthsBn = ['মহররম','সফর','রবিউল আউয়াল','রবিউস সানি','জমাদিউল আউয়াল','জমাদিউস সানি','রজব','শাবান','রমজান','শাওয়াল','জিলক্বদ','জিলহজ্জ'];
+  function getHijriBanglaDate(date) {
+    try {
+      const fmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', { day:'numeric', month:'numeric', year:'numeric' });
+      const parts = fmt.formatToParts(date);
+      let day = null, month = null, year = null;
+      parts.forEach(p => {
+        if (p.type === 'day') day = parseInt(p.value, 10);
+        if (p.type === 'month') month = parseInt(p.value, 10);
+        if (p.type === 'year') year = parseInt(p.value, 10);
+      });
+      if (!day || !month || !year) return 'Not supported on this device';
+      const monthName = hijriMonthsBn[month - 1] || hijriMonthsBn[0];
+      return toBnNumber(day) + ' ' + monthName + ', ' + toBnNumber(year);
+    } catch (e) {
+      return 'Not supported on this device';
+    }
+  }
   function updateDateDisplays() {
     const now = new Date();
     // English: day - month - year (English digits & month name)
     const englishStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
     document.getElementById('dateEnglish').innerText = englishStr;
-    // Arabic (Hijri): day - month - year, written fully in Arabic script + Arabic-Indic numerals
-    try {
-      const hijriArabic = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-arab', { day:'numeric', month:'long', year:'numeric' }).format(now);
-      document.getElementById('dateArabic').innerText = hijriArabic;
-    } catch (e) {
-      try {
-        const hijriFallback = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day:'numeric', month:'long', year:'numeric' }).format(now);
-        document.getElementById('dateArabic').innerText = hijriFallback;
-      } catch (e2) { document.getElementById('dateArabic').innerText = 'Not supported on this device'; }
-    }
+    // Hijri (আরবি বছর): সঠিক Umm al-Qura হিসাব থেকে day-month-year বের করে বাংলা সংখ্যা ও বাংলা হরফের মাসের নামে দেখানো হচ্ছে
+    document.getElementById('dateArabic').innerText = getHijriBanglaDate(now);
     // বাংলা: তারিখ - মাস - বছর (বাংলা অংক ও মাসের নাম)
     document.getElementById('dateBangla').innerText = getBanglaDate(now);
   }
