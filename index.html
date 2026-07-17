@@ -133,6 +133,31 @@
     opacity:0; transform:translateY(10px); transition:opacity 0.2s, transform 0.2s; }
   .scroll-top-btn.visible { display:flex; opacity:1; transform:translateY(0); }
   .scroll-top-btn svg { width:22px; height:22px; }
+
+  /* ===== Fast Post Overlay =====
+     আগে কোনো post-এর link এ click করলে browser view.html নামে আলাদা একটা
+     page-এ পুরোপুরি navigate (unload + fetch + parse + re-run script) করতো,
+     যার কারণে কিছুক্ষণ সাদা/ফাঁকা স্ক্রিন দেখা যেতো। এখন সেই বদলে এই
+     overlay-টা এই একই page-এর মধ্যেই সাথে সাথে দেখানো হয় (কোনো নতুন page
+     load বা নতুন Firestore call ছাড়াই, কারণ post-এর সব data আগে থেকেই
+     memory-তে (allPosts) আছে) — তাই আর কোনো blank/সাদা স্ক্রিন দেখা যায় না। */
+  .postview-overlay { display:none; position:fixed; inset:0; background:#f4f5f7; z-index:500; }
+  .postview-overlay.open { display:block; }
+  .postview-topbar { background:linear-gradient(135deg,#2a1650,#4a2a6d); color:#fff; padding:14px 16px;
+    display:flex; align-items:center; gap:12px; position:fixed; top:0; left:0; right:0; height:52px; z-index:20; }
+  .postview-back { background:rgba(255,255,255,0.15); border:none; color:#fff; width:34px; height:34px;
+    border-radius:50%; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .postview-title { font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 60px); }
+  .postview-frame { position:fixed; top:52px; left:0; right:0; bottom:0; width:100%; height:calc(100% - 52px); border:none; background:#f4f5f7; }
+  .postview-loading { position:fixed; top:52px; left:0; right:0; bottom:0; display:flex; align-items:center;
+    justify-content:center; color:#999; font-size:14px; background:#f4f5f7; z-index:5; }
+  .postview-openext { position:fixed; bottom:16px; right:16px; z-index:15; background:#1A1A2E; color:#fff;
+    border:none; padding:10px 16px; border-radius:20px; font-size:13px; font-weight:600; box-shadow:0 2px 10px rgba(0,0,0,0.2); }
+  .postview-textonly { position:fixed; top:52px; left:0; right:0; bottom:0; overflow-y:auto; padding:20px; background:#f4f5f7; }
+  .postview-textcard { background:#fff; border-radius:16px; padding:20px; font-size:17px; line-height:1.8;
+    color:#1a1a2e; font-weight:400; word-wrap:break-word; overflow-wrap:break-word; }
+  .postview-textcard .postview-title-inner { font-size:20px; font-weight:800; margin-bottom:14px; color:#1a1a2e; }
+  .postview-textcard a { color:#4a2a8d; }
 </style>
 </head>
 <body>
@@ -266,6 +291,21 @@
   <button class="scroll-top-btn" id="scrollTopBtn">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
   </button>
+
+  <!-- Fast Post Overlay: post link এ click করলে এটা এই page-এর মধ্যেই সাথে সাথে খুলে যায়,
+       নতুন কোনো page load ছাড়াই — তাই কোনো সাদা/ফাঁকা স্ক্রিন দেখায় না -->
+  <div class="postview-overlay" id="postOverlay">
+    <div class="postview-topbar">
+      <button class="postview-back" id="postOverlayBack">←</button>
+      <div class="postview-title" id="postOverlayTitle">Loading...</div>
+    </div>
+    <iframe class="postview-frame" id="postOverlayFrame" style="display:none;"></iframe>
+    <div class="postview-loading" id="postOverlayLoading" style="display:none;">Loading post...</div>
+    <div class="postview-textonly" id="postOverlayTextOnly" style="display:none;">
+      <div class="postview-textcard" id="postOverlayTextCard"></div>
+    </div>
+    <button class="postview-openext" id="postOverlayOpenExt" style="display:none;">↗ Open in Browser</button>
+  </div>
 
 <script>
   window.addEventListener('pageshow', function(event) { if (event.persisted) window.location.reload(); });
@@ -597,7 +637,7 @@
       if (sectionName === 'Daily Hadith') {
         // Daily Hadith: শুধু Title দেখাবে, Title-এ click করলে পুরো text খুলবে
         const titleText = post.title || '(শিরোনাম নেই — Title দেওয়া হয়নি)';
-        bodyHtml = `<a class="post-link" style="font-weight:800;" data-post-id="${post.id}" href="view.html?id=${post.id}${APP_MODE ? '&app=1' : ''}">${titleText}</a>`;
+        bodyHtml = `<a class="post-link" style="font-weight:800;" data-post-id="${post.id}" data-force-text="1" href="view.html?id=${post.id}${APP_MODE ? '&app=1' : ''}">${titleText}</a>`;
       } else if (hasLink) {
         const titlePrefix = post.title ? `<div style="font-weight:800;color:#1a1a2e;margin-bottom:6px;">${post.title}</div>` : '';
         bodyHtml = `${titlePrefix}<a class="post-link" data-post-id="${post.id}" data-warm-url="${escapeAttr(post.link)}" href="view.html?id=${post.id}&url=${encodeURIComponent(post.link)}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`;
@@ -727,6 +767,109 @@
     if (navigator.share) navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
     else navigator.clipboard.writeText(shareUrl);
   }
+
+  // ===================================================================
+  // Fast Post Overlay
+  // -------------------------------------------------------------------
+  // আগে post link এ click করলে view.html নামে আলাদা page এ পুরো navigate
+  // করতে হতো (page unload → নতুন request → parse → Firebase → iframe),
+  // যার কারণে click করার পর কিছুক্ষণ সাদা/ফাঁকা স্ক্রিন দেখা যেতো।
+  //
+  // এখন post-এর title, link, customText — সব data আগে থেকেই memory তে
+  // (allPosts) আছে, তাই কোনো page navigation বা নতুন Firestore call না করে
+  // এই একই page-এর ভেতরেই সাথে সাথে overlay দেখানো হয়। ফলে white/blank
+  // screen আর থাকে না, link খোলা প্রায় instant মনে হয়।
+  //
+  // Back button: Kodular App-এর BackPressed block WebViewer1.CanGoBack() /
+  // GoBack() ব্যবহার করে, আর নিচে history.pushState ব্যবহার করা হচ্ছে,
+  // তাই device back button চাপলে overlay ঠিকমতোই বন্ধ হয়ে যাবে।
+  // ===================================================================
+  function convertToEmbedUrl(originalUrl) {
+    try {
+      const u = new URL(originalUrl);
+      const host = u.hostname.replace('www.', '').replace('m.', '');
+      if (host === 'youtube.com' && u.searchParams.get('v')) return 'https://www.youtube.com/embed/' + u.searchParams.get('v');
+      if (host === 'youtu.be') { const id = u.pathname.replace('/', ''); if (id) return 'https://www.youtube.com/embed/' + id; }
+      if (host === 'youtube.com' && u.pathname.startsWith('/shorts/')) { const id = u.pathname.split('/')[2]; if (id) return 'https://www.youtube.com/embed/' + id; }
+    } catch (e) {}
+    return originalUrl;
+  }
+
+  function addToHistory(id) {
+    let history_ = JSON.parse(localStorage.getItem('visitHistory') || '[]');
+    history_ = history_.filter(h => h !== id);
+    history_.unshift(id);
+    if (history_.length > 200) history_ = history_.slice(0, 200);
+    localStorage.setItem('visitHistory', JSON.stringify(history_));
+  }
+
+  const postOverlay = document.getElementById('postOverlay');
+  const postOverlayFrame = document.getElementById('postOverlayFrame');
+  const postOverlayLoading = document.getElementById('postOverlayLoading');
+  const postOverlayTextOnly = document.getElementById('postOverlayTextOnly');
+  const postOverlayTextCard = document.getElementById('postOverlayTextCard');
+  const postOverlayOpenExt = document.getElementById('postOverlayOpenExt');
+  const postOverlayTitle = document.getElementById('postOverlayTitle');
+  let overlayIsOpen = false;
+  let currentOverlayLink = '';
+
+  function openPostOverlay(postId, forceTextOnly) {
+    const post = allPosts.find(p => p.id === postId);
+    if (!post) return;
+    addToHistory(postId);
+
+    const hasLink = !forceTextOnly && post.link && post.link.trim() !== '';
+    postOverlayTitle.innerText = post.title || post.customTextPlain || 'NoorFeed';
+
+    if (hasLink) {
+      currentOverlayLink = post.link;
+      postOverlayFrame.style.display = 'block';
+      postOverlayLoading.style.display = 'flex';
+      postOverlayTextOnly.style.display = 'none';
+      postOverlayOpenExt.style.display = 'block';
+      const embedUrl = convertToEmbedUrl(post.link);
+      postOverlayFrame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+      postOverlayFrame.setAttribute('allowfullscreen', 'true');
+      postOverlayFrame.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+      postOverlayFrame.src = embedUrl;
+      postOverlayFrame.onload = () => { postOverlayLoading.style.display = 'none'; };
+      setTimeout(() => { postOverlayLoading.style.display = 'none'; }, 4000);
+    } else {
+      currentOverlayLink = '';
+      postOverlayFrame.style.display = 'none';
+      postOverlayFrame.src = 'about:blank';
+      postOverlayLoading.style.display = 'none';
+      postOverlayOpenExt.style.display = 'none';
+      postOverlayTextOnly.style.display = 'block';
+      const titleHtml = post.title ? `<div class="postview-title-inner">${post.title}</div>` : '';
+      postOverlayTextCard.innerHTML = titleHtml + (post.customText || '');
+    }
+
+    postOverlay.classList.add('open');
+    overlayIsOpen = true;
+    history.pushState({ postOverlay: true }, '', '#post-' + postId);
+  }
+
+  function closePostOverlay(skipHistoryBack) {
+    postOverlay.classList.remove('open');
+    overlayIsOpen = false;
+    postOverlayFrame.src = 'about:blank';
+    if (!skipHistoryBack && window.location.hash.indexOf('#post-') === 0) history.back();
+  }
+
+  document.getElementById('postOverlayBack').addEventListener('click', () => closePostOverlay(false));
+  document.getElementById('postOverlayOpenExt').addEventListener('click', () => {
+    if (currentOverlayLink) window.open(currentOverlayLink, '_blank');
+  });
+  window.addEventListener('popstate', () => { if (overlayIsOpen) closePostOverlay(true); });
+
+  document.getElementById('feedContainer').addEventListener('click', function (e) {
+    const a = e.target.closest('a.post-link[data-post-id]');
+    if (!a) return;
+    if (!APP_MODE) return; // app mode না হলে আগের মতোই view.html-এ যাবে (Install App prompt দেখানোর জন্য)
+    e.preventDefault();
+    openPostOverlay(a.dataset.postId, a.dataset.forceText === '1');
+  });
 
   function isVisibleNow(post) {
     if (!post.rawPublishAt) return true;
