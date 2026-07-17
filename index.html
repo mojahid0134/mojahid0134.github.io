@@ -450,6 +450,28 @@
   let currentFilter = { type: 'all' };
   const APP_MODE = new URLSearchParams(window.location.search).get('app') === '1';
 
+  // ===== YouTube link কিনা check করা হচ্ছে =====
+  // YouTube ছাড়া অন্য site (Facebook/article/blog) iframe-এর ভেতরে load হতে
+  // block করে দেয়, তাই view.html-এ গিয়ে redirect হওয়ার আগের extra hop
+  // এড়াতে non-YouTube link গুলো এখান থেকেই সরাসরি, এক ধাপে খোলা হবে।
+  function isYouTubeLink(originalUrl) {
+    try {
+      const u = new URL(originalUrl);
+      const host = u.hostname.replace('www.', '').replace('m.', '');
+      return host === 'youtube.com' || host === 'youtu.be';
+    } catch (e) { return false; }
+  }
+
+  // view.html-এর addToHistory() এর সাথে মিলিয়ে রাখা — সরাসরি link এ ক্লিক
+  // করলেও visit history ঠিকভাবে save হবে।
+  function recordVisit(id) {
+    let history = JSON.parse(localStorage.getItem('visitHistory') || '[]');
+    history = history.filter(h => h !== id);
+    history.unshift(id);
+    if (history.length > 200) history = history.slice(0, 200);
+    localStorage.setItem('visitHistory', JSON.stringify(history));
+  }
+
   const CACHE_POSTS_KEY = 'cachedPostsData';
   const CACHE_PLAYLISTS_KEY = 'cachedPlaylistsData';
 
@@ -546,7 +568,13 @@
         bodyHtml = `<a class="post-link" style="font-weight:800;" href="view.html?id=${post.id}${APP_MODE ? '&app=1' : ''}">${titleText}</a>`;
       } else if (hasLink) {
         const titlePrefix = post.title ? `<div style="font-weight:800;color:#1a1a2e;margin-bottom:6px;">${post.title}</div>` : '';
-        bodyHtml = `${titlePrefix}<a class="post-link" href="view.html?id=${post.id}&url=${encodeURIComponent(post.link)}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`;
+        if (APP_MODE && !isYouTubeLink(post.link)) {
+          // App এর ভেতরে থাকলে আর YouTube না হলে সরাসরি link এ যাবে —
+          // view.html হয়ে ঘুরে আসার extra hop লাগবে না, তাই একদম instant।
+          bodyHtml = `${titlePrefix}<a class="post-link" href="${post.link}" onclick="recordVisit('${post.id}')">${post.customText}</a>`;
+        } else {
+          bodyHtml = `${titlePrefix}<a class="post-link" href="view.html?id=${post.id}&url=${encodeURIComponent(post.link)}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`;
+        }
       } else {
         const titlePrefix = post.title ? `<div style="font-weight:800;color:#1a1a2e;margin-bottom:6px;">${post.title}</div>` : '';
         bodyHtml = `${titlePrefix}<div class="post-link" style="cursor:default;">${post.customText}</div>`;
