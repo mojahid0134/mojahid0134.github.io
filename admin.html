@@ -288,7 +288,7 @@
     const shareUrl = window.location.origin + "/view.html?id=" + id + (post.link ? "&url=" + encodeURIComponent(post.link) : "");
     const shareTitle = post.title || post.customTextPlain || 'NoorFeed Post';
     if (navigator.share) navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
-    else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
+    else navigator.clipboard.writeText(shareUrl);
   }
 
   function sharePlaylist(id) {
@@ -296,7 +296,7 @@
     if (!pl) return;
     const shareUrl = window.location.origin + "/index.html?section=" + encodeURIComponent(pl.name);
     if (navigator.share) navigator.share({ title: pl.name, url: shareUrl }).catch(() => {});
-    else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
+    else navigator.clipboard.writeText(shareUrl);
   }
 
   function createPlaylist() {
