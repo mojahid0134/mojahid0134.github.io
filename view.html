@@ -131,7 +131,28 @@
 
   function goHome() { window.location.href = "index.html?app=1"; }
 
-  if (!isAppMode) {
+  // ===== YouTube link কিনা check করা হচ্ছে =====
+  // YouTube নিজে iframe embed allow করে, তাই ওটা app-এর ভেতরেই দেখানো যায়।
+  // কিন্তু Facebook/article/blog ইত্যাদি বেশিরভাগ site তাদের নিজেদের
+  // security rule (X-Frame-Options) দিয়ে iframe-এর ভেতরে load হতে block করে দেয়।
+  // তখন iframe blank পড়ে থাকে আর অনেকক্ষণ ধরে "বেধে" থাকে — এটাই আসল কারণ।
+  function isYouTubeLink(originalUrl) {
+    try {
+      const u = new URL(originalUrl);
+      const host = u.hostname.replace('www.', '').replace('m.', '');
+      return host === 'youtube.com' || host === 'youtu.be';
+    } catch (e) { return false; }
+  }
+
+  const isYT = hasLink && isYouTubeLink(rawUrl);
+
+  // ===== NON-YOUTUBE link হলে সাথে সাথে, iframe/loading/Firebase কিছু ছাড়াই =====
+  // সরাসরি redirect হয়ে যাবে — normal link click করার মতোই instant।
+  // location.replace() ব্যবহার করা হয়েছে যাতে back button চাপলে এই খালি
+  // page-টা history-তে না থাকে এবং loop তৈরি না হয়।
+  if (isAppMode && hasLink && !isYT) {
+    window.location.replace(rawUrl);
+  } else if (!isAppMode) {
     document.body.innerHTML = `
       <div class="install-screen">
         <h2>📱 Install the App</h2>
@@ -157,7 +178,7 @@
     if (postId) addToHistory(postId);
 
     if (hasLink) {
-      // ===== এখানেই link টা সাথে সাথে খুলে যাচ্ছে, Firebase লোড হওয়ার জন্য কোনো wait নেই =====
+      // ===== YouTube link, তাই iframe এ embed করে দেখানো হচ্ছে =====
       const embedUrl = convertToEmbedUrl(rawUrl);
       const frame = document.getElementById('contentFrame');
       frame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
