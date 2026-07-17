@@ -4,8 +4,52 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Post View</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<!-- ================================================================
+  SPEED FIX #1: এই ছোট script টা page-এর সবার আগে (Firebase লোড হওয়ারও
+  আগে) রান হয়ে, URL-এ যে link (?url=...) আছে সেই domain-এর সাথে আগেভাগেই
+  connection (DNS lookup + TLS handshake) শুরু করে দেয়। এতে পরে iframe
+  src সেট হওয়ার সাথে সাথেই আসল content দ্রুত লোড হওয়া শুরু করে।
+================================================================= -->
+<script>
+  (function () {
+    try {
+      var rawUrl = new URLSearchParams(window.location.search).get('url');
+      if (!rawUrl) return;
+      var origin = new URL(rawUrl).origin;
+      var head = document.head;
+
+      [ { rel: 'preconnect', href: origin, crossOrigin: 'anonymous' },
+        { rel: 'dns-prefetch', href: origin } ].forEach(function (attrs) {
+        var link = document.createElement('link');
+        link.rel = attrs.rel;
+        link.href = attrs.href;
+        if (attrs.crossOrigin) link.crossOrigin = attrs.crossOrigin;
+        head.appendChild(link);
+      });
+
+      // YouTube embed হলে এর সাথে জড়িত extra domain গুলাও আগে থেকে connect করে রাখা হচ্ছে
+      if (/youtube\.com|youtu\.be/i.test(origin)) {
+        ['https://www.youtube.com', 'https://i.ytimg.com', 'https://www.google.com']
+          .forEach(function (href) {
+            var l = document.createElement('link');
+            l.rel = 'preconnect'; l.href = href; l.crossOrigin = 'anonymous';
+            head.appendChild(l);
+          });
+      }
+    } catch (e) {}
+  })();
+</script>
+
+<!-- ================================================================
+  SPEED FIX #2: Firebase script দুইটা এখন "defer" দিয়ে লোড হচ্ছে।
+  এতে browser পুরো HTML page টা আগে parse করে ফেলবে (এবং নিচের body
+  script-টা সাথে সাথে চালিয়ে iframe-এর src সেট করে দেবে), Firebase
+  ডাউনলোড হওয়া পর্যন্ত আর অপেক্ষা করতে হবে না।
+================================================================= -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js" defer></script>
+
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, sans-serif; }
   html, body { height:100%; }
@@ -71,6 +115,15 @@
 </head>
 <body>
 
+<!-- ================================================================
+  SPEED FIX #3: নিচের script-টা সাধারণ (defer/async ছাড়া) script, তাই
+  page parse হওয়ার সাথে সাথেই সবার আগে চলে — Firebase লোড শেষ হওয়ার
+  জন্য অপেক্ষা করে না। এখানেই iframe বানিয়ে সাথে সাথে src (আসল link)
+  সেট করে দেওয়া হচ্ছে, যাতে content লোড হওয়া শুরু হয়ে যায় দ্রুত।
+  Firebase দিয়ে শুধু Title আনার কাজ (যেটা জরুরি না, শুধু দেখানোর জন্য)
+  পরে আলাদা script-এ (defer) করা হচ্ছে, যাতে সেটা iframe লোডিং-কে
+  block না করে।
+================================================================= -->
 <script>
   window.addEventListener('pageshow', function(event) {
     if (event.persisted) window.location.reload();
@@ -78,21 +131,13 @@
 
   const PLAYSTORE_LINK = "https://play.google.com/store/apps/details?id=com.yourname.streamfeed";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAJLBtnX05B7t8XGJljMJBHSW0OoWEM7xs",
-    authDomain: "streamfeedapp.firebaseapp.com",
-    projectId: "streamfeedapp",
-    storageBucket: "streamfeedapp.firebasestorage.app",
-    messagingSenderId: "255931584141",
-    appId: "1:255931584141:web:9d62d1759e4ee8f280dcc4"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
   const params = new URLSearchParams(window.location.search);
   const rawUrl = params.get('url');
   const postId = params.get('id');
   const isAppMode = params.get('app') === '1';
+
+  // এই দুইটা variable পরের (Firebase) script থেকেও ব্যবহার হবে, তাই window-তে রাখা হলো
+  window.NF_hasLink = rawUrl && rawUrl.trim() !== '';
 
   function convertToEmbedUrl(originalUrl) {
     try {
@@ -113,6 +158,25 @@
     return originalUrl;
   }
 
+  function hideLoading() {
+    const msg = document.getElementById('loadingMsg');
+    if (msg) msg.style.display = 'none';
+  }
+
+  function openExternally() {
+    if (rawUrl) window.open(rawUrl, '_blank');
+  }
+
+  function addToHistory(id) {
+    let history = JSON.parse(localStorage.getItem('visitHistory') || '[]');
+    history = history.filter(h => h !== id);
+    history.unshift(id);
+    if (history.length > 200) history = history.slice(0, 200);
+    localStorage.setItem('visitHistory', JSON.stringify(history));
+  }
+
+  function goHome() { window.location.href = "index.html?app=1"; }
+
   if (!isAppMode) {
     document.body.innerHTML = `
       <div class="install-screen">
@@ -122,7 +186,7 @@
       </div>
     `;
   } else {
-    const hasLink = rawUrl && rawUrl.trim() !== '';
+    const hasLink = window.NF_hasLink;
 
     document.body.innerHTML = `
       <div class="topbar">
@@ -142,23 +206,63 @@
     if (postId) addToHistory(postId);
 
     if (hasLink) {
+      // ---- এখানেই আসল speed fix: Firebase-এর জন্য অপেক্ষা না করে সাথে সাথে iframe লোড শুরু ----
       const embedUrl = convertToEmbedUrl(rawUrl);
       const frame = document.getElementById('contentFrame');
       frame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
       frame.setAttribute('allowfullscreen', 'true');
+      frame.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
       frame.src = embedUrl;
       frame.onload = () => hideLoading();
       setTimeout(hideLoading, 4000);
       document.getElementById('openExtBtn').addEventListener('click', openExternally);
-      if (postId) {
-        db.collection('posts').doc(postId).get().then(doc => {
-          if (doc.exists) {
-            const d = doc.data();
-            document.getElementById('pageTitle').innerText = d.title || d.customTextPlain || 'NoorFeed';
-          }
-        }).catch(() => {});
+    }
+    // hasLink না থাকলে (text-only post), সেটা নিচের Firebase-ready script হ্যান্ডেল করবে
+  }
+</script>
+
+<!-- ================================================================
+  এই script-টা defer, তাই এটা উপরের script এবং পেজের বাকি সব HTML parse
+  হওয়ার পরে, কিন্তু Firebase (যেটাও defer) লোড হওয়ার পরে রান হবে।
+  এখানে শুধু Title আনা (link পোস্টের জন্য, শুধুই দেখানোর জন্য — জরুরি
+  না) আর text-only পোস্টের পুরো content আনার কাজ হচ্ছে। এটা iframe-এর
+  আগে থেকে চলতে থাকা লোডিংকে একদম block করে না।
+================================================================= -->
+<script defer>
+  document.addEventListener('DOMContentLoaded', function () {
+    const isAppMode = new URLSearchParams(window.location.search).get('app') === '1';
+    if (!isAppMode) return;
+
+    const postId = new URLSearchParams(window.location.search).get('id');
+    const hasLink = window.NF_hasLink;
+    if (!postId) {
+      if (!hasLink) {
+        const card = document.getElementById('textOnlyCard');
+        if (card) card.innerText = 'Post ID পাওয়া যায়নি।';
       }
-    } else if (postId) {
+      return;
+    }
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJLBtnX05B7t8XGJljMJBHSW0OoWEM7xs",
+      authDomain: "streamfeedapp.firebaseapp.com",
+      projectId: "streamfeedapp",
+      storageBucket: "streamfeedapp.firebasestorage.app",
+      messagingSenderId: "255931584141",
+      appId: "1:255931584141:web:9d62d1759e4ee8f280dcc4"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    if (hasLink) {
+      db.collection('posts').doc(postId).get().then(doc => {
+        if (doc.exists) {
+          const d = doc.data();
+          const titleEl = document.getElementById('pageTitle');
+          if (titleEl) titleEl.innerText = d.title || d.customTextPlain || 'NoorFeed';
+        }
+      }).catch(() => {});
+    } else {
       // Text-only post: Firestore থেকে সরাসরি পুরো rich text content আনা হচ্ছে
       db.collection('posts').doc(postId).get().then(doc => {
         if (!doc.exists) {
@@ -172,29 +276,8 @@
       }).catch(err => {
         document.getElementById('textOnlyCard').innerText = 'Load করতে সমস্যা হয়েছে: ' + err.message;
       });
-    } else {
-      document.getElementById('textOnlyCard').innerText = 'Post ID পাওয়া যায়নি।';
     }
-  }
-
-  function hideLoading() {
-    const msg = document.getElementById('loadingMsg');
-    if (msg) msg.style.display = 'none';
-  }
-
-  function openExternally() {
-    if (rawUrl) window.open(rawUrl, '_blank');
-  }
-
-  function addToHistory(id) {
-    let history = JSON.parse(localStorage.getItem('visitHistory') || '[]');
-    history = history.filter(h => h !== id);
-    history.unshift(id);
-    if (history.length > 200) history = history.slice(0, 200);
-    localStorage.setItem('visitHistory', JSON.stringify(history));
-  }
-
-  function goHome() { window.location.href = "index.html?app=1"; }
+  });
 </script>
 
 </body>
