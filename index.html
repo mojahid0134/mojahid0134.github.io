@@ -505,6 +505,60 @@
   const downloadIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
   const folderIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
 
+  // ===== Link Warm-up (speeds up opening a post's link) =====
+  // যখন কোনো post feed-এ scroll করে চোখের সামনে আসে, তখনই (click করার আগেই)
+  // ওই link-এর domain-এর সাথে preconnect করে রাখা হয় এবং view.html পেজটা
+  // prefetch করে ক্যাশে রাখা হয়। ফলে user click করার সময় সেটা প্রায় সাথে
+  // সাথেই খোলে, কারণ connection আর page আগে থেকেই তৈরি থাকে।
+  const warmedPostIds = new Set();
+  let warmObserver = null;
+  function escapeAttr(str) { return String(str).replace(/"/g, '&quot;'); }
+
+  function getWarmObserver() {
+    if (warmObserver) return warmObserver;
+    warmObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          warmUpPostLink(entry.target);
+          warmObserver.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '400px 0px' });
+    return warmObserver;
+  }
+
+  function warmUpPostLink(anchorEl) {
+    const id = anchorEl.dataset.postId;
+    if (!id || warmedPostIds.has(id)) return;
+    warmedPostIds.add(id);
+
+    const targetUrl = anchorEl.dataset.warmUrl;
+    if (targetUrl) {
+      try {
+        const origin = new URL(targetUrl).origin;
+        ['preconnect', 'dns-prefetch'].forEach(rel => {
+          const l = document.createElement('link');
+          l.rel = rel; l.href = origin;
+          if (rel === 'preconnect') l.crossOrigin = 'anonymous';
+          document.head.appendChild(l);
+        });
+      } catch (e) {}
+    }
+
+    const viewHref = anchorEl.getAttribute('href');
+    if (viewHref) {
+      const pf = document.createElement('link');
+      pf.rel = 'prefetch';
+      pf.href = viewHref;
+      document.head.appendChild(pf);
+    }
+  }
+
+  function warmUpVisiblePostLinks() {
+    const observer = getWarmObserver();
+    document.querySelectorAll('a.post-link[data-post-id]').forEach(a => observer.observe(a));
+  }
+
   function copyPostText(id) {
     const post = allPosts.find(p => p.id === id);
     if (!post) return;
@@ -543,10 +597,10 @@
       if (sectionName === 'Daily Hadith') {
         // Daily Hadith: শুধু Title দেখাবে, Title-এ click করলে পুরো text খুলবে
         const titleText = post.title || '(শিরোনাম নেই — Title দেওয়া হয়নি)';
-        bodyHtml = `<a class="post-link" style="font-weight:800;" href="view.html?id=${post.id}${APP_MODE ? '&app=1' : ''}">${titleText}</a>`;
+        bodyHtml = `<a class="post-link" style="font-weight:800;" data-post-id="${post.id}" href="view.html?id=${post.id}${APP_MODE ? '&app=1' : ''}">${titleText}</a>`;
       } else if (hasLink) {
         const titlePrefix = post.title ? `<div style="font-weight:800;color:#1a1a2e;margin-bottom:6px;">${post.title}</div>` : '';
-        bodyHtml = `${titlePrefix}<a class="post-link" href="view.html?id=${post.id}&url=${encodeURIComponent(post.link)}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`;
+        bodyHtml = `${titlePrefix}<a class="post-link" data-post-id="${post.id}" data-warm-url="${escapeAttr(post.link)}" href="view.html?id=${post.id}&url=${encodeURIComponent(post.link)}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`;
       } else {
         const titlePrefix = post.title ? `<div style="font-weight:800;color:#1a1a2e;margin-bottom:6px;">${post.title}</div>` : '';
         bodyHtml = `${titlePrefix}<div class="post-link" style="cursor:default;">${post.customText}</div>`;
@@ -573,6 +627,7 @@
       `;
       feed.appendChild(card);
     });
+    warmUpVisiblePostLinks();
   }
 
   function renderSectionPlaylists(section) {
