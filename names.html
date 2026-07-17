@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>আল্লাহর ৯৯ নাম | Asma-ul-Husna</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, sans-serif; }
+  html, body { height:100%; background:#f4f5f7; }
+
+  .topbar {
+    background:linear-gradient(135deg,#2a1650,#4a2a6d);
+    color:#fff; padding:14px 16px; display:flex; align-items:center; gap:12px;
+    position:fixed; top:0; left:0; right:0; height:52px; z-index:20;
+  }
+  .back-btn {
+    background:rgba(255,255,255,0.15); border:none; color:#fff;
+    width:34px; height:34px; border-radius:50%; font-size:18px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .page-title { font-size:16px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .page-body { position:fixed; top:52px; left:0; right:0; bottom:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+
+  .search-box { padding:12px 16px; background:#f4f5f7; position:sticky; top:0; z-index:5; }
+  .search-input {
+    width:100%; padding:11px 14px; border-radius:14px; border:none;
+    background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.08); font-size:14px; color:#1a1a2e;
+  }
+
+  .intro-box {
+    margin:0 16px 14px; background:linear-gradient(135deg,#2a1650,#4a2a6d); color:#fff;
+    border-radius:16px; padding:18px 16px; text-align:center;
+  }
+  .intro-box .ar-big { font-family:'Amiri','Noto Naskh Arabic',serif; font-size:26px; margin-bottom:6px; }
+  .intro-box .sub { font-size:12.5px; color:#d9c9f7; line-height:1.6; }
+
+  .names-list { padding:4px 16px 24px; }
+
+  .name-card {
+    background:#fff; border-radius:16px; padding:16px 16px 14px; margin-bottom:12px;
+    box-shadow:0 1px 4px rgba(0,0,0,0.06); display:flex; gap:12px; align-items:flex-start;
+  }
+  .name-num-badge {
+    width:30px; height:30px; border-radius:10px; background:linear-gradient(135deg,#2a1650,#4a2a6d);
+    color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; margin-top:2px;
+  }
+  .name-body { flex:1; min-width:0; }
+  .name-ar { font-family:'Amiri','Noto Naskh Arabic',serif; font-size:30px; direction:rtl; text-align:right; color:#1a1a2e; margin-bottom:6px; line-height:1.5; }
+  .name-translit { font-size:13px; font-weight:700; color:#4a2a8d; margin-bottom:8px; }
+  .name-bn { font-size:15px; line-height:1.7; color:#2a1650; margin-bottom:6px; }
+  .name-bn::before { content:"বাংলা: "; font-weight:700; color:#8a5a2e; }
+  .name-en { font-size:13.5px; line-height:1.6; color:#555; font-style:italic; }
+  .name-en::before { content:"English: "; font-weight:700; font-style:normal; color:#888; }
+
+  .state-box { text-align:center; padding:60px 24px; color:#888; font-size:14px; line-height:1.7; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" id="backBtn">←</button>
+  <div class="page-title">আল্লাহর ৯৯ নাম (Asma-ul-Husna)</div>
+</div>
+<div class="page-body" id="pageBody"></div>
+
+<script>
+window.addEventListener('pageshow', function(event) { if (event.persisted) window.location.reload(); });
+
+const params = new URLSearchParams(window.location.search);
+const isAppMode = params.get('app') === '1';
+
+const pageBody = document.getElementById('pageBody');
+const backBtn = document.getElementById('backBtn');
+
+backBtn.addEventListener('click', function () {
+  window.location.href = 'index.html' + (isAppMode ? '?app=1' : '');
+});
+
+/* ============ Static, verified data: Al-Asma-ul-Husna (99 Names of Allah) ============ */
+/* Arabic + transliteration sourced from the standard Tirmidhi-narration list (AlAdhan API). */
+const NAMES = [{"n": 1, "ar": "الرَّحْمَنُ", "translit": "Ar Rahmaan", "en": "The Beneficent", "bn": "পরম করুণাময়"}, {"n": 2, "ar": "الرَّحِيمُ", "translit": "Ar Raheem", "en": "The Merciful", "bn": "পরম দয়ালু"}, {"n": 3, "ar": "الْمَلِكُ", "translit": "Al Malik", "en": "The King / Eternal Lord", "bn": "সর্বাধিপতি বাদশাহ"}, {"n": 4, "ar": "الْقُدُّوسُ", "translit": "Al Quddus", "en": "The Purest", "bn": "পরম পবিত্র"}, {"n": 5, "ar": "السَّلاَمُ", "translit": "As Salaam", "en": "The Source of Peace", "bn": "শান্তিদাতা"}, {"n": 6, "ar": "الْمُؤْمِنُ", "translit": "Al Mu'min", "en": "The inspirer of faith", "bn": "নিরাপত্তা দানকারী"}, {"n": 7, "ar": "الْمُهَيْمِنُ", "translit": "Al Muhaymin", "en": "The Guardian", "bn": "রক্ষণাবেক্ষণকারী"}, {"n": 8, "ar": "الْعَزِيزُ", "translit": "Al Azeez", "en": "The Precious / The Most Mighty", "bn": "পরাক্রমশালী"}, {"n": 9, "ar": "الْجَبَّارُ", "translit": "Al Jabbaar", "en": "The Compeller", "bn": "প্রবল পরাক্রমশালী"}, {"n": 10, "ar": "الْمُتَكَبِّرُ", "translit": "Al Mutakabbir", "en": "The Greatest", "bn": "অহংকারের একচ্ছত্র অধিকারী"}, {"n": 11, "ar": "الْخَالِقُ", "translit": "Al Khaaliq", "en": "The Creator", "bn": "সৃষ্টিকর্তা"}, {"n": 12, "ar": "الْبَارِئُ", "translit": "Al Baari", "en": "The Maker of Order", "bn": "সৃষ্টির উদ্ভাবনকারী"}, {"n": 13, "ar": "الْمُصَوِّرُ", "translit": "Al Musawwir", "en": "The Shaper of Beauty", "bn": "রূপদানকারী"}, {"n": 14, "ar": "الْغَفَّارُ", "translit": "Al Ghaffaar", "en": "The Forgiving", "bn": "মহাক্ষমাশীল"}, {"n": 15, "ar": "الْقَهَّارُ", "translit": "Al Qahhaar", "en": "The Subduer", "bn": "পরাক্রান্ত দমনকারী"}, {"n": 16, "ar": "الْوَهَّابُ", "translit": "Al Wahhaab", "en": "The Giver of All", "bn": "মহাদাতা"}, {"n": 17, "ar": "الرَّزَّاقُ", "translit": "Ar Razzaaq", "en": "The Sustainer", "bn": "রিযিকদাতা"}, {"n": 18, "ar": "الْفَتَّاحُ", "translit": "Al Fattaah", "en": "The Opener", "bn": "বিজয়দানকারী মীমাংসাকারী"}, {"n": 19, "ar": "اَلْعَلِيْمُ", "translit": "Al 'Aleem", "en": "The Knower of all", "bn": "সর্বজ্ঞ"}, {"n": 20, "ar": "الْقَابِضُ", "translit": "Al Qaabid", "en": "The Constrictor", "bn": "সংকোচনকারী"}, {"n": 21, "ar": "الْبَاسِطُ", "translit": "Al Baasit", "en": "The Reliever", "bn": "প্রসারণকারী"}, {"n": 22, "ar": "الْخَافِضُ", "translit": "Al Khaafid", "en": "The Abaser", "bn": "অবনতকারী"}, {"n": 23, "ar": "الرَّافِعُ", "translit": "Ar Raafi'", "en": "The Exalter", "bn": "উন্নতকারী"}, {"n": 24, "ar": "الْمُعِزُّ", "translit": "Al Mu'iz", "en": "The Bestower of Honour", "bn": "সম্মানদানকারী"}, {"n": 25, "ar": "المُذِلُّ", "translit": "Al Mudhil", "en": "The Humiliator", "bn": "অপমানকারী"}, {"n": 26, "ar": "السَّمِيعُ", "translit": "As Samee'", "en": "The Hearer of all", "bn": "সর্বশ্রোতা"}, {"n": 27, "ar": "الْبَصِيرُ", "translit": "Al Baseer", "en": "The Seer of all", "bn": "সর্বদ্রষ্টা"}, {"n": 28, "ar": "الْحَكَمُ", "translit": "Al Hakam", "en": "The Judge", "bn": "বিচারক"}, {"n": 29, "ar": "الْعَدْلُ", "translit": "Al 'Adl", "en": "The Just", "bn": "ন্যায়পরায়ণ"}, {"n": 30, "ar": "اللَّطِيفُ", "translit": "Al Lateef", "en": "The Subtle One", "bn": "সূক্ষ্মদর্শী দয়ালু"}, {"n": 31, "ar": "الْخَبِيرُ", "translit": "Al Khabeer", "en": "The All Aware", "bn": "সর্বজ্ঞাত"}, {"n": 32, "ar": "الْحَلِيمُ", "translit": "Al Haleem", "en": "The Forebearing", "bn": "সহনশীল"}, {"n": 33, "ar": "الْعَظِيمُ", "translit": "Al 'Azeem", "en": "The Maginificent", "bn": "মহিমান্বিত"}, {"n": 34, "ar": "الْغَفُورُ", "translit": "Al Ghafoor", "en": "The Great Forgiver", "bn": "ক্ষমাশীল"}, {"n": 35, "ar": "الشَّكُورُ", "translit": "Ash Shakoor", "en": "The Rewarder of Thankfulness", "bn": "গুণগ্রাহী কদরদানকারী"}, {"n": 36, "ar": "الْعَلِيُّ", "translit": "Al 'Aliyy", "en": "The Highest", "bn": "সর্বোচ্চ"}, {"n": 37, "ar": "الْكَبِيرُ", "translit": "Al Kabeer", "en": "The Greatest", "bn": "সুমহান"}, {"n": 38, "ar": "الْحَفِيظُ", "translit": "Al Hafeez", "en": "The Preserver", "bn": "সংরক্ষণকারী"}, {"n": 39, "ar": "المُقيِت", "translit": "Al Muqeet", "en": "The Nourisher", "bn": "আহার্য জোগানদাতা"}, {"n": 40, "ar": "الْحسِيبُ", "translit": "Al Haseeb", "en": "The Reckoner", "bn": "হিসাব গ্রহণকারী"}, {"n": 41, "ar": "الْجَلِيلُ", "translit": "Al Jaleel", "en": "The Majestic", "bn": "মহিমান্বিত"}, {"n": 42, "ar": "الْكَرِيمُ", "translit": "Al Kareem", "en": "The Generous", "bn": "দানশীল"}, {"n": 43, "ar": "الرَّقِيبُ", "translit": "Ar Raqeeb", "en": "The Watchful One", "bn": "প্রহরী পর্যবেক্ষণকারী"}, {"n": 44, "ar": "الْمُجِيبُ", "translit": "Al Mujeeb", "en": "The Responder to Prayer", "bn": "প্রার্থনা কবুলকারী"}, {"n": 45, "ar": "الْوَاسِعُ", "translit": "Al Waasi'", "en": "The All Comprehending", "bn": "প্রশস্ততার অধিকারী"}, {"n": 46, "ar": "الْحَكِيمُ", "translit": "Al Hakeem", "en": "The Perfectly Wise", "bn": "প্রজ্ঞাময়"}, {"n": 47, "ar": "الْوَدُودُ", "translit": "Al Wudood", "en": "The Loving One", "bn": "প্রেমময়"}, {"n": 48, "ar": "الْمَجِيدُ", "translit": "Al Majeed", "en": "The Most Glorious One", "bn": "গৌরবান্বিত"}, {"n": 49, "ar": "الْبَاعِثُ", "translit": "Al Baa'ith", "en": "The Resurrector", "bn": "পুনরুত্থানকারী"}, {"n": 50, "ar": "الشَّهِيدُ", "translit": "Ash Shaheed", "en": "The Witness", "bn": "সাক্ষী"}, {"n": 51, "ar": "الْحَقُّ", "translit": "Al Haqq", "en": "The Truth", "bn": "সত্য"}, {"n": 52, "ar": "الْوَكِيلُ", "translit": "Al Wakeel", "en": "The Trustee", "bn": "কর্মবিধায়ক"}, {"n": 53, "ar": "الْقَوِيُّ", "translit": "Al Qawiyy", "en": "The Possessor of all strength", "bn": "শক্তিশালী"}, {"n": 54, "ar": "الْمَتِينُ", "translit": "Al Mateen", "en": "The Forceful", "bn": "সুদৃঢ়"}, {"n": 55, "ar": "الْوَلِيُّ", "translit": "Al Waliyy", "en": "The Protector", "bn": "অভিভাবক"}, {"n": 56, "ar": "الْحَمِيدُ", "translit": "Al Hameed", "en": "The Praised", "bn": "প্রশংসিত"}, {"n": 57, "ar": "الْمُحْصِي", "translit": "Al Muhsi", "en": "The Appraiser", "bn": "সবকিছুর গণনাকারী"}, {"n": 58, "ar": "الْمُبْدِئُ", "translit": "Al Mubdi", "en": "The Originator", "bn": "প্রথম সৃষ্টিকারী"}, {"n": 59, "ar": "الْمُعِيدُ", "translit": "Al Mu'eed", "en": "The Restorer", "bn": "পুনঃসৃষ্টিকারী"}, {"n": 60, "ar": "الْمُحْيِي", "translit": "Al Muhiy", "en": "The Giver of life", "bn": "জীবনদানকারী"}, {"n": 61, "ar": "اَلْمُمِيتُ", "translit": "Al Mumeet", "en": "The Taker of life", "bn": "মৃত্যুদানকারী"}, {"n": 62, "ar": "الْحَيُّ", "translit": "Al Haiyy", "en": "The Ever Living", "bn": "চিরঞ্জীব"}, {"n": 63, "ar": "الْقَيُّومُ", "translit": "Al Qayyoom", "en": "The Self Existing", "bn": "স্বয়ংসম্পূর্ণ পরিচালক"}, {"n": 64, "ar": "الْوَاجِدُ", "translit": "Al Waajid", "en": "The Finder", "bn": "প্রাচুর্যময়"}, {"n": 65, "ar": "الْمَاجِدُ", "translit": "Al Maajid", "en": "The Glorious", "bn": "সম্মানিত মহিমান্বিত"}, {"n": 66, "ar": "الْواحِدُ", "translit": "Al Waahid", "en": "The Only One", "bn": "অদ্বিতীয়"}, {"n": 67, "ar": "اَلاَحَدُ", "translit": "Al Ahad", "en": "The One", "bn": "এক"}, {"n": 68, "ar": "الصَّمَدُ", "translit": "As Samad", "en": "The Supreme Provider", "bn": "অমুখাপেক্ষী"}, {"n": 69, "ar": "الْقَادِرُ", "translit": "Al Qaadir", "en": "The Powerful", "bn": "ক্ষমতাবান"}, {"n": 70, "ar": "الْمُقْتَدِرُ", "translit": "Al Muqtadir", "en": "The Creator of all power", "bn": "সর্বশক্তিমান"}, {"n": 71, "ar": "الْمُقَدِّمُ", "translit": "Al Muqaddim", "en": "The Expediter", "bn": "অগ্রবর্তীকারী"}, {"n": 72, "ar": "الْمُؤَخِّرُ", "translit": "Al Mu’akhir", "en": "The Delayer", "bn": "পশ্চাদগামীকারী"}, {"n": 73, "ar": "الأوَّلُ", "translit": "Al Awwal", "en": "The First", "bn": "অনাদি প্রথম"}, {"n": 74, "ar": "الآخِرُ", "translit": "Al Aakhir", "en": "The Last", "bn": "অনন্ত শেষ"}, {"n": 75, "ar": "الظَّاهِرُ", "translit": "Az Zaahir", "en": "The Manifest", "bn": "প্রকাশ্য"}, {"n": 76, "ar": "الْبَاطِنُ", "translit": "Al Baatin", "en": "The Hidden", "bn": "গুপ্ত"}, {"n": 77, "ar": "الْوَالِي", "translit": "Al Waali", "en": "The Governor", "bn": "অভিভাবক শাসক"}, {"n": 78, "ar": "الْمُتَعَالِي", "translit": "Al Muta’ali", "en": "The Supreme One", "bn": "সুউচ্চ"}, {"n": 79, "ar": "الْبَرُّ", "translit": "Al Barr", "en": "The Doer of Good", "bn": "কল্যাণকারী"}, {"n": 80, "ar": "التَّوَابُ", "translit": "At Tawwaab", "en": "The Guide to Repentence", "bn": "তওবা কবুলকারী"}, {"n": 81, "ar": "الْمُنْتَقِمُ", "translit": "Al Muntaqim", "en": "The Avenger", "bn": "প্রতিশোধ গ্রহণকারী"}, {"n": 82, "ar": "العَفُوُّ", "translit": "Al Afuww", "en": "The Forgiver", "bn": "ক্ষমাকারী"}, {"n": 83, "ar": "الرَّؤُوفُ", "translit": "Ar Ra’oof", "en": "The Clement", "bn": "স্নেহশীল"}, {"n": 84, "ar": "مَالِكُ الْمُلْكِ", "translit": "Maalik Ul Mulk", "en": "The Owner / Soverign of All", "bn": "সার্বভৌম অধিপতি"}, {"n": 85, "ar": "ذُوالْجَلاَلِ وَالإكْرَامِ", "translit": "Dhu Al Jalaali Wa Al Ikraam", "en": "Possessor of Majesty and Bounty", "bn": "মহিমা ও দানশীলতার অধিকারী"}, {"n": 86, "ar": "الْمُقْسِطُ", "translit": "Al Muqsit", "en": "The Equitable One", "bn": "ন্যায়বিচারক"}, {"n": 87, "ar": "الْجَامِعُ", "translit": "Al Jaami'", "en": "The Gatherer", "bn": "সমবেতকারী"}, {"n": 88, "ar": "الْغَنِيُّ", "translit": "Al Ghaniyy", "en": "The Rich One", "bn": "অভাবমুক্ত ধনী"}, {"n": 89, "ar": "الْمُغْنِي", "translit": "Al Mughi", "en": "The Enricher", "bn": "অভাবমোচনকারী"}, {"n": 90, "ar": "اَلْمَانِعُ", "translit": "Al Maani'", "en": "The Preventer of harm", "bn": "প্রতিরোধকারী"}, {"n": 91, "ar": "الضَّارَّ", "translit": "Ad Daaarr", "en": "The Creator of the harmful", "bn": "ক্ষতিসাধনকারী"}, {"n": 92, "ar": "النَّافِعُ", "translit": "An Naafi’", "en": "The Bestower of Benefits", "bn": "উপকারদাতা"}, {"n": 93, "ar": "النُّورُ", "translit": "An Noor", "en": "The Light", "bn": "জ্যোতি"}, {"n": 94, "ar": "الْهَادِي", "translit": "Al Haadi", "en": "The Guider", "bn": "পথপ্রদর্শক"}, {"n": 95, "ar": "الْبَدِيعُ", "translit": "Al Badi'", "en": "The Originator", "bn": "অতুলনীয় স্রষ্টা"}, {"n": 96, "ar": "اَلْبَاقِي", "translit": "Al Baaqi", "en": "The Everlasting One", "bn": "চিরস্থায়ী"}, {"n": 97, "ar": "الْوَارِثُ", "translit": "Al Waarith", "en": "The Inhertior", "bn": "উত্তরাধিকারী"}, {"n": 98, "ar": "الرَّشِيدُ", "translit": "Ar Rasheed", "en": "The Most Righteous Guide", "bn": "সৎপথ প্রদর্শক"}, {"n": 99, "ar": "الصَّبُورُ", "translit": "As Saboor", "en": "The Patient One", "bn": "ধৈর্যশীল"}];
+
+function renderNames(list) {
+  let html = '<div class="search-box"><input class="search-input" id="searchInput" placeholder="নাম খুঁজুন (আরবি, বাংলা, ইংরেজি বা নম্বর)..."></div>';
+  html += '<div class="intro-box"><div class="ar-big">وَلِلَّهِ الْأَسْمَاءُ الْحُسْنَىٰ فَادْعُوهُ بِهَا</div><div class="sub">\u0022আর আল্লাহর জন্যই রয়েছে সবচেয়ে সুন্দর নামসমূহ; কাজেই তোমরা সেগুলো দ্বারা তাঁকে ডাকো।\u0022 — সূরা আল-আ\u2019রাফ ৭:১৮০</div></div>';
+  html += '<div class="names-list" id="namesListBox"></div>';
+  pageBody.innerHTML = html;
+
+  const listBox = document.getElementById('namesListBox');
+  function draw(items) {
+    if (!items.length) {
+      listBox.innerHTML = '<div class="state-box">কোনো নাম পাওয়া যায়নি।</div>';
+      return;
+    }
+    listBox.innerHTML = items.map(function (item) {
+      return '<div class="name-card">' +
+        '<div class="name-num-badge">' + item.n + '</div>' +
+        '<div class="name-body">' +
+          '<div class="name-ar">' + item.ar + '</div>' +
+          '<div class="name-translit">' + item.translit + '</div>' +
+          '<div class="name-bn">' + item.bn + '</div>' +
+          '<div class="name-en">' + item.en + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+  draw(list);
+
+  document.getElementById('searchInput').addEventListener('input', function (e) {
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) { draw(list); return; }
+    draw(list.filter(function (item) {
+      return item.translit.toLowerCase().includes(q) ||
+        item.en.toLowerCase().includes(q) ||
+        item.bn.includes(q) ||
+        item.ar.includes(q) ||
+        String(item.n) === q;
+    }));
+  });
+}
+
+renderNames(NAMES);
+</script>
+
+</body>
+  </html>
