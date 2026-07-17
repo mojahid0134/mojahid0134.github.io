@@ -99,7 +99,7 @@
 </head>
 <body>
 
-  <div class="topbar">StreamFeed — Admin Panel</div>
+  <div class="topbar">NoorFeed — Admin Panel</div>
 
   <div class="center-box" id="loginBox">
     <button class="login-btn" onclick="loginWithGoogle()">Sign in with Google</button>
@@ -286,7 +286,7 @@
     const post = postsCache[id];
     if (!post) return;
     const shareUrl = window.location.origin + "/view.html?id=" + id + (post.link ? "&url=" + encodeURIComponent(post.link) : "");
-    const shareTitle = post.title || post.customTextPlain || 'StreamFeed Post';
+    const shareTitle = post.title || post.customTextPlain || 'NoorFeed Post';
     if (navigator.share) navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
     else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
   }
@@ -531,7 +531,7 @@
         msg.innerText = 'Post Scheduled ✅ (' + publishAt.toLocaleString() + ')';
       } else {
         msg.innerText = 'Post created successfully ✅';
-        sendPushNotification('New Post on StreamFeed', title || customTextPlain.slice(0, 120));
+        sendPushNotification('New Post on NoorFeed', title || customTextPlain.slice(0, 120));
       }
       document.getElementById('postLink').value = '';
       document.getElementById('postTitle').value = '';
