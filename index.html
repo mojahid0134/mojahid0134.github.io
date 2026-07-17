@@ -39,6 +39,33 @@
   .date-pill { background:rgba(255,255,255,0.12); padding:5px 11px; border-radius:14px;
     font-size:11px; font-weight:600; color:#fff; }
 
+  .analog-clock {
+    position:relative; width:64px; height:64px; border-radius:50%;
+    background:radial-gradient(circle, #fff 60%, #f2f2f2 100%);
+    border:3px solid #2a1650; box-shadow:0 2px 10px rgba(0,0,0,0.3);
+    margin-top:8px; align-self:flex-end;
+  }
+  .clock-numbers span {
+    position:absolute; top:50%; left:50%; width:100%; height:100%;
+    text-align:center; font-size:7px; font-weight:700; color:#2a1650;
+    transform: rotate(calc(30deg * var(--i))) translateY(-27px);
+    transform-origin: 0 0;
+  }
+  .clock-numbers span::before {
+    content: ""; display:inline-block;
+    transform: rotate(calc(-30deg * var(--i)));
+  }
+  .analog-clock .hand {
+    position:absolute; bottom:50%; left:50%; transform-origin:bottom; border-radius:4px;
+  }
+  .hour-hand { width:2.5px; height:16px; background:#2a1650; margin-left:-1.25px; }
+  .minute-hand { width:2px; height:22px; background:#4a2a6d; margin-left:-1px; }
+  .second-hand { width:1px; height:24px; background:#c0392b; margin-left:-0.5px; }
+  .clock-center {
+    position:absolute; top:50%; left:50%; width:6px; height:6px; border-radius:50%;
+    background:#2a1650; transform:translate(-50%,-50%);
+  }
+
   .topbar h1 { font-size:26px; font-weight:800; color:#fff; line-height:1; }
   .topbar .subtitle { font-size:12px; color:#efe6ff; margin-top:6px; line-height:1.4; }
   .divider-ornament { display:flex; align-items:center; gap:6px; margin-top:8px; }
@@ -163,6 +190,18 @@
             <span id="sessionTimer">00:00</span>
           </div>
           <div class="date-pill" id="dateBtn">📅 See Date</div>
+          <div class="analog-clock" id="analogClock">
+            <div class="clock-numbers">
+              <span style="--i:1">1</span><span style="--i:2">2</span><span style="--i:3">3</span>
+              <span style="--i:4">4</span><span style="--i:5">5</span><span style="--i:6">6</span>
+              <span style="--i:7">7</span><span style="--i:8">8</span><span style="--i:9">9</span>
+              <span style="--i:10">10</span><span style="--i:11">11</span><span style="--i:12">12</span>
+            </div>
+            <div class="hand hour-hand" id="clockHourHand"></div>
+            <div class="hand minute-hand" id="clockMinuteHand"></div>
+            <div class="hand second-hand" id="clockSecondHand"></div>
+            <div class="clock-center"></div>
+          </div>
         </div>
       </div>
 
@@ -253,13 +292,13 @@
   document.addEventListener('click', () => document.getElementById('topDropdown').classList.remove('open'));
   document.getElementById('shareAppBtn').addEventListener('click', () => {
     if (navigator.share) navigator.share({ title: APP_NAME, text: 'Install ' + APP_NAME + ' App', url: APP_SHARE_LINK }).catch(() => {});
-    else navigator.clipboard.writeText(APP_SHARE_LINK).then(() => alert('App link copied to clipboard!'));
+    else navigator.clipboard.writeText(APP_SHARE_LINK);
     document.getElementById('topDropdown').classList.remove('open');
   });
 
   document.getElementById('donateBtn').addEventListener('click', () => document.getElementById('donateModal').classList.add('open'));
   document.getElementById('donateModalClose').addEventListener('click', () => document.getElementById('donateModal').classList.remove('open'));
-  function copyNumber() { navigator.clipboard.writeText('+8801342059227').then(() => alert('Number copied!')); }
+  function copyNumber() { navigator.clipboard.writeText('+8801342059227'); }
 
   const banglaMonths = ['বৈশাখ','জ্যৈষ্ঠ','আষাঢ়','শ্রাবণ','ভাদ্র','আশ্বিন','কার্তিক','অগ্রহায়ণ','পৌষ','মাঘ','ফাল্গুন','চৈত্র'];
   const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
@@ -284,10 +323,23 @@
     return toBnNumber(banglaDay) + ' ' + (banglaMonths[monthIndex] || banglaMonths[11]) + ', ' + toBnNumber(banglaYear);
   }
   const hijriMonthsBn = ['মহররম','সফর','রবিউল আউয়াল','রবিউস সানি','জমাদিউল আউয়াল','জমাদিউস সানি','রজব','শাবান','রমজান','শাওয়াল','জিলক্বদ','জিলহজ্জ'];
+
+  // ================================
+  // HIJRI DATE ADJUSTMENT (গুরুত্বপূর্ণ):
+  // Computer-এর হিসাব (Umm al-Qura) মাঝেমাঝে বাংলাদেশ ইসলামিক ফাউন্ডেশনের
+  // চাঁদ দেখা কমিটির ঘোষণার চেয়ে ১ দিন আগে/পিছে হতে পারে (কারণ আসল হিজরি
+  // তারিখ চাঁদ দেখে ঠিক হয়, ফর্মুলা দিয়ে না)। কখনো ১ দিন গরমিল দেখলে এই
+  // সংখ্যাটা বদলে দাও: ঠিক দিন হলে 0, computer ১ দিন আগে দেখালে -1,
+  // computer ১ দিন পিছে দেখালে +1 বসাও।
+  // ================================
+  const HIJRI_DAY_OFFSET = -1;
+
   function getHijriBanglaDate(date) {
     try {
+      const adjustedDate = new Date(date);
+      adjustedDate.setDate(adjustedDate.getDate() + HIJRI_DAY_OFFSET);
       const fmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', { day:'numeric', month:'numeric', year:'numeric' });
-      const parts = fmt.formatToParts(date);
+      const parts = fmt.formatToParts(adjustedDate);
       let day = null, month = null, year = null;
       parts.forEach(p => {
         if (p.type === 'day') day = parseInt(p.value, 10);
@@ -306,13 +358,29 @@
     // English: day - month - year (English digits & month name)
     const englishStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
     document.getElementById('dateEnglish').innerText = englishStr;
-    // Hijri (আরবি বছর): সঠিক Umm al-Qura হিসাব থেকে day-month-year বের করে বাংলা সংখ্যা ও বাংলা হরফের মাসের নামে দেখানো হচ্ছে
+    // Hijri (আরবি বছর): সঠিক Umm al-Qura হিসাব + adjustment থেকে day-month-year বের করে বাংলা সংখ্যা ও বাংলা হরফের মাসের নামে দেখানো হচ্ছে
     document.getElementById('dateArabic').innerText = getHijriBanglaDate(now);
     // বাংলা: তারিখ - মাস - বছর (বাংলা অংক ও মাসের নাম)
     document.getElementById('dateBangla').innerText = getBanglaDate(now);
   }
   updateDateDisplays();
   setInterval(updateDateDisplays, 60000);
+
+  // ---- Real-time Analog Clock (ফোনের নিজের সময় ব্যবহার করে, তাই এলাকা অনুযায়ী সবসময় সঠিক সময় দেখাবে) ----
+  function updateAnalogClock() {
+    const now = new Date();
+    const h = now.getHours() % 12;
+    const m = now.getMinutes();
+    const s = now.getSeconds();
+    const hourDeg = (h * 30) + (m * 0.5);
+    const minuteDeg = (m * 6) + (s * 0.1);
+    const secondDeg = s * 6;
+    document.getElementById('clockHourHand').style.transform = `rotate(${hourDeg}deg)`;
+    document.getElementById('clockMinuteHand').style.transform = `rotate(${minuteDeg}deg)`;
+    document.getElementById('clockSecondHand').style.transform = `rotate(${secondDeg}deg)`;
+  }
+  updateAnalogClock();
+  setInterval(updateAnalogClock, 1000);
   document.getElementById('dateBtn').addEventListener('click', () => document.getElementById('dateModal').classList.add('open'));
   document.getElementById('dateModalClose').addEventListener('click', () => document.getElementById('dateModal').classList.remove('open'));
   document.getElementById('moreModalClose').addEventListener('click', () => document.getElementById('moreModal').classList.remove('open'));
@@ -451,7 +519,7 @@
   function copyPostText(id) {
     const post = allPosts.find(p => p.id === id);
     if (!post) return;
-    navigator.clipboard.writeText(post.customTextPlain || post.customText).then(() => alert('Text copied to clipboard!'));
+    navigator.clipboard.writeText(post.customTextPlain || post.customText);
   }
 
   function downloadImage(id) {
@@ -613,7 +681,7 @@
     const shareUrl = window.location.origin + "/view.html?id=" + postId + (post.link ? "&url=" + encodeURIComponent(post.link) : "");
     const shareTitle = post.title || post.customTextPlain || 'NoorFeed Post';
     if (navigator.share) navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
-    else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
+    else navigator.clipboard.writeText(shareUrl);
   }
 
   function isVisibleNow(post) {
