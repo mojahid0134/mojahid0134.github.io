@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StreamFeed</title>
+<title>NoorFeed</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -166,7 +166,7 @@
         </div>
       </div>
 
-      <h1 id="appTitle">StreamFeed</h1>
+      <h1 id="appTitle">NoorFeed</h1>
       <div class="subtitle" id="appSubtitle">Learn. Reflect. Grow.<br>In the light of Islam.</div>
       <div class="divider-ornament"><div class="line"></div><div class="dot"></div><div class="line"></div></div>
     </div>
@@ -242,7 +242,7 @@
 <script>
   window.addEventListener('pageshow', function(event) { if (event.persisted) window.location.reload(); });
 
-  const APP_NAME = "StreamFeed";
+  const APP_NAME = "NoorFeed";
   const APP_SHARE_LINK = "https://play.google.com/store/apps/details?id=com.yourname.streamfeed";
   document.title = APP_NAME;
 
@@ -446,8 +446,6 @@
   const sendIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
   const copyIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
   const downloadIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
-  const globeIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20z"/></svg>`;
-  const avatarIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path fill="#fff" stroke="none" d="M12 3.5 A18 18 0 1 0 12 10.5 A14 14 0 1 1 12 3.5 Z"/></svg>`;
   const folderIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
 
   function copyPostText(id) {
@@ -461,6 +459,14 @@
     if (!post || !post.link) return;
     if (APP_MODE && window.Kodular) window.Kodular.setWebViewString('DOWNLOAD_IMAGE:' + post.link);
     else window.open(post.link, '_blank');
+  }
+
+  function getSectionIconStyle(pl) {
+    if (!pl) return { bg:'#4a2a6d', color:'#fff', svg:`<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="9" r="4"/>` };
+    if (pl.hadithGroupId) return SECTION_STYLES['Al Hadith'];
+    if (pl.section && SECTION_STYLES[pl.section]) return SECTION_STYLES[pl.section];
+    if (SECTION_STYLES[pl.name]) return SECTION_STYLES[pl.name];
+    return { bg:'#4a2a6d', color:'#fff', svg:`<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="9" r="4"/>` };
   }
 
   function renderPosts(posts) {
@@ -490,11 +496,12 @@
       }
       const copyBtnHtml = sectionName === 'Bangla Caption' ? `<button class="action-btn" onclick="copyPostText('${post.id}')">${copyIcon} Copy</button>` : '';
       const postSubHtml = sectionName === 'Daily Hadith'
-        ? `<div class="post-sub">${timeAgo(post.rawTime)} · ${globeIcon}</div>`
-        : `<div class="post-sub">${globeIcon}</div>`;
+        ? `<div class="post-sub">${timeAgo(post.rawTime)}</div>`
+        : '';
+      const iconSt = getSectionIconStyle(pl);
       card.innerHTML = `
         <div class="post-header">
-          <div class="post-avatar">${avatarIcon}</div>
+          <div class="post-avatar" style="background:${iconSt.bg}; color:${iconSt.color};">${buildIconHtml(iconSt)}</div>
           <div class="post-meta">
             <div class="post-section-name">${sectionName}</div>
             ${postSubHtml}
@@ -604,7 +611,7 @@
     const post = allPosts.find(p => p.id === postId);
     if (!post) return;
     const shareUrl = window.location.origin + "/view.html?id=" + postId + (post.link ? "&url=" + encodeURIComponent(post.link) : "");
-    const shareTitle = post.title || post.customTextPlain || 'StreamFeed Post';
+    const shareTitle = post.title || post.customTextPlain || 'NoorFeed Post';
     if (navigator.share) navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
     else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
   }
