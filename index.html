@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NoorFeed</title>
+<title>StreamFeed</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Roboto, sans-serif;
-    -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
   body { background:#f4f5f7; }
   svg.icon { width:16px; height:16px; flex-shrink:0; }
 
@@ -22,7 +21,7 @@
     background: linear-gradient(180deg, rgba(42,22,80,0.55) 0%, rgba(74,42,109,0.3) 55%, rgba(224,160,108,0.15) 100%); }
   .topbar-content { position:relative; z-index:3; height:100%; display:flex; flex-direction:column; }
 
-  .top-toprow { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:auto; }
+  .top-toprow { display:flex; justify-content:space-between; align-items:center; margin-bottom:auto; }
   .top-left-btns { display:flex; gap:8px; }
   .hamburger-wrap, .donate-wrap { position:relative; }
   .hamburger-btn, .donate-btn { background:rgba(255,255,255,0.18); border:none; color:#fff;
@@ -39,11 +38,6 @@
     font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px; color:#fff; }
   .date-pill { background:rgba(255,255,255,0.12); padding:5px 11px; border-radius:14px;
     font-size:11px; font-weight:600; color:#fff; }
-
-  .analog-clock {
-    position:absolute; top:78px; right:16px; z-index:4;
-    filter:drop-shadow(0 2px 8px rgba(0,0,0,0.35));
-  }
 
   .topbar h1 { font-size:26px; font-weight:800; color:#fff; line-height:1; }
   .topbar .subtitle { font-size:12px; color:#efe6ff; margin-top:6px; line-height:1.4; }
@@ -168,33 +162,11 @@
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <span id="sessionTimer">00:00</span>
           </div>
-          <div class="date-pill" id="dateBtn">📅 See Date</div>
+          <div class="date-pill" id="dateBtn">Loading date...</div>
         </div>
       </div>
 
-      <div class="analog-clock" id="analogClock">
-        <svg viewBox="0 0 64 64" width="64" height="64">
-          <circle cx="32" cy="32" r="30" fill="#fff" stroke="#2a1650" stroke-width="3"/>
-          <text x="32" y="12.5" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">12</text>
-          <text x="43.9" y="14.6" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">1</text>
-          <text x="52.4" y="23.1" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">2</text>
-          <text x="55.5" y="32" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">3</text>
-          <text x="52.4" y="40.9" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">4</text>
-          <text x="43.9" y="49.4" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">5</text>
-          <text x="32" y="53.5" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">6</text>
-          <text x="20.1" y="49.4" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">7</text>
-          <text x="11.6" y="40.9" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">8</text>
-          <text x="8.5" y="32" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">9</text>
-          <text x="11.6" y="23.1" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">10</text>
-          <text x="20.1" y="14.6" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">11</text>
-          <line id="clockHourHand" x1="32" y1="32" x2="32" y2="19" stroke="#2a1650" stroke-width="3" stroke-linecap="round"/>
-          <line id="clockMinuteHand" x1="32" y1="32" x2="32" y2="12" stroke="#4a2a6d" stroke-width="2" stroke-linecap="round"/>
-          <line id="clockSecondHand" x1="32" y1="32" x2="32" y2="9" stroke="#c0392b" stroke-width="1" stroke-linecap="round"/>
-          <circle cx="32" cy="32" r="2.5" fill="#2a1650"/>
-        </svg>
-      </div>
-
-      <h1 id="appTitle">NoorFeed</h1>
+      <h1 id="appTitle">StreamFeed</h1>
       <div class="subtitle" id="appSubtitle">Learn. Reflect. Grow.<br>In the light of Islam.</div>
       <div class="divider-ornament"><div class="line"></div><div class="dot"></div><div class="line"></div></div>
     </div>
@@ -205,7 +177,7 @@
     <div class="modal-sheet">
       <div class="modal-title">📅 Today's Date <button class="modal-close" id="dateModalClose">✕</button></div>
       <div class="date-row"><div class="label">English</div><div class="value" id="dateEnglish">-</div></div>
-      <div class="date-row"><div class="label">Hijri (আরবি বছর)</div><div class="value" id="dateArabic">-</div></div>
+      <div class="date-row"><div class="label">Arabic (Hijri)</div><div class="value" id="dateArabic">-</div></div>
       <div class="date-row"><div class="label">বাংলা</div><div class="value" id="dateBangla">-</div></div>
     </div>
   </div>
@@ -270,7 +242,7 @@
 <script>
   window.addEventListener('pageshow', function(event) { if (event.persisted) window.location.reload(); });
 
-  const APP_NAME = "NoorFeed";
+  const APP_NAME = "StreamFeed";
   const APP_SHARE_LINK = "https://play.google.com/store/apps/details?id=com.yourname.streamfeed";
   document.title = APP_NAME;
 
@@ -281,13 +253,13 @@
   document.addEventListener('click', () => document.getElementById('topDropdown').classList.remove('open'));
   document.getElementById('shareAppBtn').addEventListener('click', () => {
     if (navigator.share) navigator.share({ title: APP_NAME, text: 'Install ' + APP_NAME + ' App', url: APP_SHARE_LINK }).catch(() => {});
-    else navigator.clipboard.writeText(APP_SHARE_LINK);
+    else navigator.clipboard.writeText(APP_SHARE_LINK).then(() => alert('App link copied to clipboard!'));
     document.getElementById('topDropdown').classList.remove('open');
   });
 
   document.getElementById('donateBtn').addEventListener('click', () => document.getElementById('donateModal').classList.add('open'));
   document.getElementById('donateModalClose').addEventListener('click', () => document.getElementById('donateModal').classList.remove('open'));
-  function copyNumber() { navigator.clipboard.writeText('+8801342059227'); }
+  function copyNumber() { navigator.clipboard.writeText('+8801342059227').then(() => alert('Number copied!')); }
 
   const banglaMonths = ['বৈশাখ','জ্যৈষ্ঠ','আষাঢ়','শ্রাবণ','ভাদ্র','আশ্বিন','কার্তিক','অগ্রহায়ণ','পৌষ','মাঘ','ফাল্গুন','চৈত্র'];
   const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
@@ -311,65 +283,19 @@
     const banglaDay = remaining + 1;
     return toBnNumber(banglaDay) + ' ' + (banglaMonths[monthIndex] || banglaMonths[11]) + ', ' + toBnNumber(banglaYear);
   }
-  const hijriMonthsBn = ['মহররম','সফর','রবিউল আউয়াল','রবিউস সানি','জমাদিউল আউয়াল','জমাদিউস সানি','রজব','শাবান','রমজান','শাওয়াল','জিলক্বদ','জিলহজ্জ'];
-
-  // ================================
-  // HIJRI DATE ADJUSTMENT (গুরুত্বপূর্ণ):
-  // Computer-এর হিসাব (Umm al-Qura) মাঝেমাঝে বাংলাদেশ ইসলামিক ফাউন্ডেশনের
-  // চাঁদ দেখা কমিটির ঘোষণার চেয়ে ১ দিন আগে/পিছে হতে পারে (কারণ আসল হিজরি
-  // তারিখ চাঁদ দেখে ঠিক হয়, ফর্মুলা দিয়ে না)। কখনো ১ দিন গরমিল দেখলে এই
-  // সংখ্যাটা বদলে দাও: ঠিক দিন হলে 0, computer ১ দিন আগে দেখালে -1,
-  // computer ১ দিন পিছে দেখালে +1 বসাও।
-  // ================================
-  const HIJRI_DAY_OFFSET = -1;
-
-  function getHijriBanglaDate(date) {
-    try {
-      const adjustedDate = new Date(date);
-      adjustedDate.setDate(adjustedDate.getDate() + HIJRI_DAY_OFFSET);
-      const fmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', { day:'numeric', month:'numeric', year:'numeric' });
-      const parts = fmt.formatToParts(adjustedDate);
-      let day = null, month = null, year = null;
-      parts.forEach(p => {
-        if (p.type === 'day') day = parseInt(p.value, 10);
-        if (p.type === 'month') month = parseInt(p.value, 10);
-        if (p.type === 'year') year = parseInt(p.value, 10);
-      });
-      if (!day || !month || !year) return 'Not supported on this device';
-      const monthName = hijriMonthsBn[month - 1] || hijriMonthsBn[0];
-      return toBnNumber(day) + ' ' + monthName + ', ' + toBnNumber(year);
-    } catch (e) {
-      return 'Not supported on this device';
-    }
-  }
   function updateDateDisplays() {
     const now = new Date();
-    // English: day - month - year (English digits & month name)
     const englishStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+    document.getElementById('dateBtn').innerText = englishStr;
     document.getElementById('dateEnglish').innerText = englishStr;
-    // Hijri (আরবি বছর): সঠিক Umm al-Qura হিসাব + adjustment থেকে day-month-year বের করে বাংলা সংখ্যা ও বাংলা হরফের মাসের নামে দেখানো হচ্ছে
-    document.getElementById('dateArabic').innerText = getHijriBanglaDate(now);
-    // বাংলা: তারিখ - মাস - বছর (বাংলা অংক ও মাসের নাম)
+    try {
+      const hijri = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', { day:'numeric', month:'long', year:'numeric' }).format(now);
+      document.getElementById('dateArabic').innerText = hijri;
+    } catch (e) { document.getElementById('dateArabic').innerText = 'Not supported on this device'; }
     document.getElementById('dateBangla').innerText = getBanglaDate(now);
   }
   updateDateDisplays();
   setInterval(updateDateDisplays, 60000);
-
-  // ---- Real-time Analog Clock (ফোনের নিজের সময় ব্যবহার করে, তাই এলাকা অনুযায়ী সবসময় সঠিক সময় দেখাবে) ----
-  function updateAnalogClock() {
-    const now = new Date();
-    const h = now.getHours() % 12;
-    const m = now.getMinutes();
-    const s = now.getSeconds();
-    const hourDeg = (h * 30) + (m * 0.5);
-    const minuteDeg = (m * 6) + (s * 0.1);
-    const secondDeg = s * 6;
-    document.getElementById('clockHourHand').setAttribute('transform', `rotate(${hourDeg} 32 32)`);
-    document.getElementById('clockMinuteHand').setAttribute('transform', `rotate(${minuteDeg} 32 32)`);
-    document.getElementById('clockSecondHand').setAttribute('transform', `rotate(${secondDeg} 32 32)`);
-  }
-  updateAnalogClock();
-  setInterval(updateAnalogClock, 1000);
   document.getElementById('dateBtn').addEventListener('click', () => document.getElementById('dateModal').classList.add('open'));
   document.getElementById('dateModalClose').addEventListener('click', () => document.getElementById('dateModal').classList.remove('open'));
   document.getElementById('moreModalClose').addEventListener('click', () => document.getElementById('moreModal').classList.remove('open'));
@@ -378,7 +304,6 @@
 
   const SECTION_STYLES = {
     'Daily Hadith': { bg:'#e9f5e8', color:'#2e7d32', svg:`<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>` },
-    'Al Hadith': { bg:'#fdf3e7', color:'#a8630a', svg:`<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>` },
     'Lives of the Prophets': { bg:'#eeeafc', color:'#4a2a8d', svg:`<path d="M12 2v3"/><circle cx="12" cy="2.3" r="0.8" fill="currentColor" stroke="none"/><path d="M6 21v-6a6 6 0 0 1 12 0v6"/><line x1="4" y1="21" x2="20" y2="21"/>` },
     'Lives of the Sahabah': { bg:'#fdf1e0', color:'#c9820a', svg:`<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>` },
     'Dua': { bg:'#e8f0fb', color:'#1e56b3', emoji:'🤲' },
@@ -389,9 +314,10 @@
     'মাসনুন আমল': { bg:'#eafaf0', color:'#1e8a5f', svg:`<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7"/><path d="M9 11h7"/>` },
     'কুরআনের শিক্ষা': { bg:'#fbf3e2', color:'#a8790a', svg:`<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>` },
     'Bangla Caption': { bg:'#fbeaf1', color:'#c22a72', svg:`<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>` },
+    'Islamic Caption Images': { bg:'#fef0e6', color:'#c4650f', svg:`<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>` },
     'Nasheed': { bg:'#eaf4e6', color:'#4d8a2e', svg:`<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>` }
   };
-  const SECTION_ORDER = ['Daily Hadith','Al Hadith','Lives of the Prophets','Lives of the Sahabah','Dua','99 Names','Tasbih','মাসআলা','প্রচলিত ভুল','মাসনুন আমল','কুরআনের শিক্ষা','Bangla Caption','Nasheed'];
+  const SECTION_ORDER = ['Daily Hadith','Lives of the Prophets','Lives of the Sahabah','Dua','99 Names','Tasbih','মাসআলা','প্রচলিত ভুল','মাসনুন আমল','কুরআনের শিক্ষা','Bangla Caption','Islamic Caption Images','Nasheed'];
   const MORE_ICON = { bg:'#efeef2', color:'#555', svg:`<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>` };
 
   function buildIconHtml(st) {
@@ -402,7 +328,6 @@
 
   function handleSectionClick(name) {
     if (name === 'Tasbih') { window.location.href = 'tasbih.html' + (APP_MODE ? '?app=1' : ''); return; }
-    if (name === 'Al Hadith') { currentFilter = { type: 'hadithGroups' }; applyFilterState(); window.scrollTo(0,0); return; }
     navSection(name);
   }
 
@@ -446,7 +371,6 @@
 
   let allPosts = [];
   let allPlaylists = [];
-  let allHadithGroups = [];
   let currentFilter = { type: 'all' };
   const APP_MODE = new URLSearchParams(window.location.search).get('app') === '1';
 
@@ -503,12 +427,14 @@
   const sendIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
   const copyIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
   const downloadIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+  const globeIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20z"/></svg>`;
+  const avatarIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path fill="#fff" stroke="none" d="M12 3.5 A18 18 0 1 0 12 10.5 A14 14 0 1 1 12 3.5 Z"/></svg>`;
   const folderIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
 
   function copyPostText(id) {
     const post = allPosts.find(p => p.id === id);
     if (!post) return;
-    navigator.clipboard.writeText(post.customTextPlain || post.customText);
+    navigator.clipboard.writeText(post.customText).then(() => alert('Text copied to clipboard!'));
   }
 
   function downloadImage(id) {
@@ -516,14 +442,6 @@
     if (!post || !post.link) return;
     if (APP_MODE && window.Kodular) window.Kodular.setWebViewString('DOWNLOAD_IMAGE:' + post.link);
     else window.open(post.link, '_blank');
-  }
-
-  function getSectionIconStyle(pl) {
-    if (!pl) return { bg:'#4a2a6d', color:'#fff', svg:`<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="9" r="4"/>` };
-    if (pl.hadithGroupId) return SECTION_STYLES['Al Hadith'];
-    if (pl.section && SECTION_STYLES[pl.section]) return SECTION_STYLES[pl.section];
-    if (SECTION_STYLES[pl.name]) return SECTION_STYLES[pl.name];
-    return { bg:'#4a2a6d', color:'#fff', svg:`<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="9" r="4"/>` };
   }
 
   function renderPosts(posts) {
@@ -539,36 +457,25 @@
       const sectionName = pl ? pl.name : 'General';
       const card = document.createElement('div');
       card.className = 'post-card';
-      let bodyHtml;
-      if (sectionName === 'Daily Hadith') {
-        // Daily Hadith: শুধু Title দেখাবে, Title-এ click করলে পুরো text খুলবে
-        const titleText = post.title || '(শিরোনাম নেই — Title দেওয়া হয়নি)';
-        bodyHtml = `<a class="post-link" style="font-weight:800;" href="view.html?id=${post.id}${APP_MODE ? '&app=1' : ''}">${titleText}</a>`;
-      } else if (hasLink) {
-        const titlePrefix = post.title ? `<div style="font-weight:800;color:#1a1a2e;margin-bottom:6px;">${post.title}</div>` : '';
-        bodyHtml = `${titlePrefix}<a class="post-link" href="view.html?id=${post.id}&url=${encodeURIComponent(post.link)}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`;
-      } else {
-        const titlePrefix = post.title ? `<div style="font-weight:800;color:#1a1a2e;margin-bottom:6px;">${post.title}</div>` : '';
-        bodyHtml = `${titlePrefix}<div class="post-link" style="cursor:default;">${post.customText}</div>`;
-      }
+      const titleHtml = hasLink
+        ? `<a class="post-link" href="view.html?url=${encodeURIComponent(post.link)}&title=${encodeURIComponent(post.customText)}&id=${post.id}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`
+        : `<div class="post-link" style="cursor:default;">${post.customText}</div>`;
       const copyBtnHtml = sectionName === 'Bangla Caption' ? `<button class="action-btn" onclick="copyPostText('${post.id}')">${copyIcon} Copy</button>` : '';
-      const postSubHtml = sectionName === 'Daily Hadith'
-        ? `<div class="post-sub">${timeAgo(post.rawTime)}</div>`
-        : '';
-      const iconSt = getSectionIconStyle(pl);
+      const downloadBtnHtml = sectionName === 'Islamic Caption Images' ? `<button class="action-btn" onclick="downloadImage('${post.id}')">${downloadIcon} Download Image</button>` : '';
       card.innerHTML = `
         <div class="post-header">
-          <div class="post-avatar" style="background:${iconSt.bg}; color:${iconSt.color};">${buildIconHtml(iconSt)}</div>
+          <div class="post-avatar">${avatarIcon}</div>
           <div class="post-meta">
             <div class="post-section-name">${sectionName}</div>
-            ${postSubHtml}
+            <div class="post-sub">${timeAgo(post.rawTime)} · ${globeIcon}</div>
           </div>
         </div>
-        ${bodyHtml}
+        ${titleHtml}
         <div class="post-footer">
           <button class="action-btn fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${post.id}', this)">${heartIcon} Favorite</button>
           <button class="action-btn" onclick="sharePost('${post.id}')">${sendIcon} Share</button>
           ${copyBtnHtml}
+          ${downloadBtnHtml}
         </div>
       `;
       feed.appendChild(card);
@@ -580,35 +487,6 @@
     const feed = document.getElementById('feedContainer');
     const items = allPlaylists.filter(p => p.section === section);
     if (items.length === 0) { feed.innerHTML = '<div class="empty-msg">No playlists added in this section yet</div>'; return; }
-    feed.innerHTML = '';
-    items.forEach(pl => {
-      const card = document.createElement('div');
-      card.className = 'playlist-folder';
-      card.innerHTML = `${folderIcon} ${pl.name}`;
-      card.onclick = () => { currentFilter = { type: 'playlistById', id: pl.id }; applyFilterState(); };
-      feed.appendChild(card);
-    });
-  }
-
-  function renderHadithGroups() {
-    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title">📖 Al Hadith — Choose a Group</div>`;
-    const feed = document.getElementById('feedContainer');
-    if (allHadithGroups.length === 0) { feed.innerHTML = '<div class="empty-msg">এখনো কোনো Al Hadith Group যোগ করা হয়নি</div>'; return; }
-    feed.innerHTML = '';
-    allHadithGroups.forEach(group => {
-      const card = document.createElement('div');
-      card.className = 'playlist-folder';
-      card.innerHTML = `${folderIcon} ${group.name}`;
-      card.onclick = () => { currentFilter = { type: 'hadithPlaylists', groupId: group.id, groupName: group.name }; applyFilterState(); };
-      feed.appendChild(card);
-    });
-  }
-
-  function renderHadithPlaylists(groupId, groupName) {
-    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title">📁 ${groupName || 'Al Hadith'} — Choose a Playlist</div>`;
-    const feed = document.getElementById('feedContainer');
-    const items = allPlaylists.filter(p => p.hadithGroupId === groupId);
-    if (items.length === 0) { feed.innerHTML = '<div class="empty-msg">No playlists added in this group yet</div>'; return; }
     feed.innerHTML = '';
     items.forEach(pl => {
       const card = document.createElement('div');
@@ -644,12 +522,6 @@
     } else if (currentFilter.type === 'sectionBrowse') {
       setFilterTabs(null);
       renderSectionPlaylists(currentFilter.section);
-    } else if (currentFilter.type === 'hadithGroups') {
-      setFilterTabs(null);
-      renderHadithGroups();
-    } else if (currentFilter.type === 'hadithPlaylists') {
-      setFilterTabs(null);
-      renderHadithPlaylists(currentFilter.groupId, currentFilter.groupName);
     }
   }
 
@@ -667,10 +539,9 @@
   function sharePost(postId) {
     const post = allPosts.find(p => p.id === postId);
     if (!post) return;
-    const shareUrl = window.location.origin + "/view.html?id=" + postId + (post.link ? "&url=" + encodeURIComponent(post.link) : "");
-    const shareTitle = post.title || post.customTextPlain || 'NoorFeed Post';
-    if (navigator.share) navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
-    else navigator.clipboard.writeText(shareUrl);
+    const shareUrl = window.location.origin + "/view.html?url=" + encodeURIComponent(post.link) + "&title=" + encodeURIComponent(post.customText);
+    if (navigator.share) navigator.share({ title: post.customText, url: shareUrl }).catch(() => {});
+    else navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied to clipboard!'));
   }
 
   function isVisibleNow(post) {
@@ -681,15 +552,13 @@
   function refreshData() {
     Promise.all([
       db.collection('posts').orderBy('time','desc').get(),
-      db.collection('playlists').get(),
-      db.collection('hadithGroups').get()
-    ]).then(([postSnap, plSnap, groupSnap]) => {
+      db.collection('playlists').get()
+    ]).then(([postSnap, plSnap]) => {
       let freshPosts = [];
       postSnap.forEach(doc => {
         const d = doc.data();
         freshPosts.push({
-          id: doc.id, title: d.title || '', customText: d.customText || 'Untitled Post',
-          customTextPlain: d.customTextPlain || '',
+          id: doc.id, customText: d.customText || 'Untitled Post',
           link: d.link || '', playlistId: d.playlistId || '',
           timeText: d.timeText || '', rawTime: d.time ? d.time.toMillis() : null,
           rawPublishAt: d.publishAt ? d.publishAt.toMillis() : null
@@ -700,18 +569,10 @@
       const freshPlaylists = [];
       plSnap.forEach(doc => {
         const d = doc.data();
-        freshPlaylists.push({ id: doc.id, name: d.name || 'Playlist', section: d.section || null, hadithGroupId: d.hadithGroupId || null });
+        freshPlaylists.push({ id: doc.id, name: d.name || 'Playlist', section: d.section || null });
       });
-
-      const freshHadithGroups = [];
-      groupSnap.forEach(doc => {
-        const d = doc.data();
-        freshHadithGroups.push({ id: doc.id, name: d.name || 'Group' });
-      });
-
       allPosts = freshPosts;
       allPlaylists = freshPlaylists;
-      allHadithGroups = freshHadithGroups;
       localStorage.setItem(CACHE_POSTS_KEY, JSON.stringify(freshPosts));
       localStorage.setItem(CACHE_PLAYLISTS_KEY, JSON.stringify(freshPlaylists));
       applyFilterState();
