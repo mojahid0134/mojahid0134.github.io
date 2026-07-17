@@ -154,7 +154,7 @@
         db.collection('posts').doc(postId).get().then(doc => {
           if (doc.exists) {
             const d = doc.data();
-            document.getElementById('pageTitle').innerText = d.title || d.customTextPlain || 'StreamFeed';
+            document.getElementById('pageTitle').innerText = d.title || d.customTextPlain || 'NoorFeed';
           }
         }).catch(() => {});
       }
@@ -166,7 +166,7 @@
           return;
         }
         const d = doc.data();
-        document.getElementById('pageTitle').innerText = d.title || 'StreamFeed';
+        document.getElementById('pageTitle').innerText = d.title || 'NoorFeed';
         const titleHtml = d.title ? `<div class="post-title-view">${d.title}</div>` : '';
         document.getElementById('textOnlyCard').innerHTML = titleHtml + (d.customText || '');
       }).catch(err => {
