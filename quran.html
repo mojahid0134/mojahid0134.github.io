@@ -71,6 +71,8 @@
     font-family:'Amiri','Noto Naskh Arabic',serif; font-size:24px; line-height:2.1;
     direction:rtl; text-align:right; color:#1a1a2e; margin-bottom:12px;
   }
+  .ayah-translit { font-size:14px; line-height:1.8; color:#5a3a1e; margin-bottom:8px; font-style:italic; }
+  .ayah-translit::before { content:"উচ্চারণ: "; font-weight:700; font-style:normal; color:#a8730a; }
   .ayah-bn { font-size:15px; line-height:1.8; color:#2a1650; margin-bottom:8px; }
   .ayah-bn::before { content:"বাংলা: "; font-weight:700; color:#8a5a2e; }
   .ayah-en { font-size:13.5px; line-height:1.7; color:#555; font-style:italic; }
@@ -107,7 +109,113 @@ const surahParam = params.get('surah');
 
 const API_BASE = 'https://api.alquran.cloud/v1';
 const EDITIONS = 'quran-uthmani,bn.bengali,en.sahih';
+const TRANSLIT_BASE = 'https://cdn.jsdelivr.net/npm/quran-json@3.1.2/dist/chapters';
 const LIST_CACHE_KEY = 'quran_surah_list_v1';
+
+/* ===== Latin (Tanzil) -> Bengali phonetic uccharon converter =====
+   Source transliteration: Tanzil.net (via quran-json). Converted to Bengali
+   script with a systematic, consistent rule-set (sounds -> Bangla graphemes).
+   Spelling may differ slightly from printed Bangla Quran Sharif books, since
+   there is no single universal standard for Bangla উচ্চারণ spelling. */
+const TRANSLIT_CONS = {
+  kh:'খ', gh:'গ', sh:'শ', th:'থ', dh:'ধ',
+  b:'ব', t:'ত', j:'জ', h:'হ', d:'দ', r:'র', z:'য',
+  s:'স', f:'ফ', q:'ক', k:'ক', l:'ল', m:'ম', n:'ন',
+  c:'ক', v:'ভ', p:'প', g:'গ',
+  w:'ওয়', y:'য়'
+};
+const TRANSLIT_CONS_KEYS = Object.keys(TRANSLIT_CONS).sort((a,b)=>b.length-a.length);
+
+const TRANSLIT_VOWEL_INDEP = {
+  aa:'আ', ee:'ঈ', oo:'ঊ', ai:'ঐ', au:'ঔ', ay:'ঐ', aw:'ঔ',
+  a:'আ', i:'ই', u:'উ', e:'এ', o:'ও'
+};
+const TRANSLIT_VOWEL_MATRA = {
+  aa:'া', ee:'ী', oo:'ূ', ai:'ৈ', au:'ৌ', ay:'ৈ', aw:'ৌ',
+  a:'া', i:'ি', u:'ু', e:'ে', o:'ো'
+};
+const TRANSLIT_VOWEL_KEYS = Object.keys(TRANSLIT_VOWEL_INDEP).sort((a,b)=>b.length-a.length);
+
+function translitTokenize(word) {
+  word = word.replace(/AA/g, '\x01').replace(/['\u2019]/g, '\x01');
+  const tokens = [];
+  let i = 0;
+  const n = word.length;
+  while (i < n) {
+    if (word[i] === '\x01') { tokens.push(['BREAK', null]); i += 1; continue; }
+    let matched = false;
+    for (const k of TRANSLIT_CONS_KEYS) {
+      if (word.substr(i, k.length).toLowerCase() === k) {
+        tokens.push(['C', k]); i += k.length; matched = true; break;
+      }
+    }
+    if (matched) continue;
+    for (const k of TRANSLIT_VOWEL_KEYS) {
+      if (word.substr(i, k.length).toLowerCase() === k) {
+        tokens.push(['V', k]); i += k.length; matched = true; break;
+      }
+    }
+    if (matched) continue;
+    i += 1;
+  }
+  return tokens;
+}
+
+function translitShamsiyya(tokens) {
+  const out = [];
+  let i = 0;
+  const n = tokens.length;
+  while (i < n) {
+    if (tokens[i][0] === 'C' && tokens[i][1] === 'l' && i + 2 < n &&
+        tokens[i+1][0] === 'C' && tokens[i+2][0] === 'C' &&
+        tokens[i+1][1] === tokens[i+2][1]) {
+      i += 1;
+      continue;
+    }
+    out.push(tokens[i]);
+    i += 1;
+  }
+  return out;
+}
+
+function translitWord(word) {
+  let tokens = translitTokenize(word);
+  tokens = translitShamsiyya(tokens);
+  let out = '';
+  let i = 0;
+  let pendingCons = false;
+  const n = tokens.length;
+  while (i < n) {
+    const typ = tokens[i][0], val = tokens[i][1];
+    if (typ === 'BREAK') { pendingCons = false; i += 1; continue; }
+    if (typ === 'C') {
+      const base = TRANSLIT_CONS[val];
+      if (pendingCons) out += '্';
+      out += base;
+      pendingCons = true;
+      if (i + 1 < n && tokens[i+1][0] === 'V') {
+        out += TRANSLIT_VOWEL_MATRA[tokens[i+1][1]];
+        pendingCons = false;
+        i += 2;
+        continue;
+      } else {
+        i += 1;
+        continue;
+      }
+    } else {
+      out += TRANSLIT_VOWEL_INDEP[val];
+      pendingCons = false;
+      i += 1;
+      continue;
+    }
+  }
+  return out;
+}
+
+function toBanglaUccharon(text) {
+  if (!text) return '';
+  return text.split(' ').filter(Boolean).map(translitWord).join(' ');
+}
 const surahCacheKey = n => 'quran_surah_data_v1_' + n;
 
 const pageBody = document.getElementById('pageBody');
@@ -191,7 +299,9 @@ function loadSurahList() {
 }
 
 /* ============ SURAH DETAIL SCREEN ============ */
-function renderSurahDetail(editions, fromCache) {
+function renderSurahDetail(data, fromCache) {
+  const editions = data.editions;
+  const translitVerses = data.translit || [];
   const ar = editions.find(e => e.edition.identifier === 'quran-uthmani');
   const bn = editions.find(e => e.edition.identifier === 'bn.bengali');
   const en = editions.find(e => e.edition.identifier === 'en.sahih');
@@ -213,10 +323,17 @@ function renderSurahDetail(editions, fromCache) {
   ar.ayahs.forEach((ayah, i) => {
     const bnText = bn.ayahs[i] ? bn.ayahs[i].text : '';
     const enText = en.ayahs[i] ? en.ayahs[i].text : '';
+    let translitText = '';
+    if (translitVerses[i] && translitVerses[i].translitBn) {
+      translitText = translitVerses[i].translitBn;
+    } else if (translitVerses[i] && translitVerses[i].transliteration) {
+      translitText = toBanglaUccharon(translitVerses[i].transliteration);
+    }
     html += `
       <div class="ayah-block">
         <div class="ayah-num-badge">${ayah.numberInSurah}</div>
         <div class="ayah-arabic">${ayah.text}</div>
+        ${translitText ? `<div class="ayah-translit">${translitText}</div>` : ''}
         <div class="ayah-bn">${bnText}</div>
         <div class="ayah-en">${enText}</div>
       </div>
@@ -231,15 +348,27 @@ function loadSurahDetail(n) {
   const cacheKey = surahCacheKey(n);
   const cached = localStorage.getItem(cacheKey);
   if (cached) {
-    try { renderSurahDetail(JSON.parse(cached), true); return; } catch (e) {}
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.editions) { renderSurahDetail(parsed, true); return; }
+    } catch (e) {}
   }
-  showLoading('সূরা লোড হচ্ছে... (আরবি + বাংলা + English)');
-  fetch(API_BASE + '/surah/' + n + '/editions/' + EDITIONS)
-    .then(r => r.json())
-    .then(json => {
-      if (!json.data || json.data.length < 3) throw new Error('bad response');
-      try { localStorage.setItem(cacheKey, JSON.stringify(json.data)); } catch (e) { /* storage full — still show it */ }
-      renderSurahDetail(json.data, false);
+  showLoading('সূরা লোড হচ্ছে... (আরবি + বাংলা উচ্চারণ + বাংলা + English)');
+  Promise.all([
+    fetch(API_BASE + '/surah/' + n + '/editions/' + EDITIONS).then(r => r.json()),
+    fetch(TRANSLIT_BASE + '/' + n + '.json').then(r => r.json()).catch(() => null)
+  ])
+    .then(([editionsJson, chapterJson]) => {
+      if (!editionsJson.data || editionsJson.data.length < 3) throw new Error('bad response');
+      let translit = [];
+      if (chapterJson && Array.isArray(chapterJson.verses)) {
+        translit = chapterJson.verses.map(v => ({
+          translitBn: toBanglaUccharon(v.transliteration || '')
+        }));
+      }
+      const combined = { editions: editionsJson.data, translit: translit };
+      try { localStorage.setItem(cacheKey, JSON.stringify(combined)); } catch (e) { /* storage full — still show it */ }
+      renderSurahDetail(combined, false);
     })
     .catch(() => {
       showError('এই সূরাটি লোড করা যায়নি। ইন্টারনেট সংযোগ চেক করে আবার চেষ্টা করুন।', () => loadSurahDetail(n));
