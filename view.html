@@ -4,8 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Post View</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<!-- Speed optimization: connection আগে থেকেই warm করে রাখা হচ্ছে -->
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="https://www.youtube.com">
+
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, sans-serif; }
   html, body { height:100%; }
@@ -71,6 +75,11 @@
 </head>
 <body>
 
+<!-- =========================================================
+     STEP 1: এই script টা সবার আগে, সাথে সাথে রান হয়।
+     এটা Firebase-এর জন্য একদম অপেক্ষা করে না — তাই link/iframe
+     কোনো delay ছাড়াই instantly খুলে যায়।
+     ========================================================= -->
 <script>
   window.addEventListener('pageshow', function(event) {
     if (event.persisted) window.location.reload();
@@ -78,21 +87,11 @@
 
   const PLAYSTORE_LINK = "https://play.google.com/store/apps/details?id=com.yourname.streamfeed";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAJLBtnX05B7t8XGJljMJBHSW0OoWEM7xs",
-    authDomain: "streamfeedapp.firebaseapp.com",
-    projectId: "streamfeedapp",
-    storageBucket: "streamfeedapp.firebasestorage.app",
-    messagingSenderId: "255931584141",
-    appId: "1:255931584141:web:9d62d1759e4ee8f280dcc4"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
   const params = new URLSearchParams(window.location.search);
   const rawUrl = params.get('url');
   const postId = params.get('id');
   const isAppMode = params.get('app') === '1';
+  const hasLink = rawUrl && rawUrl.trim() !== '';
 
   function convertToEmbedUrl(originalUrl) {
     try {
@@ -113,70 +112,6 @@
     return originalUrl;
   }
 
-  if (!isAppMode) {
-    document.body.innerHTML = `
-      <div class="install-screen">
-        <h2>📱 Install the App</h2>
-        <p>To view this post, please install our app from Google Play Store.</p>
-        <button class="install-btn" onclick="window.location.href='${PLAYSTORE_LINK}'">Install App</button>
-      </div>
-    `;
-  } else {
-    const hasLink = rawUrl && rawUrl.trim() !== '';
-
-    document.body.innerHTML = `
-      <div class="topbar">
-        <button class="back-btn" id="backBtn">←</button>
-        <div class="page-title" id="pageTitle">Loading...</div>
-      </div>
-      ${hasLink
-        ? `<iframe class="content-frame" id="contentFrame"></iframe>
-           <div class="loading" id="loadingMsg">Loading post...</div>
-           <button class="open-external" id="openExtBtn">↗ Open in Browser</button>`
-        : `<div class="text-only-screen"><div class="text-only-card" id="textOnlyCard">Loading...</div></div>`
-      }
-    `;
-
-    document.getElementById('backBtn').addEventListener('click', goHome);
-
-    if (postId) addToHistory(postId);
-
-    if (hasLink) {
-      const embedUrl = convertToEmbedUrl(rawUrl);
-      const frame = document.getElementById('contentFrame');
-      frame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
-      frame.setAttribute('allowfullscreen', 'true');
-      frame.src = embedUrl;
-      frame.onload = () => hideLoading();
-      setTimeout(hideLoading, 4000);
-      document.getElementById('openExtBtn').addEventListener('click', openExternally);
-      if (postId) {
-        db.collection('posts').doc(postId).get().then(doc => {
-          if (doc.exists) {
-            const d = doc.data();
-            document.getElementById('pageTitle').innerText = d.title || d.customTextPlain || 'NoorFeed';
-          }
-        }).catch(() => {});
-      }
-    } else if (postId) {
-      // Text-only post: Firestore থেকে সরাসরি পুরো rich text content আনা হচ্ছে
-      db.collection('posts').doc(postId).get().then(doc => {
-        if (!doc.exists) {
-          document.getElementById('textOnlyCard').innerText = 'Post পাওয়া যায়নি (হয়তো মুছে ফেলা হয়েছে)।';
-          return;
-        }
-        const d = doc.data();
-        document.getElementById('pageTitle').innerText = d.title || 'NoorFeed';
-        const titleHtml = d.title ? `<div class="post-title-view">${d.title}</div>` : '';
-        document.getElementById('textOnlyCard').innerHTML = titleHtml + (d.customText || '');
-      }).catch(err => {
-        document.getElementById('textOnlyCard').innerText = 'Load করতে সমস্যা হয়েছে: ' + err.message;
-      });
-    } else {
-      document.getElementById('textOnlyCard').innerText = 'Post ID পাওয়া যায়নি।';
-    }
-  }
-
   function hideLoading() {
     const msg = document.getElementById('loadingMsg');
     if (msg) msg.style.display = 'none';
@@ -195,6 +130,102 @@
   }
 
   function goHome() { window.location.href = "index.html?app=1"; }
+
+  if (!isAppMode) {
+    document.body.innerHTML = `
+      <div class="install-screen">
+        <h2>📱 Install the App</h2>
+        <p>To view this post, please install our app from Google Play Store.</p>
+        <button class="install-btn" onclick="window.location.href='${PLAYSTORE_LINK}'">Install App</button>
+      </div>
+    `;
+  } else {
+    document.body.innerHTML = `
+      <div class="topbar">
+        <button class="back-btn" id="backBtn">←</button>
+        <div class="page-title" id="pageTitle">Loading...</div>
+      </div>
+      ${hasLink
+        ? `<iframe class="content-frame" id="contentFrame"></iframe>
+           <div class="loading" id="loadingMsg">Loading post...</div>
+           <button class="open-external" id="openExtBtn">↗ Open in Browser</button>`
+        : `<div class="text-only-screen"><div class="text-only-card" id="textOnlyCard">Loading...</div></div>`
+      }
+    `;
+
+    document.getElementById('backBtn').addEventListener('click', goHome);
+    if (postId) addToHistory(postId);
+
+    if (hasLink) {
+      // ===== এখানেই link টা সাথে সাথে খুলে যাচ্ছে, Firebase লোড হওয়ার জন্য কোনো wait নেই =====
+      const embedUrl = convertToEmbedUrl(rawUrl);
+      const frame = document.getElementById('contentFrame');
+      frame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+      frame.setAttribute('allowfullscreen', 'true');
+      frame.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+      frame.src = embedUrl;
+      frame.onload = () => hideLoading();
+      setTimeout(hideLoading, 2500);
+      document.getElementById('openExtBtn').addEventListener('click', openExternally);
+    }
+  }
+</script>
+
+<!-- =========================================================
+     STEP 2: Firebase এখন background-এ, defer করে লোড হচ্ছে।
+     এটা শুধু post-এর title / text-only content বসানোর জন্য
+     ব্যবহার হবে — link খোলার সাথে এর কোনো সম্পর্ক নেই, তাই
+     এটা ধীরে লোড হলেও link খোলায় কোনো প্রভাব পড়বে না।
+     ========================================================= -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js" defer></script>
+<script defer>
+  window.addEventListener('DOMContentLoaded', function () {
+    if (!isAppMode) return;
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJLBtnX05B7t8XGJljMJBHSW0OoWEM7xs",
+      authDomain: "streamfeedapp.firebaseapp.com",
+      projectId: "streamfeedapp",
+      storageBucket: "streamfeedapp.firebasestorage.app",
+      messagingSenderId: "255931584141",
+      appId: "1:255931584141:web:9d62d1759e4ee8f280dcc4"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    if (hasLink) {
+      if (postId) {
+        db.collection('posts').doc(postId).get().then(doc => {
+          if (doc.exists) {
+            const d = doc.data();
+            const titleEl = document.getElementById('pageTitle');
+            if (titleEl) titleEl.innerText = d.title || d.customTextPlain || 'NoorFeed';
+          }
+        }).catch(() => {});
+      }
+    } else if (postId) {
+      // Text-only post: পুরো content Firestore থেকে আসছে
+      db.collection('posts').doc(postId).get().then(doc => {
+        const card = document.getElementById('textOnlyCard');
+        if (!doc.exists) {
+          if (card) card.innerText = 'Post পাওয়া যায়নি (হয়তো মুছে ফেলা হয়েছে)।';
+          return;
+        }
+        const d = doc.data();
+        const titleEl = document.getElementById('pageTitle');
+        if (titleEl) titleEl.innerText = d.title || 'NoorFeed';
+        const titleHtml = d.title ? `<div class="post-title-view">${d.title}</div>` : '';
+        if (card) card.innerHTML = titleHtml + (d.customText || '');
+      }).catch(err => {
+        const card = document.getElementById('textOnlyCard');
+        if (card) card.innerText = 'Load করতে সমস্যা হয়েছে: ' + err.message;
+      });
+    } else {
+      const card = document.getElementById('textOnlyCard');
+      if (card) card.innerText = 'Post ID পাওয়া যায়নি।';
+    }
+  });
 </script>
 
 </body>
