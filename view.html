@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Post View</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, sans-serif; }
   html, body { height:100%; }
@@ -60,8 +62,11 @@
   }
   .text-only-card {
     background:#fff; border-radius:16px; padding:20px;
-    font-size:17px; line-height:1.7; color:#1a1a2e; font-weight:600;
+    font-size:17px; line-height:1.8; color:#1a1a2e; font-weight:400;
+    word-wrap:break-word; overflow-wrap:break-word;
   }
+  .text-only-card .post-title-view { font-size:20px; font-weight:800; margin-bottom:14px; color:#1a1a2e; }
+  .text-only-card a { color:#4a2a8d; }
 </style>
 </head>
 <body>
@@ -73,9 +78,19 @@
 
   const PLAYSTORE_LINK = "https://play.google.com/store/apps/details?id=com.yourname.streamfeed";
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyAJLBtnX05B7t8XGJljMJBHSW0OoWEM7xs",
+    authDomain: "streamfeedapp.firebaseapp.com",
+    projectId: "streamfeedapp",
+    storageBucket: "streamfeedapp.firebasestorage.app",
+    messagingSenderId: "255931584141",
+    appId: "1:255931584141:web:9d62d1759e4ee8f280dcc4"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
   const params = new URLSearchParams(window.location.search);
   const rawUrl = params.get('url');
-  const title = params.get('title');
   const postId = params.get('id');
   const isAppMode = params.get('app') === '1';
 
@@ -112,13 +127,13 @@
     document.body.innerHTML = `
       <div class="topbar">
         <button class="back-btn" id="backBtn">←</button>
-        <div class="page-title">${title || 'Loading...'}</div>
+        <div class="page-title" id="pageTitle">Loading...</div>
       </div>
       ${hasLink
         ? `<iframe class="content-frame" id="contentFrame"></iframe>
            <div class="loading" id="loadingMsg">Loading post...</div>
            <button class="open-external" id="openExtBtn">↗ Open in Browser</button>`
-        : `<div class="text-only-screen"><div class="text-only-card">${title || ''}</div></div>`
+        : `<div class="text-only-screen"><div class="text-only-card" id="textOnlyCard">Loading...</div></div>`
       }
     `;
 
@@ -135,6 +150,30 @@
       frame.onload = () => hideLoading();
       setTimeout(hideLoading, 4000);
       document.getElementById('openExtBtn').addEventListener('click', openExternally);
+      if (postId) {
+        db.collection('posts').doc(postId).get().then(doc => {
+          if (doc.exists) {
+            const d = doc.data();
+            document.getElementById('pageTitle').innerText = d.title || d.customTextPlain || 'NoorFeed';
+          }
+        }).catch(() => {});
+      }
+    } else if (postId) {
+      // Text-only post: Firestore থেকে সরাসরি পুরো rich text content আনা হচ্ছে
+      db.collection('posts').doc(postId).get().then(doc => {
+        if (!doc.exists) {
+          document.getElementById('textOnlyCard').innerText = 'Post পাওয়া যায়নি (হয়তো মুছে ফেলা হয়েছে)।';
+          return;
+        }
+        const d = doc.data();
+        document.getElementById('pageTitle').innerText = d.title || 'NoorFeed';
+        const titleHtml = d.title ? `<div class="post-title-view">${d.title}</div>` : '';
+        document.getElementById('textOnlyCard').innerHTML = titleHtml + (d.customText || '');
+      }).catch(err => {
+        document.getElementById('textOnlyCard').innerText = 'Load করতে সমস্যা হয়েছে: ' + err.message;
+      });
+    } else {
+      document.getElementById('textOnlyCard').innerText = 'Post ID পাওয়া যায়নি।';
     }
   }
 
