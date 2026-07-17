@@ -404,6 +404,7 @@
   function handleSectionClick(name) {
     if (name === 'Quran') { window.location.href = 'quran.html' + (APP_MODE ? '?app=1' : ''); return; }
     if (name === 'Tasbih') { window.location.href = 'tasbih.html' + (APP_MODE ? '?app=1' : ''); return; }
+    if (name === '99 Names') { window.location.href = 'names.html' + (APP_MODE ? '?app=1' : ''); return; }
     if (name === 'Al Hadith') { currentFilter = { type: 'hadithGroups' }; applyFilterState(); window.scrollTo(0,0); return; }
     navSection(name);
   }
