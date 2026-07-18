@@ -275,6 +275,15 @@ function toBanglaUccharon(text) {
 }
 const surahCacheKey = n => 'quran_surah_data_v1_' + n;
 
+/* এই তিনটা DOM reference সবার আগে declare করা — কারণ নিচের audio-resume
+   logic (resumeAudioOnLoad) page load হওয়ার সাথে সাথেই চলে এবং pageBody
+   ব্যবহার করে। আগে এটা অনেক নিচে declare করা ছিল, যার ফলে audio চালু
+   অবস্থায় নতুন পেজ load হলে script এখানে crash করে থেমে যেত — আর তার
+   নিচের সব কোড (back button কাজ করা, list/surah দেখানো) একদম run-ই হতো না। */
+const pageBody = document.getElementById('pageBody');
+const pageTitle = document.getElementById('pageTitle');
+const backBtn = document.getElementById('backBtn');
+
 /* ============ AUDIO PLAYER (pure Arabic recitation — Mishary Alafasy) ============ */
 const AUDIO_EDITION = 'ar.alafasy';
 const AUDIO_BITRATE = 128;
@@ -423,10 +432,6 @@ audioPlayer.addEventListener('pause', syncListenBtnUI);
     }
   }
 })();
-
-const pageBody = document.getElementById('pageBody');
-const pageTitle = document.getElementById('pageTitle');
-const backBtn = document.getElementById('backBtn');
 
 function goHome() { window.location.href = 'index.html' + (isAppMode ? '?app=1' : ''); }
 function goList() { window.location.href = 'quran.html' + (isAppMode ? '?app=1' : ''); }
