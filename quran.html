@@ -96,6 +96,41 @@
   @keyframes spin { to { transform:rotate(360deg); } }
 
   .offline-tag { display:inline-block; background:#eafaf0; color:#1e8a5f; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px; margin-top:6px; }
+
+  /* ===== Audio: Full Quran / Listen buttons ===== */
+  .search-box { display:flex; gap:8px; align-items:center; }
+  .search-box .search-input { flex:1; }
+  .full-quran-btn {
+    flex-shrink:0; background:linear-gradient(135deg,#2a1650,#4a2a6d); color:#fff; border:none;
+    padding:0 14px; height:40px; border-radius:14px; font-size:12.5px; font-weight:700;
+    display:flex; align-items:center; gap:5px; white-space:nowrap;
+  }
+  .listen-btn {
+    margin-top:10px; background:rgba(255,255,255,0.16); color:#fff; border:1px solid rgba(255,255,255,0.35);
+    padding:7px 16px; border-radius:16px; font-size:12.5px; font-weight:700;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .listen-btn.is-playing { background:#fff; color:#2a1650; }
+
+  /* ===== Audio: bottom sticky player ===== */
+  .audio-bar {
+    display:none; position:fixed; left:0; right:0; bottom:0; z-index:25;
+    background:linear-gradient(135deg,#1c0f3a,#33184f); color:#fff;
+    padding:8px 14px 10px; box-shadow:0 -2px 10px rgba(0,0,0,0.25);
+  }
+  .audio-bar.active { display:block; }
+  .audio-row { display:flex; align-items:center; gap:10px; }
+  .audio-info { flex:1; min-width:0; }
+  .audio-surah-ar { font-family:'Uthman Hafs','Amiri','Noto Naskh Arabic',serif; font-size:17px; line-height:1.2; }
+  .audio-surah-en { font-size:11.5px; color:#d9c9f7; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .audio-controls { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+  .audio-controls button {
+    background:rgba(255,255,255,0.14); border:none; color:#fff; width:34px; height:34px;
+    border-radius:50%; font-size:15px; display:flex; align-items:center; justify-content:center;
+  }
+  #audioPlayPause { background:#fff; color:#2a1650; width:38px; height:38px; font-size:16px; }
+  .audio-progress { height:3px; background:rgba(255,255,255,0.18); border-radius:2px; margin-top:8px; overflow:hidden; }
+  .audio-progress-fill { height:100%; width:0%; background:#fff; border-radius:2px; }
 </style>
 </head>
 <body>
@@ -105,6 +140,22 @@
   <div class="page-title" id="pageTitle">Al-Quran</div>
 </div>
 <div class="page-body" id="pageBody"></div>
+
+<div class="audio-bar" id="audioBar">
+  <div class="audio-row">
+    <div class="audio-info">
+      <div class="audio-surah-ar" id="audioSurahAr">–</div>
+      <div class="audio-surah-en" id="audioSurahEn">Loading…</div>
+    </div>
+    <div class="audio-controls">
+      <button id="audioPrev" title="Previous Surah">⏮</button>
+      <button id="audioPlayPause" title="Play/Pause">▶</button>
+      <button id="audioNext" title="Next Surah">⏭</button>
+      <button id="audioClose" title="Stop">✕</button>
+    </div>
+  </div>
+  <div class="audio-progress"><div class="audio-progress-fill" id="audioProgressFill"></div></div>
+</div>
 
 <script>
 window.addEventListener('pageshow', function(event) { if (event.persisted) window.location.reload(); });
@@ -224,6 +275,155 @@ function toBanglaUccharon(text) {
 }
 const surahCacheKey = n => 'quran_surah_data_v1_' + n;
 
+/* ============ AUDIO PLAYER (pure Arabic recitation — Mishary Alafasy) ============ */
+const AUDIO_EDITION = 'ar.alafasy';
+const AUDIO_BITRATE = 128;
+const AUDIO_STATE_KEY = 'quran_audio_state_v1';
+const SURAH_META_KEY = 'quran_surah_meta_v1';
+
+const audioPlayer = new Audio();
+audioPlayer.preload = 'auto';
+
+const audioBarEl = document.getElementById('audioBar');
+const audioSurahArEl = document.getElementById('audioSurahAr');
+const audioSurahEnEl = document.getElementById('audioSurahEn');
+const audioPlayPauseBtn = document.getElementById('audioPlayPause');
+const audioProgressFillEl = document.getElementById('audioProgressFill');
+
+function audioUrl(n) {
+  return 'https://cdn.islamic.network/quran/audio-surah/' + AUDIO_BITRATE + '/' + AUDIO_EDITION + '/' + n + '.mp3';
+}
+function getAudioState() {
+  try { return JSON.parse(localStorage.getItem(AUDIO_STATE_KEY)); } catch (e) { return null; }
+}
+function setAudioState(state) {
+  try { localStorage.setItem(AUDIO_STATE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+function clearAudioState() {
+  try { localStorage.removeItem(AUDIO_STATE_KEY); } catch (e) {}
+}
+function getSurahMeta(n, cb) {
+  let cache = {};
+  try { cache = JSON.parse(localStorage.getItem(SURAH_META_KEY)) || {}; } catch (e) {}
+  if (cache[n]) { cb(cache[n]); return; }
+  fetch(API_BASE + '/surah/' + n).then(r => r.json()).then(j => {
+    if (j.data) {
+      cache[n] = { name: j.data.name, englishName: j.data.englishName };
+      try { localStorage.setItem(SURAH_META_KEY, JSON.stringify(cache)); } catch (e) {}
+      cb(cache[n]);
+    } else cb(null);
+  }).catch(() => cb(null));
+}
+function showAudioBar() {
+  audioBarEl.classList.add('active');
+  pageBody.style.bottom = '68px';
+  syncListenBtnUI();
+}
+function hideAudioBar() {
+  audioBarEl.classList.remove('active');
+  pageBody.style.bottom = '0';
+  syncListenBtnUI();
+}
+function updateAudioBarInfo(n) {
+  audioSurahEnEl.textContent = 'Surah ' + n + ' — লোড হচ্ছে...';
+  getSurahMeta(n, meta => {
+    if (meta) {
+      audioSurahArEl.textContent = meta.name;
+      audioSurahEnEl.textContent = n + '. ' + meta.englishName;
+    } else {
+      audioSurahArEl.textContent = '';
+      audioSurahEnEl.textContent = 'Surah ' + n;
+    }
+  });
+}
+function syncListenBtnUI() {
+  const btn = document.getElementById('listenBtn');
+  if (!btn) return;
+  const s = getAudioState();
+  const isThisSurahPlaying = s && s.surah === Number(btn.getAttribute('data-surah')) && s.playing && !audioPlayer.paused;
+  btn.classList.toggle('is-playing', !!isThisSurahPlaying);
+  btn.textContent = isThisSurahPlaying ? '⏸ Playing…' : '🔊 Listen (আরবি Audio)';
+}
+function playSurahAudio(n, resumeTime) {
+  if (n < 1 || n > 114) { stopAudio(); return; }
+  setAudioState({ surah: n, playing: true, time: resumeTime || 0 });
+  updateAudioBarInfo(n);
+  audioPlayer.src = audioUrl(n);
+  if (resumeTime) { try { audioPlayer.currentTime = resumeTime; } catch (e) {} }
+  const p = audioPlayer.play();
+  if (p && p.then) {
+    p.then(() => { audioPlayPauseBtn.textContent = '⏸'; syncListenBtnUI(); })
+     .catch(() => { audioPlayPauseBtn.textContent = '▶'; syncListenBtnUI(); });
+  }
+  showAudioBar();
+}
+function stopAudio() {
+  audioPlayer.pause();
+  audioPlayer.removeAttribute('src');
+  try { audioPlayer.load(); } catch (e) {}
+  clearAudioState();
+  hideAudioBar();
+}
+function startFullQuranAudio() {
+  const s = getAudioState();
+  if (s && s.surah) playSurahAudio(s.surah, s.time);
+  else playSurahAudio(1);
+}
+function playThisSurahAudio(n) { playSurahAudio(n); }
+
+audioPlayPauseBtn.addEventListener('click', () => {
+  if (!audioPlayer.src) return;
+  if (audioPlayer.paused) {
+    audioPlayer.play();
+    audioPlayPauseBtn.textContent = '⏸';
+    const s = getAudioState(); if (s) { s.playing = true; setAudioState(s); }
+  } else {
+    audioPlayer.pause();
+    audioPlayPauseBtn.textContent = '▶';
+    const s = getAudioState(); if (s) { s.playing = false; setAudioState(s); }
+  }
+  syncListenBtnUI();
+});
+document.getElementById('audioPrev').addEventListener('click', () => {
+  const s = getAudioState(); playSurahAudio(Math.max(1, (s ? s.surah : 1) - 1));
+});
+document.getElementById('audioNext').addEventListener('click', () => {
+  const s = getAudioState(); playSurahAudio(Math.min(114, (s ? s.surah : 1) + 1));
+});
+document.getElementById('audioClose').addEventListener('click', stopAudio);
+
+audioPlayer.addEventListener('ended', () => {
+  const s = getAudioState();
+  const next = (s ? s.surah : 0) + 1;
+  if (next <= 114) playSurahAudio(next); else stopAudio();
+});
+audioPlayer.addEventListener('timeupdate', () => {
+  if (audioPlayer.duration) {
+    audioProgressFillEl.style.width = (audioPlayer.currentTime / audioPlayer.duration * 100) + '%';
+  }
+  const s = getAudioState();
+  if (s) { s.time = audioPlayer.currentTime; setAudioState(s); }
+});
+audioPlayer.addEventListener('play', syncListenBtnUI);
+audioPlayer.addEventListener('pause', syncListenBtnUI);
+
+/* Resume playback bar (and, if it was playing, the audio itself) after navigation/reload */
+(function resumeAudioOnLoad() {
+  const s = getAudioState();
+  if (s && s.surah) {
+    updateAudioBarInfo(s.surah);
+    audioPlayer.src = audioUrl(s.surah);
+    if (s.time) { try { audioPlayer.currentTime = s.time; } catch (e) {} }
+    showAudioBar();
+    if (s.playing) {
+      const p = audioPlayer.play();
+      if (p && p.then) p.then(() => { audioPlayPauseBtn.textContent = '⏸'; }).catch(() => { audioPlayPauseBtn.textContent = '▶'; });
+    } else {
+      audioPlayPauseBtn.textContent = '▶';
+    }
+  }
+})();
+
 const pageBody = document.getElementById('pageBody');
 const pageTitle = document.getElementById('pageTitle');
 const backBtn = document.getElementById('backBtn');
@@ -250,9 +450,11 @@ function showError(msg, retryFn) {
 /* ============ SURAH LIST SCREEN ============ */
 function renderSurahList(list, fromCache) {
   pageTitle.textContent = 'Al-Quran';
-  let html = '<div class="search-box"><input class="search-input" id="searchInput" placeholder="সূরা খুঁজুন (নাম বা নম্বর)..."></div>';
+  let html = '<div class="search-box"><input class="search-input" id="searchInput" placeholder="সূরা খুঁজুন (নাম বা নম্বর)..."><button class="full-quran-btn" id="fullQuranBtn">🎧 Full Quran</button></div>';
   html += '<div class="surah-list" id="surahListBox"></div>';
   pageBody.innerHTML = html;
+
+  document.getElementById('fullQuranBtn').addEventListener('click', startFullQuranAudio);
 
   const listBox = document.getElementById('surahListBox');
   function draw(items) {
@@ -319,6 +521,7 @@ function renderSurahDetail(data, fromCache) {
       <div class="ar-name">${ar.name}</div>
       <div class="en-name">${ar.englishName} — ${ar.englishNameTranslation}</div>
       <div class="meta">${ar.numberOfAyahs} Ayahs · ${ar.revelationType}${fromCache ? '<br><span class="offline-tag">📥 Offline এ সংরক্ষিত</span>' : ''}</div>
+      <button class="listen-btn" id="listenBtn" data-surah="${ar.number}">🔊 Listen (আরবি Audio)</button>
     </div>
   `;
 
@@ -348,6 +551,20 @@ function renderSurahDetail(data, fromCache) {
 
   pageBody.innerHTML = html;
   pageBody.scrollTop = 0;
+
+  const listenBtn = document.getElementById('listenBtn');
+  listenBtn.addEventListener('click', () => {
+    const s = getAudioState();
+    if (s && s.surah === ar.number && !audioPlayer.paused) {
+      audioPlayer.pause();
+      audioPlayPauseBtn.textContent = '▶';
+      s.playing = false; setAudioState(s);
+    } else {
+      playThisSurahAudio(ar.number);
+    }
+    syncListenBtnUI();
+  });
+  syncListenBtnUI();
 }
 
 function loadSurahDetail(n) {
