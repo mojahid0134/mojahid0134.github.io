@@ -27,6 +27,17 @@
   .bottom-bar { padding:20px; flex-shrink:0; }
   .reset-btn { width:100%; background:rgba(255,255,255,0.15); color:#fff; border:none;
     padding:14px; border-radius:16px; font-size:15px; font-weight:700; }
+
+  /* ===== Custom confirm modal (browser-এর confirm() এর বদলে, WebView-তেও কাজ করবে) ===== */
+  .confirm-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:200;
+    align-items:center; justify-content:center; padding:20px; }
+  .confirm-backdrop.open { display:flex; }
+  .confirm-box { background:#fff; border-radius:18px; padding:22px; width:100%; max-width:320px; text-align:center; }
+  .confirm-box p { font-size:15px; color:#1a1a2e; font-weight:600; margin-bottom:18px; }
+  .confirm-actions { display:flex; gap:10px; }
+  .confirm-actions button { flex:1; padding:12px; border:none; border-radius:12px; font-size:14px; font-weight:700; }
+  .confirm-cancel { background:#f1eefc; color:#5b21b6; }
+  .confirm-ok { background:#6D28D9; color:#fff; }
 </style>
 </head>
 <body>
@@ -55,6 +66,16 @@
     <button class="reset-btn" id="resetBtn">Reset Counter</button>
   </div>
 
+  <div class="confirm-backdrop" id="confirmBackdrop">
+    <div class="confirm-box">
+      <p>Counter reset করতে চাও?</p>
+      <div class="confirm-actions">
+        <button class="confirm-cancel" id="confirmCancelBtn">না</button>
+        <button class="confirm-ok" id="confirmOkBtn">হ্যাঁ, Reset করো</button>
+      </div>
+    </div>
+  </div>
+
 <script>
   window.addEventListener('pageshow', function(event) { if (event.persisted) window.location.reload(); });
 
@@ -77,11 +98,16 @@
   });
 
   document.getElementById('resetBtn').addEventListener('click', () => {
-    if (confirm('Counter reset করতে চাও?')) {
-      count = 0;
-      localStorage.setItem('tasbihCount', 0);
-      counterNum.innerText = 0;
-    }
+    document.getElementById('confirmBackdrop').classList.add('open');
+  });
+  document.getElementById('confirmCancelBtn').addEventListener('click', () => {
+    document.getElementById('confirmBackdrop').classList.remove('open');
+  });
+  document.getElementById('confirmOkBtn').addEventListener('click', () => {
+    count = 0;
+    localStorage.setItem('tasbihCount', 0);
+    counterNum.innerText = 0;
+    document.getElementById('confirmBackdrop').classList.remove('open');
   });
 
   document.getElementById('backBtn').addEventListener('click', () => {
