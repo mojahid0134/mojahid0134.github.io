@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rewards - NoorFeed</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, sans-serif; }
+  html, body { height:100%; background:#f4f5f7; }
+
+  .topbar {
+    background:linear-gradient(135deg,#2a1650,#4a2a6d);
+    color:#fff; padding:14px 16px; display:flex; align-items:center; gap:12px;
+    position:fixed; top:0; left:0; right:0; height:52px; z-index:20;
+  }
+  .back-btn {
+    background:rgba(255,255,255,0.15); border:none; color:#fff;
+    width:34px; height:34px; border-radius:50%; font-size:18px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .page-title { font-size:16px; font-weight:700; }
+
+  .page-body {
+    position:fixed; top:52px; left:0; right:0; bottom:68px;
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    display:flex; align-items:center; justify-content:center; text-align:center; padding:30px;
+  }
+  .placeholder-msg { color:#888; font-size:14px; line-height:1.7; }
+  .placeholder-msg b { color:#4a2a6d; }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <button class="back-btn" id="backBtn">←</button>
+    <div class="page-title">🎁 Rewards</div>
+  </div>
+
+  <div class="page-body">
+    <div class="placeholder-msg">
+      <b>Rewards Page — পরের ধাপে বসবে।</b><br><br>
+      এখানে Progress, Watch Ad, Reward Claim, Donation, Rate/Share App, How It Works, আর Reward History — সবকিছু আসবে।
+    </div>
+  </div>
+
+<script>
+  const APP_MODE = new URLSearchParams(window.location.search).get('app') === '1';
+  document.getElementById('backBtn').addEventListener('click', () => {
+    window.location.href = 'index.html' + (APP_MODE ? '?app=1' : '');
+  });
+</script>
+
+<script src="nav.js"></script>
+<script>NFNav.init('rewards');</script>
+</body>
+</html>
