@@ -11,7 +11,7 @@
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Roboto, sans-serif;
     -webkit-text-size-adjust:100%; text-size-adjust:100%; }
-  body { background:#f4f5f7; }
+  body { background:#f4f5f7; padding-bottom:68px; }
   svg.icon { width:16px; height:16px; flex-shrink:0; }
 
   /* ===== Header (Image Background, 1280x563 Ratio) ===== */
@@ -24,8 +24,8 @@
 
   .top-toprow { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:auto; }
   .top-left-btns { display:flex; gap:8px; }
-  .hamburger-wrap, .donate-wrap { position:relative; }
-  .hamburger-btn, .donate-btn { background:rgba(255,255,255,0.18); border:none; color:#fff;
+  .hamburger-wrap { position:relative; }
+  .hamburger-btn { background:rgba(255,255,255,0.18); border:none; color:#fff;
     width:36px; height:36px; border-radius:10px; font-size:18px; display:flex; align-items:center; justify-content:center; }
   .topbar-dropdown { display:none; position:absolute; top:42px; left:0;
     background:#fff; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.25);
@@ -63,11 +63,6 @@
   .date-row:last-child { border-bottom:none; }
   .date-row .label { font-size:13px; color:#888; font-weight:600; }
   .date-row .value { font-size:15px; color:#1a1a2e; font-weight:700; }
-  .donate-method { padding:14px; background:#f9f6ff; border-radius:12px; margin-bottom:10px; }
-  .donate-method .name { font-size:14px; font-weight:800; color:#5b21b6; margin-bottom:4px; }
-  .donate-method .num-row { display:flex; justify-content:space-between; align-items:center; }
-  .donate-method .num { font-size:16px; font-weight:700; color:#1a1a2e; }
-  .copy-btn { background:#6D28D9; color:#fff; border:none; padding:6px 12px; border-radius:10px; font-size:12px; font-weight:700; }
   .more-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
   .more-item { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
   .more-item .icon-box { width:54px; height:54px; border-radius:14px; display:flex; align-items:center; justify-content:center; }
@@ -89,12 +84,6 @@
   .section-icon-box { width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; }
   .section-icon-box svg { width:26px; height:26px; }
   .section-label { font-size:10.5px; font-weight:700; color:#333; text-align:center; line-height:1.2; }
-
-  /* ===== Filter Row ===== */
-  .filter-row { display:flex; background:#f4f2fb; border-radius:16px; margin:14px 0 4px; padding:5px; }
-  .filter-item { flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
-    padding:10px 6px; border-radius:12px; font-size:13.5px; font-weight:700; color:#777; }
-  .filter-item.active { background:#fff; color:#5b21b6; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
 
   /* ===== Feed ===== */
   .feed { padding:14px; display:flex; flex-direction:column; gap:14px; }
@@ -150,17 +139,6 @@
         <div class="top-left-btns">
           <div class="hamburger-wrap">
             <button class="hamburger-btn" id="topDotsBtn">☰</button>
-            <div class="topbar-dropdown" id="topDropdown">
-              <div id="shareAppBtn">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                Share App
-              </div>
-            </div>
-          </div>
-          <div class="donate-wrap">
-            <button class="donate-btn" id="donateBtn">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.5z"/></svg>
-            </button>
           </div>
         </div>
         <div class="top-right-info">
@@ -210,25 +188,6 @@
     </div>
   </div>
 
-  <!-- Donate Modal -->
-  <div class="modal-backdrop" id="donateModal">
-    <div class="modal-sheet">
-      <div class="modal-title">💜 Support Us <button class="modal-close" id="donateModalClose">✕</button></div>
-      <div class="donate-method">
-        <div class="name">bKash (Personal)</div>
-        <div class="num-row"><div class="num">+8801342059227</div><button class="copy-btn" onclick="copyNumber()">Copy</button></div>
-      </div>
-      <div class="donate-method">
-        <div class="name">Rocket (Personal)</div>
-        <div class="num-row"><div class="num">+8801342059227</div><button class="copy-btn" onclick="copyNumber()">Copy</button></div>
-      </div>
-      <div class="donate-method">
-        <div class="name">Nagad (Personal)</div>
-        <div class="num-row"><div class="num">+8801342059227</div><button class="copy-btn" onclick="copyNumber()">Copy</button></div>
-      </div>
-    </div>
-  </div>
-
   <!-- More Sections Modal -->
   <div class="modal-backdrop" id="moreModal">
     <div class="modal-sheet">
@@ -241,21 +200,6 @@
 
   <div class="section-panel">
     <div class="section-scroll" id="sectionScroll"></div>
-
-    <div class="filter-row">
-      <div class="filter-item active" id="filterYourFeeds">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Your Feeds
-      </div>
-      <div class="filter-item" id="filterFavourite">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.5z"/></svg>
-        Favourite
-      </div>
-      <div class="filter-item" id="filterHistory">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
-        History
-      </div>
-    </div>
   </div>
 
   <div id="sectionTitleBox"></div>
@@ -267,6 +211,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
   </button>
 
+<script src="nav.js"></script>
 <script>
   window.addEventListener('pageshow', function(event) { if (event.persisted) window.location.reload(); });
 
@@ -274,20 +219,9 @@
   const APP_SHARE_LINK = "https://play.google.com/store/apps/details?id=com.yourname.streamfeed";
   document.title = APP_NAME;
 
-  document.getElementById('topDotsBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    document.getElementById('topDropdown').classList.toggle('open');
+  document.getElementById('topDotsBtn').addEventListener('click', () => {
+    window.location.href = 'rewards.html' + (new URLSearchParams(window.location.search).get('app') === '1' ? '?app=1' : '');
   });
-  document.addEventListener('click', () => document.getElementById('topDropdown').classList.remove('open'));
-  document.getElementById('shareAppBtn').addEventListener('click', () => {
-    if (navigator.share) navigator.share({ title: APP_NAME, text: 'Install ' + APP_NAME + ' App', url: APP_SHARE_LINK }).catch(() => {});
-    else navigator.clipboard.writeText(APP_SHARE_LINK);
-    document.getElementById('topDropdown').classList.remove('open');
-  });
-
-  document.getElementById('donateBtn').addEventListener('click', () => document.getElementById('donateModal').classList.add('open'));
-  document.getElementById('donateModalClose').addEventListener('click', () => document.getElementById('donateModal').classList.remove('open'));
-  function copyNumber() { navigator.clipboard.writeText('+8801342059227'); }
 
   const banglaMonths = ['বৈশাখ','জ্যৈষ্ঠ','আষাঢ়','শ্রাবণ','ভাদ্র','আশ্বিন','কার্তিক','অগ্রহায়ণ','পৌষ','মাঘ','ফাল্গুন','চৈত্র'];
   const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
@@ -478,10 +412,6 @@
   const CACHE_POSTS_KEY = 'cachedPostsData';
   const CACHE_PLAYLISTS_KEY = 'cachedPlaylistsData';
 
-  document.getElementById('filterYourFeeds').addEventListener('click', showAllPosts);
-  document.getElementById('filterFavourite').addEventListener('click', showFavorites);
-  document.getElementById('filterHistory').addEventListener('click', showHistory);
-
   let seconds = parseInt(sessionStorage.getItem('appTimerSeconds') || '0', 10);
   let timerInterval = null;
   function updateTimerDisplay() {
@@ -650,10 +580,20 @@
     });
   }
 
-  function setFilterTabs(active) {
-    document.querySelectorAll('.filter-item').forEach(f => f.classList.remove('active'));
-    if (active) document.getElementById(active).classList.add('active');
+  function setFilterTabs(activeKey) {
+    document.querySelectorAll('.nf-nav-item').forEach(f => f.classList.remove('active', 'rewards-active'));
+    const map = { filterYourFeeds: 0, filterFavourite: 1, filterHistory: 2 };
+    if (activeKey && activeKey in map) {
+      const el = document.querySelectorAll('.nf-nav-item')[map[activeKey]];
+      if (el) el.classList.add('active');
+    }
   }
+
+  window.nfSetFilter = function (key) {
+    if (key === 'home') showAllPosts();
+    else if (key === 'favourite') showFavorites();
+    else if (key === 'history') showHistory();
+  };
 
   function applyFilterState() {
     if (currentFilter.type === 'all') { setFilterTabs('filterYourFeeds'); renderPosts(allPosts); }
@@ -759,10 +699,14 @@
   } catch (e) {}
 
   const sectionParam = new URLSearchParams(window.location.search).get('section');
+  const filterParam = new URLSearchParams(window.location.search).get('filter');
   if (sectionParam) {
     if (CATEGORY_SECTIONS.includes(sectionParam)) currentFilter = { type: 'sectionBrowse', section: sectionParam };
     else currentFilter = { type: 'playlist', name: sectionParam };
-  }
+  } else if (filterParam === 'favourite') { currentFilter = { type: 'favorite' }; }
+  else if (filterParam === 'history') { currentFilter = { type: 'history' }; }
+
+  if (window.NFNav) window.NFNav.init(filterParam === 'favourite' ? 'favourite' : (filterParam === 'history' ? 'history' : 'home'));
   applyFilterState();
 
   let touchStartY = 0, pulling = false;
