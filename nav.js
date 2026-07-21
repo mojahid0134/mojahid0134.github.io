@@ -16,7 +16,7 @@
       position: fixed; left: 0; right: 0; bottom: 0; z-index: 500;
       background: #fff; display: flex; justify-content: space-around; align-items: center;
       padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px));
-      box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+      border-radius: 22px 22px 0 0; box-shadow: 0 -6px 16px rgba(0,0,0,0.08);
     }
     .nf-nav-item {
       display: flex; flex-direction: column; align-items: center; gap: 3px;
@@ -24,7 +24,7 @@
       color: #888; font-size: 11px; font-weight: 700; min-width: 60px;
     }
     .nf-nav-item svg { width: 22px; height: 22px; }
-    .nf-nav-item.active { color: #6D28D9; background: #f1eefc; }
+    .nf-nav-item.active { color: #1a1a2e; background: #E0F2FE; }
   `;
   document.head.appendChild(style);
 
