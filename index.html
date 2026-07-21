@@ -532,9 +532,19 @@
       card.className = 'post-card';
       let bodyHtml;
       if (sectionName === 'Daily Hadith') {
-        // Daily Hadith: শুধু Title দেখাবে, Title-এ click করলে পুরো text খুলবে
-        const titleText = post.title || '(শিরোনাম নেই — Title দেওয়া হয়নি)';
-        bodyHtml = `<a class="post-link" style="font-weight:800;" href="view.html?id=${post.id}${APP_MODE ? '&app=1' : ''}">${titleText}</a>`;
+        // Daily Hadith: Title থাকলে শুধু Title দেখাবে (click করলে পুরো text খুলবে)।
+        // Title না থাকলে সরাসরি Post Text-ই দেখাবে (অন্য section-এর মতো)।
+        if (post.title) {
+          bodyHtml = `<a class="post-link" style="font-weight:800;" href="view.html?id=${post.id}${APP_MODE ? '&app=1' : ''}">${post.title}</a>`;
+        } else if (hasLink) {
+          if (APP_MODE && !isYouTubeLink(post.link)) {
+            bodyHtml = `<a class="post-link" href="${post.link}" onclick="recordVisit('${post.id}')">${post.customText}</a>`;
+          } else {
+            bodyHtml = `<a class="post-link" href="view.html?id=${post.id}&url=${encodeURIComponent(post.link)}${APP_MODE ? '&app=1' : ''}">${post.customText}</a>`;
+          }
+        } else {
+          bodyHtml = `<div class="post-link" style="cursor:default;">${post.customText}</div>`;
+        }
       } else if (hasLink) {
         const titlePrefix = post.title ? `<div style="font-weight:800;color:#1a1a2e;margin-bottom:6px;">${post.title}</div>` : '';
         if (APP_MODE && !isYouTubeLink(post.link)) {
