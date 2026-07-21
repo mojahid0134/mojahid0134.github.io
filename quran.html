@@ -54,6 +54,20 @@
   .surah-sub { color:#888; font-size:12px; margin-top:2px; }
   .surah-ar { font-family:'Uthman Hafs','Amiri','Noto Naskh Arabic',serif; font-size:22px; color:#2a1650; flex-shrink:0; }
 
+  .fav-toggle-btn {
+    flex-shrink:0; background:#fff; border:none; width:42px; height:42px; border-radius:14px;
+    box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; justify-content:center;
+  }
+  .fav-toggle-btn svg { width:19px; height:19px; color:#c9820a; }
+  .fav-toggle-btn.active svg { fill:#c9820a; }
+  .surah-card { flex-wrap:wrap; }
+  .surah-add-fav {
+    flex-basis:100%; margin-top:6px; font-size:11px; font-weight:700; color:#6D28D9;
+    display:flex; align-items:center; gap:4px;
+  }
+  .surah-add-fav.active { color:#c9820a; }
+  .surah-add-fav svg { width:13px; height:13px; }
+
   /* ===== Surah detail screen ===== */
   .surah-header {
     background:linear-gradient(135deg,#2a1650,#4a2a6d); color:#fff;
@@ -426,7 +440,10 @@ audioPlayer.addEventListener('pause', syncListenBtnUI);
     showAudioBar();
     if (s.playing) {
       const p = audioPlayer.play();
-      if (p && p.then) p.then(() => { audioPlayPauseBtn.textContent = '⏸'; }).catch(() => { audioPlayPauseBtn.textContent = '▶'; });
+      if (p && p.then) p.then(() => { audioPlayPauseBtn.textContent = '⏸'; }).catch(() => {
+        audioPlayPauseBtn.textContent = '▶';
+        s.playing = false; setAudioState(s); // resume ব্যর্থ হলে state-ও accurate রাখা হচ্ছে
+      });
     } else {
       audioPlayPauseBtn.textContent = '▶';
     }
@@ -453,17 +470,40 @@ function showError(msg, retryFn) {
 }
 
 /* ============ SURAH LIST SCREEN ============ */
+function getFavSurahs() {
+  try { return JSON.parse(localStorage.getItem('quran_favourite_surahs')) || []; } catch (e) { return []; }
+}
+function isFavSurah(n) { return getFavSurahs().includes(n); }
+function toggleFavSurah(n) {
+  let favs = getFavSurahs();
+  const idx = favs.indexOf(n);
+  if (idx === -1) favs.push(n); else favs.splice(idx, 1);
+  localStorage.setItem('quran_favourite_surahs', JSON.stringify(favs));
+  return favs.includes(n);
+}
+
 function renderSurahList(list, fromCache) {
   pageTitle.textContent = 'Al-Quran';
-  let html = '<div class="search-box"><input class="search-input" id="searchInput" placeholder="সূরা খুঁজুন (নাম বা নম্বর)..."><button class="full-quran-btn" id="fullQuranBtn">🎧 Full Quran</button></div>';
+  let html = '<div class="search-box"><input class="search-input" id="searchInput" placeholder="সূরা খুঁজুন (নাম বা নম্বর)...">' +
+    '<button class="full-quran-btn" id="fullQuranBtn">🎧 Full Quran</button>' +
+    '<button class="fav-toggle-btn" id="favListToggleBtn" title="Favourite Surahs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>' +
+    '</div>';
   html += '<div class="surah-list" id="surahListBox"></div>';
   pageBody.innerHTML = html;
 
   document.getElementById('fullQuranBtn').addEventListener('click', startFullQuranAudio);
 
   const listBox = document.getElementById('surahListBox');
+  let showingFavOnly = false;
+  const favIcon = `<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>`;
   function draw(items) {
-    listBox.innerHTML = items.map(s => `
+    if (items.length === 0) {
+      listBox.innerHTML = '<div class="empty-msg">কোনো Favourite সূরা এখনো যোগ করা হয়নি</div>';
+      return;
+    }
+    listBox.innerHTML = items.map(s => {
+      const fav = isFavSurah(s.number);
+      return `
       <div class="surah-card" data-n="${s.number}">
         <div class="surah-num">${s.number}</div>
         <div class="surah-info">
@@ -471,20 +511,44 @@ function renderSurahList(list, fromCache) {
           <div class="surah-sub">${s.englishNameTranslation} · ${s.numberOfAyahs} Ayahs · ${s.revelationType}</div>
         </div>
         <div class="surah-ar">${s.name}</div>
+        <div class="surah-add-fav${fav ? ' active' : ''}" data-fav-n="${s.number}">
+          <svg viewBox="0 0 24 24" fill="${fav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">${favIcon}</svg>
+          ${fav ? 'Added to Favourite' : 'Add to Favourite'}
+        </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
     listBox.querySelectorAll('.surah-card').forEach(card => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.surah-add-fav')) return; // favourite টগল হলে সূরা না খুলুক
         window.location.href = 'quran.html?surah=' + card.getAttribute('data-n') + (isAppMode ? '&app=1' : '');
+      });
+    });
+    listBox.querySelectorAll('.surah-add-fav').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const n = Number(el.getAttribute('data-fav-n'));
+        const nowFav = toggleFavSurah(n);
+        el.classList.toggle('active', nowFav);
+        el.innerHTML = `<svg viewBox="0 0 24 24" fill="${nowFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">${favIcon}</svg> ${nowFav ? 'Added to Favourite' : 'Add to Favourite'}`;
+        if (showingFavOnly && !nowFav) draw(list.filter(s => isFavSurah(s.number)));
       });
     });
   }
   draw(list);
 
+  document.getElementById('favListToggleBtn').addEventListener('click', function () {
+    showingFavOnly = !showingFavOnly;
+    this.classList.toggle('active', showingFavOnly);
+    document.getElementById('searchInput').value = '';
+    draw(showingFavOnly ? list.filter(s => isFavSurah(s.number)) : list);
+  });
+
   document.getElementById('searchInput').addEventListener('input', function (e) {
     const q = e.target.value.trim().toLowerCase();
-    if (!q) { draw(list); return; }
-    draw(list.filter(s =>
+    const base = showingFavOnly ? list.filter(s => isFavSurah(s.number)) : list;
+    if (!q) { draw(base); return; }
+    draw(base.filter(s =>
       s.englishName.toLowerCase().includes(q) ||
       s.englishNameTranslation.toLowerCase().includes(q) ||
       String(s.number) === q ||
