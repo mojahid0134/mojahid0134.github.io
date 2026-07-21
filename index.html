@@ -40,9 +40,12 @@
   .date-pill { background:rgba(255,255,255,0.12); padding:5px 11px; border-radius:14px;
     font-size:11px; font-weight:600; color:#fff; }
 
-  .analog-clock {
+  .digital-clock {
     position:absolute; top:78px; right:16px; z-index:4;
-    filter:drop-shadow(0 2px 8px rgba(0,0,0,0.35));
+    background:rgba(255,255,255,0.15); backdrop-filter:blur(4px);
+    border:1px solid rgba(255,255,255,0.3); border-radius:12px;
+    padding:8px 14px; color:#fff; font-size:15px; font-weight:700; letter-spacing:1px;
+    font-variant-numeric:tabular-nums;
   }
 
   .topbar h1 { font-size:26px; font-weight:800; color:#fff; line-height:1; }
@@ -63,6 +66,11 @@
   .date-row:last-child { border-bottom:none; }
   .date-row .label { font-size:13px; color:#888; font-weight:600; }
   .date-row .value { font-size:15px; color:#1a1a2e; font-weight:700; }
+  .donate-method { padding:14px; background:#f9f6ff; border-radius:12px; margin-bottom:10px; }
+  .donate-method .name { font-size:14px; font-weight:800; color:#5b21b6; margin-bottom:4px; }
+  .donate-method .num-row { display:flex; justify-content:space-between; align-items:center; }
+  .donate-method .num { font-size:16px; font-weight:700; color:#1a1a2e; }
+  .copy-btn { background:#6D28D9; color:#fff; border:none; padding:6px 12px; border-radius:10px; font-size:12px; font-weight:700; }
   .more-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
   .more-item { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
   .more-item .icon-box { width:54px; height:54px; border-radius:14px; display:flex; align-items:center; justify-content:center; }
@@ -103,8 +111,8 @@
   .action-btn { background:#f1eefc; color:#5b21b6; border:none;
     padding:8px 14px; border-radius:16px; font-size:13px; font-weight:700;
     display:flex; align-items:center; gap:6px; }
-  .action-btn.fav-btn.active { color:#e0245e; }
-  .action-btn.fav-btn.active svg { fill:#e0245e; }
+  .action-btn.fav-btn.active { color:#6D28D9; }
+  .action-btn.fav-btn.active svg { fill:#6D28D9; }
 
   .playlist-folder { background:#fff; border-radius:14px; padding:16px 18px;
     display:flex; align-items:center; gap:10px; font-weight:700; color:#1a1a2e;
@@ -139,6 +147,20 @@
         <div class="top-left-btns">
           <div class="hamburger-wrap">
             <button class="hamburger-btn" id="topDotsBtn">☰</button>
+            <div class="topbar-dropdown" id="topDropdown">
+              <div id="menuDonateTop">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.5z"/></svg>
+                Donate
+              </div>
+              <div id="menuRateTop">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Rate Our App
+              </div>
+              <div id="menuShareTop">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Share App
+              </div>
+            </div>
           </div>
         </div>
         <div class="top-right-info">
@@ -150,27 +172,7 @@
         </div>
       </div>
 
-      <div class="analog-clock" id="analogClock">
-        <svg viewBox="0 0 64 64" width="64" height="64">
-          <circle cx="32" cy="32" r="30" fill="#fff" stroke="#2a1650" stroke-width="3"/>
-          <text x="32" y="12.5" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">12</text>
-          <text x="43.9" y="14.6" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">1</text>
-          <text x="52.4" y="23.1" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">2</text>
-          <text x="55.5" y="32" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">3</text>
-          <text x="52.4" y="40.9" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">4</text>
-          <text x="43.9" y="49.4" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">5</text>
-          <text x="32" y="53.5" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">6</text>
-          <text x="20.1" y="49.4" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">7</text>
-          <text x="11.6" y="40.9" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">8</text>
-          <text x="8.5" y="32" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">9</text>
-          <text x="11.6" y="23.1" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">10</text>
-          <text x="20.1" y="14.6" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="700" fill="#2a1650">11</text>
-          <line id="clockHourHand" x1="32" y1="32" x2="32" y2="19" stroke="#2a1650" stroke-width="3" stroke-linecap="round"/>
-          <line id="clockMinuteHand" x1="32" y1="32" x2="32" y2="12" stroke="#4a2a6d" stroke-width="2" stroke-linecap="round"/>
-          <line id="clockSecondHand" x1="32" y1="32" x2="32" y2="9" stroke="#c0392b" stroke-width="1" stroke-linecap="round"/>
-          <circle cx="32" cy="32" r="2.5" fill="#2a1650"/>
-        </svg>
-      </div>
+      <div class="digital-clock" id="digitalClock">00:00:00</div>
 
       <h1 id="appTitle">NoorFeed</h1>
       <div class="subtitle" id="appSubtitle">Learn. Reflect. Grow.<br>In the light of Islam.</div>
@@ -185,6 +187,25 @@
       <div class="date-row"><div class="label">English</div><div class="value" id="dateEnglish">-</div></div>
       <div class="date-row"><div class="label">Hijri (আরবি বছর)</div><div class="value" id="dateArabic">-</div></div>
       <div class="date-row"><div class="label">বাংলা</div><div class="value" id="dateBangla">-</div></div>
+    </div>
+  </div>
+
+  <!-- Donate Modal -->
+  <div class="modal-backdrop" id="donateModal">
+    <div class="modal-sheet">
+      <div class="modal-title">💜 Support Us <button class="modal-close" id="donateModalClose">✕</button></div>
+      <div class="donate-method">
+        <div class="name">bKash (Personal)</div>
+        <div class="num-row"><div class="num">+8801342059227</div><button class="copy-btn" onclick="copyNumber()">Copy</button></div>
+      </div>
+      <div class="donate-method">
+        <div class="name">Rocket (Personal)</div>
+        <div class="num-row"><div class="num">+8801342059227</div><button class="copy-btn" onclick="copyNumber()">Copy</button></div>
+      </div>
+      <div class="donate-method">
+        <div class="name">Nagad (Personal)</div>
+        <div class="num-row"><div class="num">+8801342059227</div><button class="copy-btn" onclick="copyNumber()">Copy</button></div>
+      </div>
     </div>
   </div>
 
@@ -219,8 +240,23 @@
   const APP_SHARE_LINK = "https://play.google.com/store/apps/details?id=com.yourname.streamfeed";
   document.title = APP_NAME;
 
-  document.getElementById('topDotsBtn').addEventListener('click', () => {
-    if (window.NFNav) window.NFNav.openRewards();
+  document.getElementById('topDotsBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('topDropdown').classList.toggle('open');
+  });
+  document.addEventListener('click', () => document.getElementById('topDropdown').classList.remove('open'));
+  document.getElementById('menuDonateTop').addEventListener('click', () => {
+    document.getElementById('donateModal').classList.add('open');
+    document.getElementById('topDropdown').classList.remove('open');
+  });
+  document.getElementById('menuRateTop').addEventListener('click', () => {
+    window.open(APP_SHARE_LINK, '_blank');
+    document.getElementById('topDropdown').classList.remove('open');
+  });
+  document.getElementById('menuShareTop').addEventListener('click', () => {
+    if (navigator.share) navigator.share({ title: APP_NAME, text: 'Install ' + APP_NAME + ' App', url: APP_SHARE_LINK }).catch(() => {});
+    else navigator.clipboard.writeText(APP_SHARE_LINK);
+    document.getElementById('topDropdown').classList.remove('open');
   });
 
   const banglaMonths = ['বৈশাখ','জ্যৈষ্ঠ','আষাঢ়','শ্রাবণ','ভাদ্র','আশ্বিন','কার্তিক','অগ্রহায়ণ','পৌষ','মাঘ','ফাল্গুন','চৈত্র'];
@@ -289,23 +325,20 @@
   updateDateDisplays();
   setInterval(updateDateDisplays, 60000);
 
-  // ---- Real-time Analog Clock (ফোনের নিজের সময় ব্যবহার করে, তাই এলাকা অনুযায়ী সবসময় সঠিক সময় দেখাবে) ----
-  function updateAnalogClock() {
+  // ---- Real-time Digital Clock (Hours : Minutes : Seconds, ফোনের নিজের সময় ব্যবহার করে) ----
+  function updateDigitalClock() {
     const now = new Date();
-    const h = now.getHours() % 12;
-    const m = now.getMinutes();
-    const s = now.getSeconds();
-    const hourDeg = (h * 30) + (m * 0.5);
-    const minuteDeg = (m * 6) + (s * 0.1);
-    const secondDeg = s * 6;
-    document.getElementById('clockHourHand').setAttribute('transform', `rotate(${hourDeg} 32 32)`);
-    document.getElementById('clockMinuteHand').setAttribute('transform', `rotate(${minuteDeg} 32 32)`);
-    document.getElementById('clockSecondHand').setAttribute('transform', `rotate(${secondDeg} 32 32)`);
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('digitalClock').innerText = h + ':' + m + ':' + s;
   }
-  updateAnalogClock();
-  setInterval(updateAnalogClock, 1000);
+  updateDigitalClock();
+  setInterval(updateDigitalClock, 1000);
   document.getElementById('dateBtn').addEventListener('click', () => document.getElementById('dateModal').classList.add('open'));
   document.getElementById('dateModalClose').addEventListener('click', () => document.getElementById('dateModal').classList.remove('open'));
+  document.getElementById('donateModalClose').addEventListener('click', () => document.getElementById('donateModal').classList.remove('open'));
+  function copyNumber() { navigator.clipboard.writeText('+8801342059227'); }
   document.getElementById('moreModalClose').addEventListener('click', () => document.getElementById('moreModal').classList.remove('open'));
 
   const CATEGORY_SECTIONS = ['Lives of the Prophets', 'Lives of the Sahabah', 'Dua', 'মাসআলা', 'প্রচলিত ভুল', 'মাসনুন আমল', 'কুরআনের শিক্ষা', 'Nasheed'];
@@ -454,7 +487,7 @@
     return Math.floor(diff/604800) + ' weeks ago';
   }
 
-  const heartIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.5z"/></svg>`;
+  const bookmarkIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
   const sendIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
   const copyIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
   const downloadIcon = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
@@ -527,7 +560,7 @@
         </div>
         ${bodyHtml}
         <div class="post-footer">
-          <button class="action-btn fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${post.id}', this)">${heartIcon} Favorite</button>
+          <button class="action-btn fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${post.id}', this)">${bookmarkIcon} Bookmark</button>
           <button class="action-btn" onclick="sharePost('${post.id}')">${sendIcon} Share</button>
           ${copyBtnHtml}
         </div>
@@ -591,7 +624,7 @@
 
   window.nfSetFilter = function (key) {
     if (key === 'home') showAllPosts();
-    else if (key === 'favourite') showFavorites();
+    else if (key === 'bookmark') showFavorites();
     else if (key === 'history') showHistory();
   };
 
@@ -703,10 +736,10 @@
   if (sectionParam) {
     if (CATEGORY_SECTIONS.includes(sectionParam)) currentFilter = { type: 'sectionBrowse', section: sectionParam };
     else currentFilter = { type: 'playlist', name: sectionParam };
-  } else if (filterParam === 'favourite') { currentFilter = { type: 'favorite' }; }
+  } else if (filterParam === 'bookmark') { currentFilter = { type: 'favorite' }; }
   else if (filterParam === 'history') { currentFilter = { type: 'history' }; }
 
-  if (window.NFNav) window.NFNav.init(filterParam === 'favourite' ? 'favourite' : (filterParam === 'history' ? 'history' : 'home'));
+  if (window.NFNav) window.NFNav.init(filterParam === 'bookmark' ? 'bookmark' : (filterParam === 'history' ? 'history' : 'home'));
   applyFilterState();
 
   let touchStartY = 0, pulling = false;
