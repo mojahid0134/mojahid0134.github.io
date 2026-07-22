@@ -128,9 +128,14 @@
     </div>
 
     <div class="card">
-      <h3>Al Hadith — Manage Groups</h3>
-      <div class="hint">এখানে Group তৈরি করো (যেমন: বুখারী শরীফ, মুসলিম শরীফ)। তারপর উপরের "Create New Playlist"-এ গিয়ে সেই Group-এর ভেতরে Playlist বসাতে পারবে।</div>
-      <input type="text" id="hadithGroupName" placeholder="Group name (e.g. বুখারী শরীফ)">
+      <h3>Al Hadith — Manage Groups (Books)</h3>
+      <div class="hint">এখানে Group তৈরি করো (যেমন: সহিহ বুখারী)। তারপর উপরের "Create New Playlist"-এ গিয়ে সেই Group-এর ভেতরে Playlist বসাতে পারবে।</div>
+      <input type="text" id="hadithGroupName" placeholder="Book name (e.g. সহিহ বুখারী)">
+      <input type="text" id="hadithGroupAuthor" placeholder="Author (e.g. ইমাম বুখারি)">
+      <input type="text" id="hadithGroupBadge" placeholder="Badge text (e.g. B, AD, 40) — max 3 letters" maxlength="3">
+      <input type="color" id="hadithGroupColor" value="#0EA5E9" style="width:100%; height:42px; padding:4px; margin-bottom:10px;">
+      <input type="number" id="hadithGroupCount" placeholder="Hadith count (e.g. 7563)">
+      <input type="number" id="hadithGroupOrder" placeholder="Order number (list-এ কোন জায়গায় দেখাবে, যেমন 1, 2, 3...)">
       <button class="action" onclick="createHadithGroup()">Create Group</button>
       <div class="msg" id="hadithGroupMsg"></div>
       <div id="hadithGroupListBox" style="margin-top:14px;"></div>
@@ -325,12 +330,29 @@
 
   function createHadithGroup() {
     const name = document.getElementById('hadithGroupName').value.trim();
+    const author = document.getElementById('hadithGroupAuthor').value.trim();
+    const badge = document.getElementById('hadithGroupBadge').value.trim();
+    const color = document.getElementById('hadithGroupColor').value;
+    const count = parseInt(document.getElementById('hadithGroupCount').value, 10) || 0;
+    const order = parseInt(document.getElementById('hadithGroupOrder').value, 10) || 0;
     const msg = document.getElementById('hadithGroupMsg');
     if (!name) { msg.className = 'msg err'; msg.innerText = 'Group name is required'; return; }
 
-    db.collection('hadithGroups').add({ name: name }).then(() => {
+    db.collection('hadithGroups').add({
+      name: name,
+      author: author,
+      badge: badge || name[0],
+      color: color,
+      count: count,
+      order: order
+    }).then(() => {
       msg.className = 'msg ok'; msg.innerText = 'Group created ✅';
       document.getElementById('hadithGroupName').value = '';
+      document.getElementById('hadithGroupAuthor').value = '';
+      document.getElementById('hadithGroupBadge').value = '';
+      document.getElementById('hadithGroupColor').value = '#0EA5E9';
+      document.getElementById('hadithGroupCount').value = '';
+      document.getElementById('hadithGroupOrder').value = '';
       loadHadithGroupsList();
     }).catch(err => {
       msg.className = 'msg err'; msg.innerText = 'Error: ' + err.message;
@@ -348,7 +370,10 @@
         return;
       }
       box.innerHTML = '';
-      snapshot.forEach(doc => {
+      const hgDocs = [];
+      snapshot.forEach(doc => hgDocs.push(doc));
+      hgDocs.sort((a, b) => (a.data().order || 0) - (b.data().order || 0));
+      hgDocs.forEach(doc => {
         const data = doc.data();
         hadithGroupsCache[doc.id] = data;
 
@@ -360,7 +385,7 @@
         const item = document.createElement('div');
         item.className = 'list-item';
         item.innerHTML = `
-          <div><div class="list-item-text">📖 ${data.name}</div></div>
+          <div><div class="list-item-text">${data.badge ? '['+data.badge+'] ' : '📖 '}${data.name}${data.author ? ' — ' + data.author : ''}${data.count ? ' (' + data.count + ' হাদিস)' : ''}</div></div>
           <div class="menu-wrap">
             <button class="dots-btn" onclick="toggleMenu('hg-menu-${doc.id}')">⋮</button>
             <div class="dropdown-menu" id="hg-menu-${doc.id}">
