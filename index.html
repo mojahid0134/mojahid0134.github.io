@@ -134,6 +134,8 @@
   .empty-msg { text-align:center; color:#999; padding:40px 0; }
   .section-title { padding:14px 14px 0; font-size:16px; font-weight:800; color:#1a1a2e;
     display:flex; align-items:center; gap:8px; }
+  .back-btn-inline { background:#E0F2FE; border:none; width:32px; height:32px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#1a1a2e; font-size:18px; font-weight:800; }
 
   /* ===== Scroll to Top Button ===== */
   .scroll-top-btn { position:fixed; bottom:84px; right:20px; z-index:150;
@@ -387,7 +389,7 @@
     if (name === 'Quran') { window.location.href = 'quran.html' + (APP_MODE ? '?app=1' : ''); return; }
     if (name === 'Tasbih') { window.location.href = 'tasbih.html' + (APP_MODE ? '?app=1' : ''); return; }
     if (name === '99 Names') { window.location.href = 'names.html' + (APP_MODE ? '?app=1' : ''); return; }
-    if (name === 'Al Hadith') { currentFilter = { type: 'hadithGroups' }; applyFilterState(); window.scrollTo(0,0); return; }
+    if (name === 'Al Hadith') { filterStack = []; currentFilter = { type: 'hadithGroups' }; applyFilterState(); window.scrollTo(0,0); return; }
     navSection(name);
   }
 
@@ -529,8 +531,8 @@
     return { bg:'#0EA5E9', color:'#fff', svg:`<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="9" r="4"/>` };
   }
 
-  function renderPosts(posts) {
-    document.getElementById('sectionTitleBox').innerHTML = '';
+  function renderPosts(posts, titleHtml) {
+    document.getElementById('sectionTitleBox').innerHTML = titleHtml || '';
     const feed = document.getElementById('feedContainer');
     if (posts.length === 0) { feed.innerHTML = '<div class="empty-msg">No posts yet</div>'; return; }
     const favs = getFavorites();
@@ -595,7 +597,7 @@
   }
 
   function renderSectionPlaylists(section) {
-    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title">📁 ${section} — Choose a Playlist</div>`;
+    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title"><button class="back-btn-inline" onclick="goBackFilter()">←</button><span>📁 ${section}</span></div>`;
     const feed = document.getElementById('feedContainer');
     const items = allPlaylists.filter(p => p.section === section);
     if (items.length === 0) { feed.innerHTML = '<div class="empty-msg">No playlists added in this section yet</div>'; return; }
@@ -604,13 +606,13 @@
       const card = document.createElement('div');
       card.className = 'playlist-folder';
       card.innerHTML = `${folderIcon} ${pl.name}`;
-      card.onclick = () => { currentFilter = { type: 'playlistById', id: pl.id }; applyFilterState(); };
+      card.onclick = () => pushFilterAndGo({ type: 'playlistById', id: pl.id });
       feed.appendChild(card);
     });
   }
 
   function renderHadithGroups() {
-    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title">📖 Al Hadith — Choose a Book</div>`;
+    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title"><button class="back-btn-inline" onclick="goBackFilter()">←</button><span>📖 Al Hadith — বই বাছাই করুন</span></div>`;
     const feed = document.getElementById('feedContainer');
     if (allHadithGroups.length === 0) { feed.innerHTML = '<div class="empty-msg">এখনো কোনো Al Hadith Group যোগ করা হয়নি</div>'; return; }
     feed.innerHTML = '';
@@ -628,13 +630,13 @@
           <div class="count-lbl">হাদিস</div>
         </div>
       `;
-      card.onclick = () => { currentFilter = { type: 'hadithPlaylists', groupId: group.id, groupName: group.name }; applyFilterState(); };
+      card.onclick = () => pushFilterAndGo({ type: 'hadithPlaylists', groupId: group.id, groupName: group.name });
       feed.appendChild(card);
     });
   }
 
   function renderHadithPlaylists(groupId, groupName) {
-    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title">📁 ${groupName || 'Al Hadith'} — Choose a Playlist</div>`;
+    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title"><button class="back-btn-inline" onclick="goBackFilter()">←</button><span>📁 ${groupName || 'Al Hadith'}</span></div>`;
     const feed = document.getElementById('feedContainer');
     const group = allHadithGroups.find(g => g.id === groupId);
     const groupColor = (group && group.color) || '#0EA5E9';
@@ -654,7 +656,7 @@
           ${hasRange ? `<div class="hadith-book-author">হাদিসের রেঞ্জ: ${pl.rangeStart} - ${pl.rangeEnd}</div>` : ''}
         </div>
       `;
-      card.onclick = () => { currentFilter = { type: 'playlistById', id: pl.id }; applyFilterState(); };
+      card.onclick = () => pushFilterAndGo({ type: 'playlistById', id: pl.id });
       feed.appendChild(card);
     });
   }
@@ -687,10 +689,11 @@
     } else if (currentFilter.type === 'playlist') {
       setFilterTabs(null);
       const pl = allPlaylists.find(p => p.name === currentFilter.name);
-      renderPosts(pl ? allPosts.filter(p => p.playlistId === pl.id) : []);
+      renderPosts(pl ? allPosts.filter(p => p.playlistId === pl.id) : [], backTitleHtml(pl ? pl.name : ''));
     } else if (currentFilter.type === 'playlistById') {
       setFilterTabs(null);
-      renderPosts(allPosts.filter(p => p.playlistId === currentFilter.id));
+      const pl = allPlaylists.find(p => p.id === currentFilter.id);
+      renderPosts(allPosts.filter(p => p.playlistId === currentFilter.id), backTitleHtml(pl ? pl.name : ''));
     } else if (currentFilter.type === 'sectionBrowse') {
       setFilterTabs(null);
       renderSectionPlaylists(currentFilter.section);
@@ -703,11 +706,36 @@
     }
   }
 
-  function showAllPosts() { currentFilter = { type: 'all' }; applyFilterState(); }
-  function showHistory() { currentFilter = { type: 'history' }; applyFilterState(); }
-  function showFavorites() { currentFilter = { type: 'favorite' }; applyFilterState(); }
+  // ===== Back Navigation Stack =====
+  // Group/Playlist-এর ভেতরে ঢুকলে আগের filter stack-এ জমা থাকে।
+  // history.pushState ব্যবহার করা হয়েছে, তাই App-এর ← Back বাটন এবং
+  // Phone-এর নিজের (physical/system) Back বাটন — দুটোই একইভাবে কাজ করবে।
+  let filterStack = [];
+  function pushFilterAndGo(newFilter) {
+    filterStack.push(currentFilter);
+    currentFilter = newFilter;
+    history.pushState({ nfDrill: true }, '');
+    applyFilterState();
+    window.scrollTo(0, 0);
+  }
+  function goBackFilter() {
+    history.back();
+  }
+  window.addEventListener('popstate', function () {
+    currentFilter = filterStack.pop() || { type: 'all' };
+    applyFilterState();
+    window.scrollTo(0, 0);
+  });
+  function backTitleHtml(title) {
+    return `<div class="section-title"><button class="back-btn-inline" onclick="goBackFilter()">←</button>${title ? `<span>${title}</span>` : ''}</div>`;
+  }
+
+  function showAllPosts() { filterStack = []; currentFilter = { type: 'all' }; applyFilterState(); }
+  function showHistory() { filterStack = []; currentFilter = { type: 'history' }; applyFilterState(); }
+  function showFavorites() { filterStack = []; currentFilter = { type: 'favorite' }; applyFilterState(); }
 
   function navSection(name) {
+    filterStack = [];
     if (CATEGORY_SECTIONS.includes(name)) currentFilter = { type: 'sectionBrowse', section: name };
     else currentFilter = { type: 'playlist', name: name };
     applyFilterState();
