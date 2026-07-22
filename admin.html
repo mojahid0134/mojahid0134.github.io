@@ -122,12 +122,19 @@
         <option value="কুরআনের শিক্ষা">Inside: কুরআনের শিক্ষা</option>
         <option value="Nasheed">Inside: Nasheed</option>
         <optgroup label="Inside Al Hadith" id="hadithGroupOptions"></optgroup>
+        <optgroup label="Inside বিষয়ভিত্তিক কুরআন" id="quranGroupOptions"></optgroup>
       </select>
+      <div class="hint">Order Number — এই Playlist Group/Section-এর ভেতরে কোন ক্রমে (1, 2, 3...) দেখাবে। Standalone হলে খালি রাখতে পারো।</div>
+      <input type="number" id="playlistOrder" placeholder="Order number (e.g. 1, 2, 3...)">
       <div id="playlistHadithFields" style="display:none;">
-        <div class="hint">এটা একটা Hadith Book-এর Chapter/Playlist — নিচে Chapter নাম্বার (badge) আর হাদিসের রেঞ্জ দাও, যেমন ছবিতে দেখানো হয়েছে।</div>
-        <input type="number" id="playlistChapterNum" placeholder="Chapter number / badge (e.g. 0, 1, 2...)">
+        <div class="hint">এটা একটা Hadith Book-এর Chapter/Playlist — নিচে Badge আর হাদিসের রেঞ্জ দাও, যেমন ছবিতে দেখানো হয়েছে।</div>
+        <input type="text" id="playlistChapterNum" placeholder="Badge text (e.g. 0, 1, 2...)">
         <input type="text" id="playlistRangeStart" placeholder="হাদিসের রেঞ্জ শুরু (e.g. 1)">
         <input type="text" id="playlistRangeEnd" placeholder="হাদিসের রেঞ্জ শেষ (e.g. 94)">
+      </div>
+      <div id="playlistQuranFields" style="display:none;">
+        <div class="hint">এটা বিষয়ভিত্তিক কুরআন-এর একটা Playlist — আয়াত সংখ্যা দাও, যেমন ছবিতে দেখানো হয়েছে।</div>
+        <input type="text" id="playlistVerseCount" placeholder="আয়াত সংখ্যা (e.g. 26)">
       </div>
       <button class="action" onclick="createPlaylist()">Create Playlist</button>
       <div class="msg" id="playlistMsg"></div>
@@ -145,6 +152,17 @@
       <button class="action" onclick="createHadithGroup()">Create Group</button>
       <div class="msg" id="hadithGroupMsg"></div>
       <div id="hadithGroupListBox" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="card">
+      <h3>বিষয়ভিত্তিক কুরআন — Manage Groups (Topics)</h3>
+      <div class="hint">এখানে Topic Group তৈরি করো (যেমন: আল্লাহ তায়ালা)। তারপর উপরের "Create New Playlist"-এ গিয়ে সেই Topic-এর ভেতরে Playlist বসাতে পারবে।</div>
+      <input type="text" id="quranGroupName" placeholder="Topic name (e.g. আল্লাহ তায়ালা)">
+      <input type="color" id="quranGroupColor" value="#90CAF9" style="width:100%; height:42px; padding:4px; margin-bottom:10px;">
+      <input type="number" id="quranGroupOrder" placeholder="Order number (list-এ কোন জায়গায় দেখাবে, যেমন 1, 2, 3...)">
+      <button class="action" onclick="createQuranGroup()">Create Group</button>
+      <div class="msg" id="quranGroupMsg"></div>
+      <div id="quranGroupListBox" style="margin-top:14px;"></div>
     </div>
 
     <div class="card">
@@ -253,6 +271,7 @@
   let postsCache = {};
   let playlistsCache = {};
   let hadithGroupsCache = {};
+  let quranGroupsCache = {};
 
   function loginWithGoogle() {
     auth.signInWithPopup(provider).catch(err => {
@@ -268,6 +287,7 @@
         document.getElementById('adminPanel').style.display = 'flex';
         loadPlaylistsIntoDropdown();
         loadHadithGroupsList();
+        loadQuranGroupsList();
         loadPlaylistsList();
         loadPostsList();
       } else {
@@ -313,6 +333,7 @@
   function togglePlaylistHadithFields() {
     const sectionValue = document.getElementById('playlistSection').value;
     document.getElementById('playlistHadithFields').style.display = sectionValue.startsWith('hadith:') ? 'block' : 'none';
+    document.getElementById('playlistQuranFields').style.display = sectionValue.startsWith('quran:') ? 'block' : 'none';
   }
 
   function createPlaylist() {
@@ -321,15 +342,19 @@
     const msg = document.getElementById('playlistMsg');
     if (!name) { msg.className = 'msg err'; msg.innerText = 'Name is required'; return; }
 
-    let playlistData = { name: name, section: null, hadithGroupId: null };
+    const orderInput = parseInt(document.getElementById('playlistOrder').value, 10);
+    let playlistData = { name: name, section: null, hadithGroupId: null, quranGroupId: null, order: isNaN(orderInput) ? 0 : orderInput };
+
     if (sectionValue.startsWith('hadith:')) {
       playlistData.hadithGroupId = sectionValue.replace('hadith:', '');
       const chapterNum = document.getElementById('playlistChapterNum').value.trim();
       playlistData.chapterNum = chapterNum;
       playlistData.rangeStart = document.getElementById('playlistRangeStart').value.trim();
       playlistData.rangeEnd = document.getElementById('playlistRangeEnd').value.trim();
-      playlistData.order = parseInt(chapterNum, 10);
-      if (isNaN(playlistData.order)) playlistData.order = 0;
+      if (isNaN(orderInput)) playlistData.order = parseInt(chapterNum, 10) || 0;
+    } else if (sectionValue.startsWith('quran:')) {
+      playlistData.quranGroupId = sectionValue.replace('quran:', '');
+      playlistData.verseCount = document.getElementById('playlistVerseCount').value.trim();
     } else {
       playlistData.section = sectionValue || null;
     }
@@ -338,9 +363,11 @@
       msg.className = 'msg ok'; msg.innerText = 'Playlist created ✅';
       document.getElementById('playlistName').value = '';
       document.getElementById('playlistSection').value = '';
+      document.getElementById('playlistOrder').value = '';
       document.getElementById('playlistChapterNum').value = '';
       document.getElementById('playlistRangeStart').value = '';
       document.getElementById('playlistRangeEnd').value = '';
+      document.getElementById('playlistVerseCount').value = '';
       togglePlaylistHadithFields();
       loadPlaylistsIntoDropdown();
       loadPlaylistsList();
@@ -375,6 +402,28 @@
       document.getElementById('hadithGroupCount').value = '';
       document.getElementById('hadithGroupOrder').value = '';
       loadHadithGroupsList();
+    }).catch(err => {
+      msg.className = 'msg err'; msg.innerText = 'Error: ' + err.message;
+    });
+  }
+
+  function createQuranGroup() {
+    const name = document.getElementById('quranGroupName').value.trim();
+    const color = document.getElementById('quranGroupColor').value;
+    const order = parseInt(document.getElementById('quranGroupOrder').value, 10) || 0;
+    const msg = document.getElementById('quranGroupMsg');
+    if (!name) { msg.className = 'msg err'; msg.innerText = 'Topic name is required'; return; }
+
+    db.collection('quranGroups').add({
+      name: name,
+      color: color,
+      order: order
+    }).then(() => {
+      msg.className = 'msg ok'; msg.innerText = 'Group created ✅';
+      document.getElementById('quranGroupName').value = '';
+      document.getElementById('quranGroupColor').value = '#90CAF9';
+      document.getElementById('quranGroupOrder').value = '';
+      loadQuranGroupsList();
     }).catch(err => {
       msg.className = 'msg err'; msg.innerText = 'Error: ' + err.message;
     });
@@ -427,6 +476,53 @@
     });
   }
 
+  function loadQuranGroupsList() {
+    const box = document.getElementById('quranGroupListBox');
+    const optgroup = document.getElementById('quranGroupOptions');
+    db.collection('quranGroups').get().then(snapshot => {
+      quranGroupsCache = {};
+      optgroup.innerHTML = '';
+      if (snapshot.empty) {
+        box.innerHTML = '<div class="empty-list">এখনো কোনো Group তৈরি করা হয়নি</div>';
+        return;
+      }
+      box.innerHTML = '';
+      const qgDocs = [];
+      snapshot.forEach(doc => qgDocs.push(doc));
+      qgDocs.sort((a, b) => (a.data().order || 0) - (b.data().order || 0));
+      qgDocs.forEach(doc => {
+        const data = doc.data();
+        quranGroupsCache[doc.id] = data;
+
+        const opt = document.createElement('option');
+        opt.value = 'quran:' + doc.id;
+        opt.innerText = 'বিষয়ভিত্তিক কুরআন → ' + data.name;
+        optgroup.appendChild(opt);
+
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+          <div><div class="list-item-text">📚 ${data.name}${typeof data.order !== 'undefined' ? ' (#' + data.order + ')' : ''}</div></div>
+          <div class="menu-wrap">
+            <button class="dots-btn" onclick="toggleMenu('qg-menu-${doc.id}')">⋮</button>
+            <div class="dropdown-menu" id="qg-menu-${doc.id}">
+              <div onclick="deleteQuranGroup('${doc.id}')">Delete</div>
+            </div>
+          </div>
+        `;
+        box.appendChild(item);
+      });
+    });
+  }
+
+  function deleteQuranGroup(id) {
+    if (!confirm("এই Group মুছে ফেলতে চাও? (ভেতরের Playlist গুলো standalone হয়ে যাবে, মুছে যাবে না)")) return;
+    db.collection('quranGroups').doc(id).delete().then(() => {
+      loadQuranGroupsList();
+      loadPlaylistsList();
+    });
+  }
+
   function loadPlaylistsIntoDropdown() {
     const dropdown = document.getElementById('postPlaylist');
     dropdown.innerHTML = '<option value="">-- Select Playlist --</option>';
@@ -456,6 +552,8 @@
         item.className = 'list-item';
         const tagHtml = data.hadithGroupId
           ? `<span class="list-item-tag">📖 Al Hadith → ${(hadithGroupsCache[data.hadithGroupId] && hadithGroupsCache[data.hadithGroupId].name) || '...'}</span>`
+          : data.quranGroupId
+          ? `<span class="list-item-tag">📚 বিষয়ভিত্তিক কুরআন → ${(quranGroupsCache[data.quranGroupId] && quranGroupsCache[data.quranGroupId].name) || '...'}</span>`
           : (data.section ? `<span class="list-item-tag">📁 Inside: ${data.section}</span>` : `<span class="list-item-tag">Standalone</span>`);
         item.innerHTML = `
           <div>
