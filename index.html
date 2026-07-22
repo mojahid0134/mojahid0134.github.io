@@ -636,13 +636,24 @@
   function renderHadithPlaylists(groupId, groupName) {
     document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title">📁 ${groupName || 'Al Hadith'} — Choose a Playlist</div>`;
     const feed = document.getElementById('feedContainer');
-    const items = allPlaylists.filter(p => p.hadithGroupId === groupId);
+    const group = allHadithGroups.find(g => g.id === groupId);
+    const groupColor = (group && group.color) || '#0EA5E9';
+    const items = allPlaylists.filter(p => p.hadithGroupId === groupId)
+      .slice()
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
     if (items.length === 0) { feed.innerHTML = '<div class="empty-msg">No playlists added in this group yet</div>'; return; }
     feed.innerHTML = '';
     items.forEach(pl => {
       const card = document.createElement('div');
-      card.className = 'playlist-folder';
-      card.innerHTML = `${folderIcon} ${pl.name}`;
+      card.className = 'hadith-book-card';
+      const hasRange = pl.rangeStart !== '' && pl.rangeEnd !== '';
+      card.innerHTML = `
+        <div class="hadith-badge" style="background:${groupColor};">${pl.chapterNum !== '' ? pl.chapterNum : ''}</div>
+        <div class="hadith-book-info">
+          <div class="hadith-book-name">${pl.name}</div>
+          ${hasRange ? `<div class="hadith-book-author">হাদিসের রেঞ্জ: ${pl.rangeStart} - ${pl.rangeEnd}</div>` : ''}
+        </div>
+      `;
       card.onclick = () => { currentFilter = { type: 'playlistById', id: pl.id }; applyFilterState(); };
       feed.appendChild(card);
     });
@@ -739,7 +750,10 @@
       const freshPlaylists = [];
       plSnap.forEach(doc => {
         const d = doc.data();
-        freshPlaylists.push({ id: doc.id, name: d.name || 'Playlist', section: d.section || null, hadithGroupId: d.hadithGroupId || null });
+        freshPlaylists.push({
+          id: doc.id, name: d.name || 'Playlist', section: d.section || null, hadithGroupId: d.hadithGroupId || null,
+          chapterNum: d.chapterNum || '', rangeStart: d.rangeStart || '', rangeEnd: d.rangeEnd || '', order: d.order || 0
+        });
       });
 
       const freshHadithGroups = [];
