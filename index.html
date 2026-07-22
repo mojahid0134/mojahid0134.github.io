@@ -389,7 +389,7 @@
     if (name === 'Quran') { window.location.href = 'quran.html' + (APP_MODE ? '?app=1' : ''); return; }
     if (name === 'Tasbih') { window.location.href = 'tasbih.html' + (APP_MODE ? '?app=1' : ''); return; }
     if (name === '99 Names') { window.location.href = 'names.html' + (APP_MODE ? '?app=1' : ''); return; }
-    if (name === 'Al Hadith') { filterStack = []; currentFilter = { type: 'hadithGroups' }; applyFilterState(); window.scrollTo(0,0); return; }
+    if (name === 'Al Hadith') { freshNav({ type: 'hadithGroups' }); return; }
     navSection(name);
   }
 
@@ -706,40 +706,85 @@
     }
   }
 
-  // ===== Back Navigation Stack =====
-  // Group/Playlist-এর ভেতরে ঢুকলে আগের filter stack-এ জমা থাকে।
+  // ===== Back Navigation System =====
   // history.pushState ব্যবহার করা হয়েছে, তাই App-এর ← Back বাটন এবং
   // Phone-এর নিজের (physical/system) Back বাটন — দুটোই একইভাবে কাজ করবে।
+  //
+  // সমস্যা যেটা ঠিক করা হলো: আগে এক Section ঘুরে অন্য Section-এ গেলে
+  // পুরনো Section-এর history রয়েই যেত, ফলে Back চাপতে চাপতে সেই পুরনো
+  // Section-এ চলে যেত। এখন Home/Favourite/History বা নতুন কোনো Section-এ
+  // ঢোকার সময় (freshNav) আগের পুরো history rewind করে reset করে দেওয়া
+  // হয়, তাই Back চাপলে সবসময় সরাসরি Home-এ গিয়ে থামবে।
   let filterStack = [];
+  let historyDepth = 0;
+  let suppressPopstate = false;
+
   function pushFilterAndGo(newFilter) {
     filterStack.push(currentFilter);
     currentFilter = newFilter;
+    historyDepth++;
     history.pushState({ nfDrill: true }, '');
     applyFilterState();
     window.scrollTo(0, 0);
   }
+
   function goBackFilter() {
     history.back();
   }
+
   window.addEventListener('popstate', function () {
+    if (suppressPopstate) return;
     currentFilter = filterStack.pop() || { type: 'all' };
+    historyDepth = Math.max(0, historyDepth - 1);
     applyFilterState();
     window.scrollTo(0, 0);
   });
+
+  function settleFresh(newFilter) {
+    if (newFilter.type === 'all' || newFilter.type === 'history' || newFilter.type === 'favorite') {
+      currentFilter = newFilter;
+      applyFilterState();
+      window.scrollTo(0, 0);
+    } else {
+      filterStack.push({ type: 'all' });
+      historyDepth = 1;
+      history.pushState({ nfDrill: true }, '');
+      currentFilter = newFilter;
+      applyFilterState();
+      window.scrollTo(0, 0);
+    }
+  }
+
+  // Home / Favourite / History বাটনে অথবা নতুন কোনো Section-এ ঢোকার সময় এটা ব্যবহার হবে।
+  function freshNav(newFilter) {
+    const rewind = historyDepth;
+    filterStack = [];
+    historyDepth = 0;
+    if (rewind > 0) {
+      suppressPopstate = true;
+      const onLanded = function () {
+        window.removeEventListener('popstate', onLanded);
+        suppressPopstate = false;
+        settleFresh(newFilter);
+      };
+      window.addEventListener('popstate', onLanded);
+      history.go(-rewind);
+    } else {
+      settleFresh(newFilter);
+    }
+  }
+
   function backTitleHtml(title) {
     return `<div class="section-title"><button class="back-btn-inline" onclick="goBackFilter()">←</button>${title ? `<span>${title}</span>` : ''}</div>`;
   }
 
-  function showAllPosts() { filterStack = []; currentFilter = { type: 'all' }; applyFilterState(); }
-  function showHistory() { filterStack = []; currentFilter = { type: 'history' }; applyFilterState(); }
-  function showFavorites() { filterStack = []; currentFilter = { type: 'favorite' }; applyFilterState(); }
+  function showAllPosts() { freshNav({ type: 'all' }); }
+  function showHistory() { freshNav({ type: 'history' }); }
+  function showFavorites() { freshNav({ type: 'favorite' }); }
 
   function navSection(name) {
-    filterStack = [];
-    if (CATEGORY_SECTIONS.includes(name)) currentFilter = { type: 'sectionBrowse', section: name };
-    else currentFilter = { type: 'playlist', name: name };
-    applyFilterState();
-    window.scrollTo(0,0);
+    if (CATEGORY_SECTIONS.includes(name)) freshNav({ type: 'sectionBrowse', section: name });
+    else freshNav({ type: 'playlist', name: name });
   }
 
   function sharePost(postId) {
