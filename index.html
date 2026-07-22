@@ -131,6 +131,24 @@
   .hadith-book-count .count-num { font-size:14.5px; font-weight:800; color:#1a1a2e; }
   .hadith-book-count .count-lbl { font-size:10.5px; color:#999; margin-top:1px; }
 
+  /* ===== বিষয়ভিত্তিক কুরআন — Topic Groups (Split Number Block) ===== */
+  .qtopic-group-card { background:#fff; border-radius:14px; overflow:hidden;
+    display:flex; align-items:stretch; box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; }
+  .qtopic-num-block { width:64px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-size:26px; font-weight:800; color:#1a1a2e; }
+  .qtopic-group-info { flex:1; min-width:0; display:flex; align-items:center; justify-content:space-between;
+    gap:10px; padding:14px 14px; }
+  .qtopic-group-name { font-size:15px; font-weight:800; color:#1a1a2e; }
+  .qtopic-group-count { text-align:right; flex-shrink:0; padding-left:12px; border-left:1px solid #d6ecec;
+    font-size:12px; color:#0e7c86; font-weight:700; line-height:1.5; }
+
+  /* ===== বিষয়ভিত্তিক কুরআন — Playlists (Accent Border Cards) ===== */
+  .qtopic-playlist-card { background:#fff; border-radius:12px; padding:14px 16px;
+    border-left:5px solid #F9A825; box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; }
+  .qtopic-playlist-card.alt { border-left-color:#26A69A; }
+  .qtopic-playlist-name { font-size:15px; font-weight:800; color:#1a1a2e; }
+  .qtopic-playlist-count { font-size:12px; color:#888; margin-top:3px; }
+
   .empty-msg { text-align:center; color:#999; padding:40px 0; }
   .section-title { padding:14px 14px 0; font-size:16px; font-weight:800; color:#1a1a2e;
     display:flex; align-items:center; gap:8px; }
@@ -364,6 +382,7 @@
     'Quran': { bg:'#f0ecfb', color:'#4a2a8d', text:'قرآن' },
     'Daily Hadith': { bg:'#e9f5e8', color:'#2e7d32', svg:`<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>` },
     'Al Hadith': { bg:'#fdf3e7', color:'#a8630a', svg:`<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>` },
+    'বিষয়ভিত্তিক কুরআন': { bg:'#e0f7fa', color:'#00838f', svg:`<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>` },
     'Lives of the Prophets': { bg:'#eeeafc', color:'#4a2a8d', svg:`<path d="M12 2v3"/><circle cx="12" cy="2.3" r="0.8" fill="currentColor" stroke="none"/><path d="M6 21v-6a6 6 0 0 1 12 0v6"/><line x1="4" y1="21" x2="20" y2="21"/>` },
     'Lives of the Sahabah': { bg:'#fdf1e0', color:'#c9820a', svg:`<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>` },
     'Dua': { bg:'#e8f0fb', color:'#1e56b3', emoji:'🤲' },
@@ -376,7 +395,7 @@
     'Bangla Caption': { bg:'#fbeaf1', color:'#c22a72', svg:`<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>` },
     'Nasheed': { bg:'#eaf4e6', color:'#4d8a2e', svg:`<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>` }
   };
-  const SECTION_ORDER = ['Quran','Daily Hadith','Al Hadith','Lives of the Prophets','Lives of the Sahabah','Dua','99 Names','Tasbih','মাসআলা','প্রচলিত ভুল','মাসনুন আমল','কুরআনের শিক্ষা','Bangla Caption','Nasheed'];
+  const SECTION_ORDER = ['Quran','Daily Hadith','Al Hadith','বিষয়ভিত্তিক কুরআন','Lives of the Prophets','Lives of the Sahabah','Dua','99 Names','Tasbih','মাসআলা','প্রচলিত ভুল','মাসনুন আমল','কুরআনের শিক্ষা','Bangla Caption','Nasheed'];
   const MORE_ICON = { bg:'#efeef2', color:'#555', svg:`<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>` };
 
   function buildIconHtml(st) {
@@ -390,6 +409,7 @@
     if (name === 'Tasbih') { window.location.href = 'tasbih.html' + (APP_MODE ? '?app=1' : ''); return; }
     if (name === '99 Names') { window.location.href = 'names.html' + (APP_MODE ? '?app=1' : ''); return; }
     if (name === 'Al Hadith') { freshNav({ type: 'hadithGroups' }); return; }
+    if (name === 'বিষয়ভিত্তিক কুরআন') { freshNav({ type: 'quranGroups' }); return; }
     navSection(name);
   }
 
@@ -434,6 +454,7 @@
   let allPosts = [];
   let allPlaylists = [];
   let allHadithGroups = [];
+  let allQuranGroups = [];
   let currentFilter = { type: 'all' };
   const APP_MODE = new URLSearchParams(window.location.search).get('app') === '1';
 
@@ -599,7 +620,7 @@
   function renderSectionPlaylists(section) {
     document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title"><button class="back-btn-inline" onclick="goBackFilter()">←</button><span>📁 ${section}</span></div>`;
     const feed = document.getElementById('feedContainer');
-    const items = allPlaylists.filter(p => p.section === section);
+    const items = allPlaylists.filter(p => p.section === section).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
     if (items.length === 0) { feed.innerHTML = '<div class="empty-msg">No playlists added in this section yet</div>'; return; }
     feed.innerHTML = '';
     items.forEach(pl => {
@@ -661,6 +682,47 @@
     });
   }
 
+  function renderQuranGroups() {
+    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title"><button class="back-btn-inline" onclick="goBackFilter()">←</button><span>📚 বিষয়ভিত্তিক কুরআন — বিষয় বাছাই করুন</span></div>`;
+    const feed = document.getElementById('feedContainer');
+    if (allQuranGroups.length === 0) { feed.innerHTML = '<div class="empty-msg">এখনো কোনো বিষয় যোগ করা হয়নি</div>'; return; }
+    feed.innerHTML = '';
+    allQuranGroups.forEach(group => {
+      const count = allPlaylists.filter(p => p.quranGroupId === group.id).length;
+      const card = document.createElement('div');
+      card.className = 'qtopic-group-card';
+      card.innerHTML = `
+        <div class="qtopic-num-block" style="background:${group.color};">${toBnNumber(group.order)}</div>
+        <div class="qtopic-group-info">
+          <div class="qtopic-group-name">${group.name}</div>
+          <div class="qtopic-group-count">অনুচ্ছেদ<br>${toBnNumber(count)} টি</div>
+        </div>
+      `;
+      card.onclick = () => pushFilterAndGo({ type: 'quranPlaylists', groupId: group.id, groupName: group.name });
+      feed.appendChild(card);
+    });
+  }
+
+  function renderQuranPlaylists(groupId, groupName) {
+    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title"><button class="back-btn-inline" onclick="goBackFilter()">←</button><span>📁 ${groupName || 'বিষয়ভিত্তিক কুরআন'}</span></div>`;
+    const feed = document.getElementById('feedContainer');
+    const items = allPlaylists.filter(p => p.quranGroupId === groupId)
+      .slice()
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (items.length === 0) { feed.innerHTML = '<div class="empty-msg">No playlists added in this topic yet</div>'; return; }
+    feed.innerHTML = '';
+    items.forEach((pl, idx) => {
+      const card = document.createElement('div');
+      card.className = 'qtopic-playlist-card' + (idx % 2 === 1 ? ' alt' : '');
+      card.innerHTML = `
+        <div class="qtopic-playlist-name">${pl.name}</div>
+        ${pl.verseCount !== '' ? `<div class="qtopic-playlist-count">আয়াত সংখ্যা ${toBnNumber(pl.verseCount)} টি</div>` : ''}
+      `;
+      card.onclick = () => pushFilterAndGo({ type: 'playlistById', id: pl.id });
+      feed.appendChild(card);
+    });
+  }
+
   function setFilterTabs(activeKey) {
     document.querySelectorAll('.nf-nav-item').forEach(f => f.classList.remove('active', 'rewards-active'));
     const map = { filterYourFeeds: 0, filterFavourite: 1, filterHistory: 2 };
@@ -676,6 +738,14 @@
     else if (key === 'history') showHistory();
   };
 
+  function sortedPlaylistPosts(playlistId) {
+    // Playlist-এর ভেতরের Post গুলো add করার ক্রম অনুযায়ী (পুরনো → নতুন) দেখাবে,
+    // যাতে Hadith/Quran Topic-এর মতো sequential content ঠিক ক্রমে থাকে।
+    return allPosts.filter(p => p.playlistId === playlistId)
+      .slice()
+      .sort((a, b) => (a.rawTime || 0) - (b.rawTime || 0));
+  }
+
   function applyFilterState() {
     if (currentFilter.type === 'all') { setFilterTabs('filterYourFeeds'); renderPosts(allPosts); }
     else if (currentFilter.type === 'history') {
@@ -689,11 +759,11 @@
     } else if (currentFilter.type === 'playlist') {
       setFilterTabs(null);
       const pl = allPlaylists.find(p => p.name === currentFilter.name);
-      renderPosts(pl ? allPosts.filter(p => p.playlistId === pl.id) : [], backTitleHtml(pl ? pl.name : ''));
+      renderPosts(pl ? sortedPlaylistPosts(pl.id) : [], backTitleHtml(pl ? pl.name : ''));
     } else if (currentFilter.type === 'playlistById') {
       setFilterTabs(null);
       const pl = allPlaylists.find(p => p.id === currentFilter.id);
-      renderPosts(allPosts.filter(p => p.playlistId === currentFilter.id), backTitleHtml(pl ? pl.name : ''));
+      renderPosts(sortedPlaylistPosts(currentFilter.id), backTitleHtml(pl ? pl.name : ''));
     } else if (currentFilter.type === 'sectionBrowse') {
       setFilterTabs(null);
       renderSectionPlaylists(currentFilter.section);
@@ -703,6 +773,12 @@
     } else if (currentFilter.type === 'hadithPlaylists') {
       setFilterTabs(null);
       renderHadithPlaylists(currentFilter.groupId, currentFilter.groupName);
+    } else if (currentFilter.type === 'quranGroups') {
+      setFilterTabs(null);
+      renderQuranGroups();
+    } else if (currentFilter.type === 'quranPlaylists') {
+      setFilterTabs(null);
+      renderQuranPlaylists(currentFilter.groupId, currentFilter.groupName);
     }
   }
 
@@ -805,8 +881,9 @@
     Promise.all([
       db.collection('posts').orderBy('time','desc').get(),
       db.collection('playlists').get(),
-      db.collection('hadithGroups').get()
-    ]).then(([postSnap, plSnap, groupSnap]) => {
+      db.collection('hadithGroups').get(),
+      db.collection('quranGroups').get()
+    ]).then(([postSnap, plSnap, groupSnap, quranGroupSnap]) => {
       let freshPosts = [];
       postSnap.forEach(doc => {
         const d = doc.data();
@@ -825,6 +902,7 @@
         const d = doc.data();
         freshPlaylists.push({
           id: doc.id, name: d.name || 'Playlist', section: d.section || null, hadithGroupId: d.hadithGroupId || null,
+          quranGroupId: d.quranGroupId || null, verseCount: d.verseCount || '',
           chapterNum: d.chapterNum || '', rangeStart: d.rangeStart || '', rangeEnd: d.rangeEnd || '', order: d.order || 0
         });
       });
@@ -840,9 +918,19 @@
       });
       freshHadithGroups.sort((a, b) => a.order - b.order);
 
+      const freshQuranGroups = [];
+      quranGroupSnap.forEach(doc => {
+        const d = doc.data();
+        freshQuranGroups.push({
+          id: doc.id, name: d.name || 'Group', color: d.color || '#90CAF9', order: d.order || 0
+        });
+      });
+      freshQuranGroups.sort((a, b) => a.order - b.order);
+
       allPosts = freshPosts;
       allPlaylists = freshPlaylists;
       allHadithGroups = freshHadithGroups;
+      allQuranGroups = freshQuranGroups;
       localStorage.setItem(CACHE_POSTS_KEY, JSON.stringify(freshPosts));
       localStorage.setItem(CACHE_PLAYLISTS_KEY, JSON.stringify(freshPlaylists));
       applyFilterState();
