@@ -111,7 +111,7 @@
     <div class="card">
       <h3>Create New Playlist</h3>
       <input type="text" id="playlistName" placeholder="Enter playlist name">
-      <select id="playlistSection">
+      <select id="playlistSection" onchange="togglePlaylistHadithFields()">
         <option value="">Standalone (No Section)</option>
         <option value="Lives of the Prophets">Inside: Lives of the Prophets</option>
         <option value="Lives of the Sahabah">Inside: Lives of the Sahabah</option>
@@ -123,6 +123,12 @@
         <option value="Nasheed">Inside: Nasheed</option>
         <optgroup label="Inside Al Hadith" id="hadithGroupOptions"></optgroup>
       </select>
+      <div id="playlistHadithFields" style="display:none;">
+        <div class="hint">এটা একটা Hadith Book-এর Chapter/Playlist — নিচে Chapter নাম্বার (badge) আর হাদিসের রেঞ্জ দাও, যেমন ছবিতে দেখানো হয়েছে।</div>
+        <input type="number" id="playlistChapterNum" placeholder="Chapter number / badge (e.g. 0, 1, 2...)">
+        <input type="text" id="playlistRangeStart" placeholder="হাদিসের রেঞ্জ শুরু (e.g. 1)">
+        <input type="text" id="playlistRangeEnd" placeholder="হাদিসের রেঞ্জ শেষ (e.g. 94)">
+      </div>
       <button class="action" onclick="createPlaylist()">Create Playlist</button>
       <div class="msg" id="playlistMsg"></div>
     </div>
@@ -304,6 +310,11 @@
     else navigator.clipboard.writeText(shareUrl);
   }
 
+  function togglePlaylistHadithFields() {
+    const sectionValue = document.getElementById('playlistSection').value;
+    document.getElementById('playlistHadithFields').style.display = sectionValue.startsWith('hadith:') ? 'block' : 'none';
+  }
+
   function createPlaylist() {
     const name = document.getElementById('playlistName').value.trim();
     const sectionValue = document.getElementById('playlistSection').value;
@@ -313,6 +324,12 @@
     let playlistData = { name: name, section: null, hadithGroupId: null };
     if (sectionValue.startsWith('hadith:')) {
       playlistData.hadithGroupId = sectionValue.replace('hadith:', '');
+      const chapterNum = document.getElementById('playlistChapterNum').value.trim();
+      playlistData.chapterNum = chapterNum;
+      playlistData.rangeStart = document.getElementById('playlistRangeStart').value.trim();
+      playlistData.rangeEnd = document.getElementById('playlistRangeEnd').value.trim();
+      playlistData.order = parseInt(chapterNum, 10);
+      if (isNaN(playlistData.order)) playlistData.order = 0;
     } else {
       playlistData.section = sectionValue || null;
     }
@@ -321,6 +338,10 @@
       msg.className = 'msg ok'; msg.innerText = 'Playlist created ✅';
       document.getElementById('playlistName').value = '';
       document.getElementById('playlistSection').value = '';
+      document.getElementById('playlistChapterNum').value = '';
+      document.getElementById('playlistRangeStart').value = '';
+      document.getElementById('playlistRangeEnd').value = '';
+      togglePlaylistHadithFields();
       loadPlaylistsIntoDropdown();
       loadPlaylistsList();
     }).catch(err => {
