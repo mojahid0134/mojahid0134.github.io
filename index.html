@@ -119,6 +119,19 @@
     display:flex; align-items:center; gap:10px; font-weight:700; color:#1a1a2e;
     box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; }
 
+  /* ===== Al Hadith — Book Cards (Hexagon Badge) ===== */
+  .hadith-book-card { background:#fff; border-radius:16px; padding:14px 16px;
+    display:flex; align-items:center; gap:14px; box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; }
+  .hadith-badge { width:46px; height:46px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; font-size:13px;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); }
+  .hadith-book-info { flex:1; min-width:0; }
+  .hadith-book-name { font-size:15px; font-weight:800; color:#1a1a2e; }
+  .hadith-book-author { font-size:12px; color:#888; margin-top:2px; }
+  .hadith-book-count { text-align:right; flex-shrink:0; }
+  .hadith-book-count .count-num { font-size:14.5px; font-weight:800; color:#1a1a2e; }
+  .hadith-book-count .count-lbl { font-size:10.5px; color:#999; margin-top:1px; }
+
   .empty-msg { text-align:center; color:#999; padding:40px 0; }
   .section-title { padding:14px 14px 0; font-size:16px; font-weight:800; color:#1a1a2e;
     display:flex; align-items:center; gap:8px; }
@@ -598,14 +611,24 @@
   }
 
   function renderHadithGroups() {
-    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title">📖 Al Hadith — Choose a Group</div>`;
+    document.getElementById('sectionTitleBox').innerHTML = `<div class="section-title">📖 Al Hadith — Choose a Book</div>`;
     const feed = document.getElementById('feedContainer');
     if (allHadithGroups.length === 0) { feed.innerHTML = '<div class="empty-msg">এখনো কোনো Al Hadith Group যোগ করা হয়নি</div>'; return; }
     feed.innerHTML = '';
     allHadithGroups.forEach(group => {
       const card = document.createElement('div');
-      card.className = 'playlist-folder';
-      card.innerHTML = `${folderIcon} ${group.name}`;
+      card.className = 'hadith-book-card';
+      card.innerHTML = `
+        <div class="hadith-badge" style="background:${group.color};">${group.badge}</div>
+        <div class="hadith-book-info">
+          <div class="hadith-book-name">${group.name}</div>
+          <div class="hadith-book-author">${group.author}</div>
+        </div>
+        <div class="hadith-book-count">
+          <div class="count-num">${toBnNumber(group.count)}</div>
+          <div class="count-lbl">হাদিস</div>
+        </div>
+      `;
       card.onclick = () => { currentFilter = { type: 'hadithPlaylists', groupId: group.id, groupName: group.name }; applyFilterState(); };
       feed.appendChild(card);
     });
@@ -723,8 +746,13 @@
       const freshHadithGroups = [];
       groupSnap.forEach(doc => {
         const d = doc.data();
-        freshHadithGroups.push({ id: doc.id, name: d.name || 'Group' });
+        freshHadithGroups.push({
+          id: doc.id, name: d.name || 'Group', author: d.author || '',
+          badge: d.badge || (d.name ? d.name[0] : 'G'), color: d.color || '#0EA5E9',
+          count: d.count || 0, order: d.order || 0
+        });
       });
+      freshHadithGroups.sort((a, b) => a.order - b.order);
 
       allPosts = freshPosts;
       allPlaylists = freshPlaylists;
