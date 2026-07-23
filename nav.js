@@ -13,7 +13,7 @@
   const style = document.createElement('style');
   style.textContent = `
     .nf-bottom-nav {
-      position: fixed; left: 0; right: 0; bottom: 60px; z-index: 500;
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 500;
       background: #fff; display: flex; justify-content: space-around; align-items: center;
       padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px));
       border-radius: 22px 22px 0 0; box-shadow: 0 -6px 16px rgba(0,0,0,0.08);
