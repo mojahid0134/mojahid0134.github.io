@@ -119,6 +119,9 @@
     box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; }
   .playlist-folder .pf-name { flex:1; min-width:0; }
   .playlist-folder .pf-count { font-size:12px; color:#888; font-weight:700; flex-shrink:0; }
+  .skeleton { background:linear-gradient(90deg,#eee 25%,#f5f5f5 37%,#eee 63%); background-size:400% 100%;
+    animation:skeleton-loading 1.4s ease infinite; border-radius:14px; }
+  @keyframes skeleton-loading { 0%{background-position:100% 50%;} 100%{background-position:0 50%;} }
 
   /* ===== Al Hadith — Book Cards (Hexagon Badge) ===== */
   .hadith-book-card { background:#fff; border-radius:16px; padding:14px 16px;
@@ -378,7 +381,7 @@
   function copyNumber() { navigator.clipboard.writeText('+8801342059227'); }
   document.getElementById('moreModalClose').addEventListener('click', () => document.getElementById('moreModal').classList.remove('open'));
 
-  const CATEGORY_SECTIONS = ['Lives of the Prophets', 'Lives of the Sahabah', 'Dua', 'মাসআলা', 'প্রচলিত ভুল', 'মাসনুন আমল', 'কুরআনের শিক্ষা', 'Nasheed'];
+  const CATEGORY_SECTIONS = ['Lives of the Prophets', 'Lives of the Sahabah', 'Dua', 'মাসআলা', 'প্রচলিত ভুল', 'মাসনুন আমল', 'কুরআনের শিক্ষা'];
 
   const SECTION_STYLES = {
     'Quran': { bg:'#f0ecfb', color:'#4a2a8d', text:'قرآن' },
@@ -452,6 +455,13 @@
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  // Offline persistence চালু করা হচ্ছে — এতে App একবার ডেটা লোড করার পর
+  // Firestore নিজে থেকেই ডিভাইসে (IndexedDB) cache রাখে, ফলে পরের বার App
+  // খোলার সাথে সাথেই সব দেখাবে (কোনো delay ছাড়া), আর ডেটা বদলালে/মুছলে
+  // সাথে সাথে সব স্ক্রিনে auto-update হয়ে যাবে — আলাদা করে Refresh লাগবে না।
+  db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+    console.log('Firestore persistence not enabled:', err.code);
+  });
 
   let allPosts = [];
   let allPlaylists = [];
@@ -643,15 +653,16 @@
     allHadithGroups.forEach(group => {
       const card = document.createElement('div');
       card.className = 'hadith-book-card';
+      const groupPlaylistIds = allPlaylists.filter(p => p.hadithGroupId === group.id).map(p => p.id);
+      const postCount = allPosts.filter(p => groupPlaylistIds.includes(p.playlistId)).length;
       card.innerHTML = `
         <div class="hadith-badge" style="background:${group.color};">${group.badge}</div>
         <div class="hadith-book-info">
           <div class="hadith-book-name">${group.name}</div>
-          <div class="hadith-book-author">${group.author}</div>
         </div>
         <div class="hadith-book-count">
-          <div class="count-num">${toBnNumber(group.count)}</div>
-          <div class="count-lbl">হাদিস</div>
+          <div class="count-num">${toBnNumber(postCount)}</div>
+          <div class="count-lbl">পোস্ট</div>
         </div>
       `;
       card.onclick = () => pushFilterAndGo({ type: 'hadithPlaylists', groupId: group.id, groupName: group.name });
@@ -677,7 +688,7 @@
         <div class="hadith-badge" style="background:${groupColor};">${pl.chapterNum !== '' ? pl.chapterNum : ''}</div>
         <div class="hadith-book-info">
           <div class="hadith-book-name">${pl.name}</div>
-          ${''}
+
         </div>
       `;
       card.onclick = () => pushFilterAndGo({ type: 'playlistById', id: pl.id });
@@ -885,74 +896,78 @@
     return post.rawPublishAt <= Date.now();
   }
 
-  function refreshData() {
-    Promise.all([
-      db.collection('posts').orderBy('time','desc').get(),
-      db.collection('playlists').get(),
-      db.collection('hadithGroups').get(),
-      db.collection('quranGroups').get()
-    ]).then(([postSnap, plSnap, groupSnap, quranGroupSnap]) => {
-      let freshPosts = [];
-      postSnap.forEach(doc => {
-        const d = doc.data();
-        freshPosts.push({
-          id: doc.id, title: d.title || '', customText: d.customText || 'Untitled Post',
-          customTextPlain: d.customTextPlain || '',
-          link: d.link || '', playlistId: d.playlistId || '',
-          timeText: d.timeText || '', rawTime: d.time ? d.time.toMillis() : null,
-          rawPublishAt: d.publishAt ? d.publishAt.toMillis() : null
-        });
-      });
-      freshPosts = freshPosts.filter(isVisibleNow).sort((a,b) => (b.rawPublishAt || b.rawTime || 0) - (a.rawPublishAt || a.rawTime || 0));
+  /* ================= REAL-TIME LIVE SYNC =================
+     আগে প্রতিবার Manual fetch (get()) করে localStorage cache-এ রাখা হতো,
+     যার কারণে delete করা Post কিছুক্ষণ থেকে যেত আর Al Hadith/কুরআন Topic
+     গুলো late দেখাত। এখন onSnapshot() ব্যবহার করা হচ্ছে — Firestore-এ যেই
+     মুহূর্তে কিছু বদলাবে (add/edit/delete), সাথে সাথে App-এও বদলে যাবে,
+     কোনো Manual Refresh ছাড়াই। সাথে offline persistence চালু থাকায় পরের
+     বার App খোলার সাথে সাথেই আগের ডেটা local cache থেকে instantly দেখাবে। */
 
-      const freshPlaylists = [];
-      plSnap.forEach(doc => {
-        const d = doc.data();
-        freshPlaylists.push({
-          id: doc.id, name: d.name || 'Playlist', section: d.section || null, hadithGroupId: d.hadithGroupId || null,
-          quranGroupId: d.quranGroupId || null, verseCount: d.verseCount || '',
-          chapterNum: d.chapterNum || '', rangeStart: d.rangeStart || '', rangeEnd: d.rangeEnd || '', order: d.order || 0
-        });
-      });
-
-      const freshHadithGroups = [];
-      groupSnap.forEach(doc => {
-        const d = doc.data();
-        freshHadithGroups.push({
-          id: doc.id, name: d.name || 'Group', author: d.author || '',
-          badge: d.badge || (d.name ? d.name[0] : 'G'), color: d.color || '#0EA5E9',
-          count: d.count || 0, order: d.order || 0
-        });
-      });
-      freshHadithGroups.sort((a, b) => a.order - b.order);
-
-      const freshQuranGroups = [];
-      quranGroupSnap.forEach(doc => {
-        const d = doc.data();
-        freshQuranGroups.push({
-          id: doc.id, name: d.name || 'Group', color: d.color || '#90CAF9', order: d.order || 0
-        });
-      });
-      freshQuranGroups.sort((a, b) => a.order - b.order);
-
-      allPosts = freshPosts;
-      allPlaylists = freshPlaylists;
-      allHadithGroups = freshHadithGroups;
-      allQuranGroups = freshQuranGroups;
-      localStorage.setItem(CACHE_POSTS_KEY, JSON.stringify(freshPosts));
-      localStorage.setItem(CACHE_PLAYLISTS_KEY, JSON.stringify(freshPlaylists));
-      applyFilterState();
-    }).finally(() => {
-      setTimeout(() => { pullIndicator.style.height = '0px'; }, 400);
-    });
+  function mapPostDoc(doc) {
+    const d = doc.data();
+    return {
+      id: doc.id, title: d.title || '', customText: d.customText || 'Untitled Post',
+      customTextPlain: d.customTextPlain || '',
+      link: d.link || '', playlistId: d.playlistId || '',
+      timeText: d.timeText || '', rawTime: d.time ? d.time.toMillis() : null,
+      rawPublishAt: d.publishAt ? d.publishAt.toMillis() : null
+    };
+  }
+  function mapPlaylistDoc(doc) {
+    const d = doc.data();
+    return {
+      id: doc.id, name: d.name || 'Playlist', section: d.section || null, hadithGroupId: d.hadithGroupId || null,
+      quranGroupId: d.quranGroupId || null, verseCount: d.verseCount || '',
+      chapterNum: d.chapterNum || '', rangeStart: d.rangeStart || '', rangeEnd: d.rangeEnd || '', order: d.order || 0
+    };
+  }
+  function mapHadithGroupDoc(doc) {
+    const d = doc.data();
+    return {
+      id: doc.id, name: d.name || 'Group', author: d.author || '',
+      badge: d.badge || (d.name ? d.name[0] : 'G'), color: d.color || '#0EA5E9',
+      count: d.count || 0, order: d.order || 0
+    };
+  }
+  function mapQuranGroupDoc(doc) {
+    const d = doc.data();
+    return { id: doc.id, name: d.name || 'Group', color: d.color || '#90CAF9', order: d.order || 0 };
   }
 
-  try {
-    const cachedPosts = JSON.parse(localStorage.getItem(CACHE_POSTS_KEY) || 'null');
-    const cachedPlaylists = JSON.parse(localStorage.getItem(CACHE_PLAYLISTS_KEY) || 'null');
-    if (cachedPosts) allPosts = cachedPosts.filter(isVisibleNow);
-    if (cachedPlaylists) allPlaylists = cachedPlaylists;
-  } catch (e) {}
+  db.collection('posts').orderBy('time', 'desc').onSnapshot(snap => {
+    allPosts = snap.docs.map(mapPostDoc).filter(isVisibleNow)
+      .sort((a, b) => (b.rawPublishAt || b.rawTime || 0) - (a.rawPublishAt || a.rawTime || 0));
+    applyFilterState();
+  }, err => console.log('posts live-sync error:', err));
+
+  db.collection('playlists').onSnapshot(snap => {
+    allPlaylists = snap.docs.map(mapPlaylistDoc);
+    applyFilterState();
+  }, err => console.log('playlists live-sync error:', err));
+
+  db.collection('hadithGroups').onSnapshot(snap => {
+    allHadithGroups = snap.docs.map(mapHadithGroupDoc).sort((a, b) => a.order - b.order);
+    applyFilterState();
+  }, err => console.log('hadithGroups live-sync error:', err));
+
+  db.collection('quranGroups').onSnapshot(snap => {
+    allQuranGroups = snap.docs.map(mapQuranGroupDoc).sort((a, b) => a.order - b.order);
+    applyFilterState();
+  }, err => console.log('quranGroups live-sync error:', err));
+
+  // Pull-to-refresh এখন শুধু server-এর সাথে জোর করে একবার sync check করে
+  // নিশ্চিত হয় যে সব up-to-date — যেহেতু listener গুলো এমনিতেই সবসময় লাইভ,
+  // তাই এটা আগের মতো ভারী/ধীর না, খুবই দ্রুত শেষ হয়।
+  function refreshData() {
+    Promise.all([
+      db.collection('posts').orderBy('time', 'desc').get({ source: 'server' }),
+      db.collection('playlists').get({ source: 'server' }),
+      db.collection('hadithGroups').get({ source: 'server' }),
+      db.collection('quranGroups').get({ source: 'server' })
+    ]).catch(err => console.log('force-sync error (live listeners still active):', err))
+      .finally(() => { setTimeout(() => { pullIndicator.style.height = '0px'; }, 300); });
+  }
 
   const sectionParam = new URLSearchParams(window.location.search).get('section');
   const filterParam = new URLSearchParams(window.location.search).get('filter');
