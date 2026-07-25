@@ -216,6 +216,7 @@
 
     <div class="card">
       <h3>Manage Playlists</h3>
+      <input type="text" id="playlistSearchInput" placeholder="🔍 Playlist নাম দিয়ে খুঁজুন..." oninput="filterPlaylistsList()">
       <div id="playlistListBox"></div>
     </div>
 
@@ -458,6 +459,7 @@
           <div class="menu-wrap">
             <button class="dots-btn" onclick="toggleMenu('hg-menu-${doc.id}')">⋮</button>
             <div class="dropdown-menu" id="hg-menu-${doc.id}">
+              <div onclick="editHadithGroup('${doc.id}')">Edit</div>
               <div onclick="deleteHadithGroup('${doc.id}')">Delete</div>
             </div>
           </div>
@@ -465,6 +467,19 @@
         box.appendChild(item);
       });
     });
+  }
+
+  function editHadithGroup(id) {
+    const data = hadithGroupsCache[id];
+    if (!data) return;
+    const newName = prompt('নতুন Book/Group নাম দাও:', data.name || '');
+    if (newName === null) return;
+    const trimmed = newName.trim();
+    if (!trimmed) { alert('নাম খালি রাখা যাবে না'); return; }
+    db.collection('hadithGroups').doc(id).update({ name: trimmed }).then(() => {
+      loadHadithGroupsList();
+      loadPlaylistsList();
+    }).catch(err => alert('Error: ' + err.message));
   }
 
   function deleteHadithGroup(id) {
@@ -505,6 +520,7 @@
           <div class="menu-wrap">
             <button class="dots-btn" onclick="toggleMenu('qg-menu-${doc.id}')">⋮</button>
             <div class="dropdown-menu" id="qg-menu-${doc.id}">
+              <div onclick="editQuranGroup('${doc.id}')">Edit</div>
               <div onclick="deleteQuranGroup('${doc.id}')">Delete</div>
             </div>
           </div>
@@ -512,6 +528,19 @@
         box.appendChild(item);
       });
     });
+  }
+
+  function editQuranGroup(id) {
+    const data = quranGroupsCache[id];
+    if (!data) return;
+    const newName = prompt('নতুন Topic/Group নাম দাও:', data.name || '');
+    if (newName === null) return;
+    const trimmed = newName.trim();
+    if (!trimmed) { alert('নাম খালি রাখা যাবে না'); return; }
+    db.collection('quranGroups').doc(id).update({ name: trimmed }).then(() => {
+      loadQuranGroupsList();
+      loadPlaylistsList();
+    }).catch(err => alert('Error: ' + err.message));
   }
 
   function deleteQuranGroup(id) {
@@ -535,6 +564,31 @@
     });
   }
 
+  function renderPlaylistItem(box, doc_id, data) {
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    const tagHtml = data.hadithGroupId
+      ? `<span class="list-item-tag">📖 Al Hadith → ${(hadithGroupsCache[data.hadithGroupId] && hadithGroupsCache[data.hadithGroupId].name) || '...'}</span>`
+      : data.quranGroupId
+      ? `<span class="list-item-tag">📚 বিষয়ভিত্তিক কুরআন → ${(quranGroupsCache[data.quranGroupId] && quranGroupsCache[data.quranGroupId].name) || '...'}</span>`
+      : (data.section ? `<span class="list-item-tag">📁 Inside: ${data.section}</span>` : `<span class="list-item-tag">Standalone</span>`);
+    item.innerHTML = `
+      <div>
+        <div class="list-item-text">${data.name}</div>
+        ${tagHtml}
+      </div>
+      <div class="menu-wrap">
+        <button class="dots-btn" onclick="toggleMenu('pl-menu-${doc_id}')">⋮</button>
+        <div class="dropdown-menu" id="pl-menu-${doc_id}">
+          <div onclick="editPlaylist('${doc_id}')">Edit</div>
+          <div onclick="sharePlaylist('${doc_id}')">Share</div>
+          <div onclick="deletePlaylist('${doc_id}')">Delete</div>
+        </div>
+      </div>
+    `;
+    box.appendChild(item);
+  }
+
   function loadPlaylistsList() {
     const box = document.getElementById('playlistListBox');
     db.collection('playlists').get().then(snapshot => {
@@ -543,33 +597,34 @@
         box.innerHTML = '<div class="empty-list">No playlists yet</div>';
         return;
       }
-      box.innerHTML = '';
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        playlistsCache[doc.id] = data;
-        const item = document.createElement('div');
-        item.className = 'list-item';
-        const tagHtml = data.hadithGroupId
-          ? `<span class="list-item-tag">📖 Al Hadith → ${(hadithGroupsCache[data.hadithGroupId] && hadithGroupsCache[data.hadithGroupId].name) || '...'}</span>`
-          : data.quranGroupId
-          ? `<span class="list-item-tag">📚 বিষয়ভিত্তিক কুরআন → ${(quranGroupsCache[data.quranGroupId] && quranGroupsCache[data.quranGroupId].name) || '...'}</span>`
-          : (data.section ? `<span class="list-item-tag">📁 Inside: ${data.section}</span>` : `<span class="list-item-tag">Standalone</span>`);
-        item.innerHTML = `
-          <div>
-            <div class="list-item-text">${data.name}</div>
-            ${tagHtml}
-          </div>
-          <div class="menu-wrap">
-            <button class="dots-btn" onclick="toggleMenu('pl-menu-${doc.id}')">⋮</button>
-            <div class="dropdown-menu" id="pl-menu-${doc.id}">
-              <div onclick="sharePlaylist('${doc.id}')">Share</div>
-              <div onclick="deletePlaylist('${doc.id}')">Delete</div>
-            </div>
-          </div>
-        `;
-        box.appendChild(item);
-      });
+      snapshot.forEach(doc => { playlistsCache[doc.id] = doc.data(); });
+      filterPlaylistsList();
     });
+  }
+
+  function filterPlaylistsList() {
+    const box = document.getElementById('playlistListBox');
+    const q = (document.getElementById('playlistSearchInput').value || '').trim().toLowerCase();
+    const entries = Object.entries(playlistsCache).filter(([id, data]) => !q || (data.name || '').toLowerCase().includes(q));
+    if (entries.length === 0) {
+      box.innerHTML = '<div class="empty-list">' + (q ? 'কোনো Playlist পাওয়া যায়নি' : 'No playlists yet') + '</div>';
+      return;
+    }
+    box.innerHTML = '';
+    entries.forEach(([id, data]) => renderPlaylistItem(box, id, data));
+  }
+
+  function editPlaylist(id) {
+    const data = playlistsCache[id];
+    if (!data) return;
+    const newName = prompt('নতুন Playlist নাম দাও:', data.name || '');
+    if (newName === null) return;
+    const trimmed = newName.trim();
+    if (!trimmed) { alert('নাম খালি রাখা যাবে না'); return; }
+    db.collection('playlists').doc(id).update({ name: trimmed }).then(() => {
+      loadPlaylistsIntoDropdown();
+      loadPlaylistsList();
+    }).catch(err => alert('Error: ' + err.message));
   }
 
   function deletePlaylist(id) {
