@@ -117,7 +117,6 @@
         <option value="প্রচলিত ভুল">Inside: প্রচলিত ভুল</option>
         <option value="মাসনুন আমল">Inside: মাসনুন আমল</option>
         <option value="কুরআনের শিক্ষা">Inside: কুরআনের শিক্ষা</option>
-        <option value="Nasheed">Inside: Nasheed</option>
       </select>
       <div class="hint">উপরে Section সিলেক্ট করলে এটা হবে একটা "Top-level" Playlist। নিচে যদি "Parent Playlist" সিলেক্ট কর, তাহলে এটা সেই Playlist এর ভিতরের একটা Sub-Playlist হয়ে যাবে (Al Hadith এর মতো Multi-level এর জন্য) — উপরের Section আর নিচের Parent Playlist দুইটা একসাথে দিস না, যেকোনো একটা দিবি।</div>
       <select id="playlistParent">
@@ -181,6 +180,14 @@
       <button class="action" onclick="runBulkImport()">Import করো</button>
       <div class="msg" id="bulkImportMsg"></div>
       <div id="bulkImportProgress" class="hint"></div>
+    </div>
+
+    <div class="card">
+      <h3>🗑️ Delete Section/Playlist by Name</h3>
+      <div class="hint">এখানে হুবহু নাম লিখে Delete করলে সেই Playlist/Section, তার ভিতরের সব Sub-Playlist এবং সব Post স্থায়ীভাবে মুছে যাবে। খুব সাবধানে ব্যবহার কর, এটা Undo করা যাবে না।</div>
+      <input type="text" id="deleteSectionInput" placeholder="যেমন: Nasheed">
+      <button class="action" style="background:#c0392b;" onclick="deleteSectionByName()">Delete করো</button>
+      <div class="msg" id="deleteSectionMsg"></div>
     </div>
 
     <div class="card">
@@ -394,8 +401,17 @@
   }
 
   // ================================
-  // Bulk Import Tool (Section > Group > Playlist)
+  // Bulk Import Tool (Section > Group > Playlist) — Duplicate এড়িয়ে
   // ================================
+  async function findExisting(name, parentId) {
+    const snap = await db.collection('playlists')
+      .where('name', '==', name)
+      .where('parentId', '==', parentId || null)
+      .limit(1)
+      .get();
+    return snap.empty ? null : snap.docs[0].id;
+  }
+
   async function runBulkImport() {
     const raw = document.getElementById('bulkImportText').value;
     const msg = document.getElementById('bulkImportMsg');
@@ -403,9 +419,9 @@
     if (!raw.trim()) { msg.className = 'msg err'; msg.innerText = 'Text খালি আছে'; return; }
 
     const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    let currentSectionId = null, currentSectionName = null;
+    let currentSectionId = null;
     let currentGroupId = null;
-    let sectionCount = 0, groupCount = 0, playlistCount = 0;
+    let sectionCount = 0, groupCount = 0, playlistCount = 0, skippedCount = 0;
 
     msg.className = 'msg ok'; msg.innerText = 'Import শুরু হয়েছে, অপেক্ষা কর...';
 
@@ -414,28 +430,41 @@
         if (line.toLowerCase().startsWith('section')) {
           const name = line.split(':').slice(1).join(':').trim();
           if (!name) continue;
-          const ref = await db.collection('playlists').add({ name: name, section: null, parentId: null, isSectionRoot: true });
-          currentSectionId = ref.id;
-          currentSectionName = name;
+          const existing = await findExisting(name, null);
+          if (existing) {
+            currentSectionId = existing;
+            skippedCount++;
+          } else {
+            const ref = await db.collection('playlists').add({ name: name, section: null, parentId: null, isSectionRoot: true });
+            currentSectionId = ref.id;
+            sectionCount++;
+          }
           currentGroupId = null;
-          sectionCount++;
-          progress.innerText = `Section: ${name} (${sectionCount} Section, ${groupCount} Group, ${playlistCount} Playlist তৈরি হয়েছে...)`;
+          progress.innerText = `চলছে... Section:${sectionCount} Group:${groupCount} Playlist:${playlistCount} (${skippedCount}টা আগে থেকেই ছিল, Skip হয়েছে)`;
         } else if (line.toLowerCase().startsWith('group')) {
           const name = line.split(':').slice(1).join(':').trim();
           if (!name || !currentSectionId) continue;
-          const ref = await db.collection('playlists').add({ name: name, section: null, parentId: currentSectionId });
-          currentGroupId = ref.id;
-          groupCount++;
-          progress.innerText = `Group: ${name} (${sectionCount} Section, ${groupCount} Group, ${playlistCount} Playlist তৈরি হয়েছে...)`;
+          const existing = await findExisting(name, currentSectionId);
+          if (existing) {
+            currentGroupId = existing;
+            skippedCount++;
+          } else {
+            const ref = await db.collection('playlists').add({ name: name, section: null, parentId: currentSectionId });
+            currentGroupId = ref.id;
+            groupCount++;
+          }
+          progress.innerText = `চলছে... Section:${sectionCount} Group:${groupCount} Playlist:${playlistCount} (${skippedCount}টা আগে থেকেই ছিল, Skip হয়েছে)`;
         } else if (line.toLowerCase().startsWith('playlist')) {
           const name = line.split(':').slice(1).join(':').trim();
           if (!name) continue;
           const parentId = currentGroupId || currentSectionId;
           if (!parentId) continue;
+          const existing = await findExisting(name, parentId);
+          if (existing) { skippedCount++; continue; }
           await db.collection('playlists').add({ name: name, section: null, parentId: parentId });
           playlistCount++;
           if (playlistCount % 10 === 0) {
-            progress.innerText = `চলছে... (${sectionCount} Section, ${groupCount} Group, ${playlistCount} Playlist তৈরি হয়েছে)`;
+            progress.innerText = `চলছে... Section:${sectionCount} Group:${groupCount} Playlist:${playlistCount} (${skippedCount}টা আগে থেকেই ছিল, Skip হয়েছে)`;
           }
         }
       } catch (e) {
@@ -444,11 +473,60 @@
     }
 
     msg.className = 'msg ok';
-    msg.innerText = `✅ Import সম্পূর্ণ! ${sectionCount} Section, ${groupCount} Group, ${playlistCount} Playlist তৈরি হয়েছে।`;
+    msg.innerText = `✅ সম্পূর্ণ! নতুন তৈরি: ${sectionCount} Section, ${groupCount} Group, ${playlistCount} Playlist। আগে থেকেই ছিল বলে Skip: ${skippedCount}টা।`;
     progress.innerText = '';
     document.getElementById('bulkImportText').value = '';
     loadPlaylistsIntoDropdown();
     loadPlaylistsList();
+  }
+
+  // ================================
+  // Section/Playlist নাম দিয়ে খুঁজে, তার সব Sub-Playlist ও Post সহ মুছে ফেলা
+  // ================================
+  async function deleteSectionByName() {
+    const name = document.getElementById('deleteSectionInput').value.trim();
+    const msg = document.getElementById('deleteSectionMsg');
+    if (!name) { msg.className = 'msg err'; msg.innerText = 'নাম লিখতে হবে'; return; }
+    if (!confirm(`"${name}" নামের সবকিছু (Playlist + ভিতরের সব Sub-Playlist + Post) স্থায়ীভাবে মুছে যাবে। নিশ্চিত?`)) return;
+
+    msg.className = 'msg ok'; msg.innerText = 'মুছে ফেলা হচ্ছে, একটু সময় লাগবে...';
+
+    const snapshot = await db.collection('playlists').get();
+    let allDocs = [];
+    snapshot.forEach(doc => allDocs.push({ id: doc.id, ...doc.data() }));
+
+    const targets = allDocs.filter(d => (d.name || '').trim() === name.trim());
+    if (targets.length === 0) { msg.className = 'msg err'; msg.innerText = 'এই নামে কিছু পাওয়া যায়নি'; return; }
+
+    function collectAllIds(rootIds) {
+      let result = new Set(rootIds);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        allDocs.forEach(d => {
+          if (d.parentId && result.has(d.parentId) && !result.has(d.id)) {
+            result.add(d.id); changed = true;
+          }
+        });
+      }
+      return Array.from(result);
+    }
+
+    const idsToDelete = collectAllIds(targets.map(t => t.id));
+
+    for (const id of idsToDelete) {
+      await db.collection('playlists').doc(id).delete();
+      // এই Playlist এর Post গুলোও মুছে ফেলা
+      const postSnap = await db.collection('posts').where('playlistId', '==', id).get();
+      for (const pdoc of postSnap.docs) await db.collection('posts').doc(pdoc.id).delete();
+    }
+
+    msg.className = 'msg ok';
+    msg.innerText = `✅ "${name}" এবং এর ভিতরের মোট ${idsToDelete.length} টা Playlist/Group মুছে ফেলা হয়েছে।`;
+    document.getElementById('deleteSectionInput').value = '';
+    loadPlaylistsIntoDropdown();
+    loadPlaylistsList();
+    loadPostsList();
   }
 
   function deletePlaylist(id) {
