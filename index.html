@@ -117,6 +117,8 @@
   .playlist-folder { background:#fff; border-radius:14px; padding:16px 18px;
     display:flex; align-items:center; gap:10px; font-weight:700; color:#1a1a2e;
     box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; }
+  .playlist-folder .pf-name { flex:1; min-width:0; }
+  .playlist-folder .pf-count { font-size:12px; color:#888; font-weight:700; flex-shrink:0; }
 
   /* ===== Al Hadith — Book Cards (Hexagon Badge) ===== */
   .hadith-book-card { background:#fff; border-radius:16px; padding:14px 16px;
@@ -626,7 +628,8 @@
     items.forEach(pl => {
       const card = document.createElement('div');
       card.className = 'playlist-folder';
-      card.innerHTML = `${folderIcon} ${pl.name}`;
+      const postCount = allPosts.filter(p => p.playlistId === pl.id).length;
+      card.innerHTML = `${folderIcon}<div class="pf-name">${pl.name}</div><div class="pf-count">${postCount} Posts</div>`;
       card.onclick = () => pushFilterAndGo({ type: 'playlistById', id: pl.id });
       feed.appendChild(card);
     });
@@ -859,8 +862,16 @@
   function showFavorites() { freshNav({ type: 'favorite' }); }
 
   function navSection(name) {
-    if (CATEGORY_SECTIONS.includes(name)) freshNav({ type: 'sectionBrowse', section: name });
-    else freshNav({ type: 'playlist', name: name });
+    if (CATEGORY_SECTIONS.includes(name)) {
+      // এই Section-এর ভেতরে যদি মাত্র ১টাই Playlist থাকে (যেমন: মাসআলা,
+      // প্রচলিত ভুল, মাসনুন আমল, কুরআনের শিক্ষা), তাহলে মাঝের "folder list"
+      // স্ক্রিন না দেখিয়ে সরাসরি সেই Playlist-এর Post ফিডে নিয়ে যাওয়া হবে।
+      const items = allPlaylists.filter(p => p.section === name);
+      if (items.length === 1) freshNav({ type: 'playlistById', id: items[0].id });
+      else freshNav({ type: 'sectionBrowse', section: name });
+    } else {
+      freshNav({ type: 'playlist', name: name });
+    }
   }
 
   function sharePost(postId) {
@@ -981,3 +992,4 @@
 
 </body>
 </html>
+ 
