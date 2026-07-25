@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NoorFeed — Cleanup Duplicates</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, sans-serif; }
+  body { background:#f4f5f7; padding:20px; }
+  .topbar { background:linear-gradient(135deg,#1A1A2E,#16213E); color:#fff; padding:16px; text-align:center; font-size:18px; font-weight:600; border-radius:12px; margin-bottom:20px; }
+  .center-box { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; gap:14px; }
+  .login-btn, .start-btn { background:#1A1A2E; color:#fff; border:none; padding:14px 28px; border-radius:30px; font-size:15px; font-weight:600; cursor:pointer; }
+  .start-btn { background:#c0392b; width:100%; margin-bottom:14px; }
+  .denied { color:#c0392b; font-weight:600; text-align:center; }
+  .box { display:none; background:#fff; border-radius:14px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  #log { background:#111; color:#0f0; font-family:monospace; font-size:12px; padding:12px; border-radius:8px; height:460px; overflow-y:auto; white-space:pre-wrap; }
+  .warn { background:#fff3cd; color:#856404; padding:12px; border-radius:8px; margin-bottom:14px; font-size:13px; line-height:1.6; }
+</style>
+</head>
+<body>
+
+<div class="topbar">NoorFeed — Cleanup Duplicates</div>
+
+<div class="center-box" id="loginBox">
+  <button class="login-btn" onclick="loginWithGoogle()">Sign in with Google (Admin)</button>
+  <div class="denied" id="deniedMsg"></div>
+</div>
+
+<div class="box" id="cleanBox">
+  <div class="warn">
+    এই টুল একই নামের duplicate Group (Al Hadith / বিষয়ভিত্তিক কুরআন) এবং duplicate নামের Playlist খুঁজে বের করে একটা রেখে বাকিগুলো মুছে দেবে। কোনো Post যদি মুছে ফেলা Playlist-এর সাথে যুক্ত থাকে, সেটা প্রথমে বেঁচে থাকা Playlist-এ সরিয়ে নেওয়া হবে — কোনো Post হারাবে না। "Dua" সেকশনের পুরনো "Namaj" Playlist-ও "সালাত" Playlist-এ merge হয়ে যাবে। এটা একবার চালালেই যথেষ্ট।
+  </div>
+  <button class="start-btn" id="startBtn" onclick="startCleanup()">🧹 Start Cleanup</button>
+  <div id="log"></div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAJLBtnX05B7t8XGJljMJBHSW0OoWEM7xs",
+    authDomain: "streamfeedapp.firebaseapp.com",
+    projectId: "streamfeedapp",
+    storageBucket: "streamfeedapp.firebasestorage.app",
+    messagingSenderId: "255931584141",
+    appId: "1:255931584141:web:9d62d1759e4ee8f280dcc4"
+  };
+  const ADMIN_EMAIL = "mdmojahidhossain0134@gmail.com";
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  function loginWithGoogle() {
+    auth.signInWithPopup(provider).catch(err => {
+      document.getElementById('deniedMsg').innerText = "Login Error: " + err.message;
+    });
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      if (user.email === ADMIN_EMAIL) {
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('cleanBox').style.display = 'block';
+      } else {
+        document.getElementById('deniedMsg').innerText = "This Gmail (" + user.email + ") is not allowed.";
+        auth.signOut();
+      }
+    } else {
+      document.getElementById('cleanBox').style.display = 'none';
+      document.getElementById('loginBox').style.display = 'flex';
+    }
+  });
+
+  function log(msg) {
+    const el = document.getElementById('log');
+    el.textContent += msg + "\n";
+    el.scrollTop = el.scrollHeight;
+  }
+
+  // পুরনো নাম -> নতুন (canonical) নামে merge করার জন্য (section, oldName, newName)
+  const RENAME_MERGES = [
+    { section: "Dua", oldName: "Namaj", newName: "সালাত" }
+  ];
+
+  function scoreCompleteness(d) {
+    // যেই Doc-এ বেশি তথ্য ভরা আছে, তাকে প্রাধান্য দিয়ে survivor হিসেবে রাখা হবে
+    let s = 0;
+    if (d.rangeStart) s++;
+    if (d.rangeEnd) s++;
+    if (d.verseCount) s++;
+    if (d.author) s++;
+    if (d.count) s++;
+    if (d.chapterNum) s++;
+    return s;
+  }
+
+  async function startCleanup() {
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('log').textContent = '';
+    try {
+      log('Fetching all data...');
+      const [hgSnap, qgSnap, plSnap] = await Promise.all([
+        db.collection('hadithGroups').get(),
+        db.collection('quranGroups').get(),
+        db.collection('playlists').get()
+      ]);
+
+      let hadithGroups = hgSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      let quranGroups = qgSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      let playlists = plSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      log('Loaded: ' + hadithGroups.length + ' hadith groups, ' + quranGroups.length + ' quran groups, ' + playlists.length + ' playlists.\n');
+
+      /* ================= STEP 1: Merge duplicate GROUPS (by name) ================= */
+      async function mergeDuplicateGroups(list, collectionName, playlistIdField) {
+        const byName = {};
+        list.forEach(g => { (byName[g.name] = byName[g.name] || []).push(g); });
+        for (const name in byName) {
+          const dupes = byName[name];
+          if (dupes.length <= 1) continue;
+          dupes.sort((a, b) => (a.order || 0) - (b.order || 0));
+          const survivor = dupes[0];
+          log('Merging duplicate group "' + name + '" (' + dupes.length + ' copies) -> keeping id ' + survivor.id);
+          for (let i = 1; i < dupes.length; i++) {
+            const dup = dupes[i];
+            // এই duplicate group-এর সব playlist survivor group-এ repoint করা হচ্ছে
+            const childPlaylists = playlists.filter(p => p[playlistIdField] === dup.id);
+            for (const pl of childPlaylists) {
+              await db.collection('playlists').doc(pl.id).update({ [playlistIdField]: survivor.id });
+              pl[playlistIdField] = survivor.id; // local update
+            }
+            await db.collection(collectionName).doc(dup.id).delete();
+            log('  Deleted duplicate group doc: ' + dup.id + ' (repointed ' + childPlaylists.length + ' playlists)');
+          }
+        }
+      }
+
+      await mergeDuplicateGroups(hadithGroups, 'hadithGroups', 'hadithGroupId');
+      await mergeDuplicateGroups(quranGroups, 'quranGroups', 'quranGroupId');
+
+      /* ================= STEP 2: Merge duplicate PLAYLISTS (by parent+name) ================= */
+      function keyFor(p) {
+        if (p.hadithGroupId) return 'H||' + p.hadithGroupId + '||' + p.name;
+        if (p.quranGroupId) return 'Q||' + p.quranGroupId + '||' + p.name;
+        if (p.section) return 'S||' + p.section + '||' + p.name;
+        return 'X||' + p.id;
+      }
+      const byKey = {};
+      playlists.forEach(p => { const k = keyFor(p); (byKey[k] = byKey[k] || []).push(p); });
+
+      for (const k in byKey) {
+        const dupes = byKey[k];
+        if (dupes.length <= 1) continue;
+        dupes.sort((a, b) => scoreCompleteness(b) - scoreCompleteness(a));
+        const survivor = dupes[0];
+        log('Merging duplicate playlist "' + survivor.name + '" (' + dupes.length + ' copies) -> keeping id ' + survivor.id);
+        // survivor-এ বাকিদের ভালো field গুলো (যদি survivor-এ ফাঁকা থাকে) বসিয়ে দেওয়া হচ্ছে
+        let patch = {};
+        for (let i = 1; i < dupes.length; i++) {
+          const dup = dupes[i];
+          if (!survivor.rangeStart && dup.rangeStart) patch.rangeStart = dup.rangeStart;
+          if (!survivor.rangeEnd && dup.rangeEnd) patch.rangeEnd = dup.rangeEnd;
+          if (!survivor.verseCount && dup.verseCount) patch.verseCount = dup.verseCount;
+        }
+        if (Object.keys(patch).length) await db.collection('playlists').doc(survivor.id).update(patch);
+
+        for (let i = 1; i < dupes.length; i++) {
+          const dup = dupes[i];
+          const postsSnap = await db.collection('posts').where('playlistId', '==', dup.id).get();
+          for (const postDoc of postsSnap.docs) {
+            await db.collection('posts').doc(postDoc.id).update({ playlistId: survivor.id });
+          }
+          await db.collection('playlists').doc(dup.id).delete();
+          log('  Deleted duplicate playlist doc: ' + dup.id + ' (moved ' + postsSnap.size + ' posts to survivor)');
+        }
+      }
+
+      /* ================= STEP 3: Legacy rename-merges (e.g. Dua/Namaj -> Dua/সালাত) ================= */
+      // playlists array কে রিফ্রেশ করে নেওয়া হচ্ছে যেহেতু উপরের ধাপে অনেক ডকুমেন্ট বদলে গেছে
+      const plSnap2 = await db.collection('playlists').get();
+      const freshPlaylists = plSnap2.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      for (const rn of RENAME_MERGES) {
+        const oldPl = freshPlaylists.find(p => p.section === rn.section && p.name === rn.oldName);
+        const newPl = freshPlaylists.find(p => p.section === rn.section && p.name === rn.newName);
+        if (!oldPl) continue;
+        if (!newPl) {
+          log('Renaming legacy playlist "' + rn.oldName + '" -> "' + rn.newName + '" (no existing target, just renaming)');
+          await db.collection('playlists').doc(oldPl.id).update({ name: rn.newName });
+          continue;
+        }
+        log('Merging legacy playlist "' + rn.oldName + '" into "' + rn.newName + '"');
+        const postsSnap = await db.collection('posts').where('playlistId', '==', oldPl.id).get();
+        for (const postDoc of postsSnap.docs) {
+          await db.collection('posts').doc(postDoc.id).update({ playlistId: newPl.id });
+        }
+        await db.collection('playlists').doc(oldPl.id).delete();
+        log('  Deleted "' + rn.oldName + '" (moved ' + postsSnap.size + ' posts to "' + rn.newName + '")');
+      }
+
+      log('\n✅ Cleanup সম্পন্ন হয়েছে! এখন index.html / admin.html রিফ্রেশ করে দেখো, duplicate গুলো আর নেই।');
+    } catch (err) {
+      log('\n❌ ERROR: ' + err.message);
+    }
+    document.getElementById('startBtn').disabled = false;
+  }
+</script>
+</body>
+</html>
