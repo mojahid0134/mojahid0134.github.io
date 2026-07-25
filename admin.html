@@ -176,6 +176,17 @@
         <code>Playlist : নাম</code> (Group এর ভিতরের Playlist, Group না থাকলে সরাসরি Section এর ভিতরে যাবে)<br>
         আগে থেকে একই নামের কিছু থাকলে Replace হবে না, ডুপ্লিকেট এড়াতে Import এর আগে Manage Playlists চেক করে নিস।
       </div>
+      <label style="font-size:13px; color:#555; display:block; margin-bottom:4px;">এই Import টা কোন App Section (Nav Button) এর ভিতরে যাবে?</label>
+      <select id="bulkImportAppSection">
+        <option value="Al Hadith">Al Hadith</option>
+        <option value="Lives of the Prophets">Lives of the Prophets</option>
+        <option value="Lives of the Sahabah">Lives of the Sahabah</option>
+        <option value="Dua">Dua</option>
+        <option value="কুরআনের শিক্ষা">কুরআনের শিক্ষা (বিষয়ভিত্তিক কুরআন)</option>
+        <option value="মাসআলা">মাসআলা</option>
+        <option value="প্রচলিত ভুল">প্রচলিত ভুল</option>
+        <option value="মাসনুন আমল">মাসনুন আমল</option>
+      </select>
       <textarea id="bulkImportText" rows="8" placeholder="এখানে Section/Group/Playlist লিস্ট Paste কর..." style="font-family:monospace; font-size:12px;"></textarea>
       <button class="action" onclick="runBulkImport()">Import করো</button>
       <div class="msg" id="bulkImportMsg"></div>
@@ -414,6 +425,7 @@
 
   async function runBulkImport() {
     const raw = document.getElementById('bulkImportText').value;
+    const appSection = document.getElementById('bulkImportAppSection').value;
     const msg = document.getElementById('bulkImportMsg');
     const progress = document.getElementById('bulkImportProgress');
     if (!raw.trim()) { msg.className = 'msg err'; msg.innerText = 'Text খালি আছে'; return; }
@@ -435,7 +447,8 @@
             currentSectionId = existing;
             skippedCount++;
           } else {
-            const ref = await db.collection('playlists').add({ name: name, section: null, parentId: null, isSectionRoot: true });
+            // Section root Playlist টাকেই App এর নির্দিষ্ট Nav Section এর সাথে Tag করা হচ্ছে
+            const ref = await db.collection('playlists').add({ name: name, section: appSection, parentId: null, isSectionRoot: true });
             currentSectionId = ref.id;
             sectionCount++;
           }
