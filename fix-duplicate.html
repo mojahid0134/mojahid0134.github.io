@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NoorFeed — Fix Duplicate</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, sans-serif; }
+  body { background:#f4f5f7; padding:20px; }
+  .topbar { background:linear-gradient(135deg,#1A1A2E,#16213E); color:#fff; padding:16px; text-align:center; font-size:18px; font-weight:600; border-radius:12px; margin-bottom:20px; }
+  .center-box { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; gap:14px; }
+  .login-btn { background:#1A1A2E; color:#fff; border:none; padding:14px 28px; border-radius:30px; font-size:15px; font-weight:600; cursor:pointer; }
+  .denied { color:#c0392b; font-weight:600; text-align:center; }
+  .box { display:none; background:#fff; border-radius:14px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  .item { border:1px solid #eee; border-radius:12px; padding:14px; margin-bottom:12px; }
+  .item .name { font-weight:700; color:#1a1a2e; margin-bottom:4px; }
+  .item .meta { font-size:12px; color:#888; margin-bottom:10px; }
+  .del-btn { background:#c0392b; color:#fff; border:none; padding:10px 16px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; }
+  #log { background:#111; color:#0f0; font-family:monospace; font-size:12px; padding:12px; border-radius:8px; margin-top:14px; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<div class="topbar">NoorFeed — Fix "ওহীর সূচনা অধ্যায়" Duplicate</div>
+
+<div class="center-box" id="loginBox">
+  <button class="login-btn" onclick="loginWithGoogle()">Sign in with Google (Admin)</button>
+  <div class="denied" id="deniedMsg"></div>
+</div>
+
+<div class="box" id="mainBox">
+  <div id="results">Loading...</div>
+  <div id="log"></div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAJLBtnX05B7t8XGJljMJBHSW0OoWEM7xs",
+    authDomain: "streamfeedapp.firebaseapp.com",
+    projectId: "streamfeedapp",
+    storageBucket: "streamfeedapp.firebasestorage.app",
+    messagingSenderId: "255931584141",
+    appId: "1:255931584141:web:9d62d1759e4ee8f280dcc4"
+  };
+  const ADMIN_EMAIL = "mdmojahidhossain0134@gmail.com";
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  function loginWithGoogle() {
+    auth.signInWithPopup(provider).catch(err => {
+      document.getElementById('deniedMsg').innerText = "Login Error: " + err.message;
+    });
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      if (user.email === ADMIN_EMAIL) {
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('mainBox').style.display = 'block';
+        loadResults();
+      } else {
+        document.getElementById('deniedMsg').innerText = "This Gmail (" + user.email + ") is not allowed.";
+        auth.signOut();
+      }
+    } else {
+      document.getElementById('mainBox').style.display = 'none';
+      document.getElementById('loginBox').style.display = 'flex';
+    }
+  });
+
+  function log(msg) {
+    const el = document.getElementById('log');
+    el.textContent += msg + "\n";
+  }
+
+  async function loadResults() {
+    const box = document.getElementById('results');
+    box.innerHTML = 'তথ্য খোঁজা হচ্ছে...';
+
+    const hgSnap = await db.collection('hadithGroups').where('name', '==', 'সহিহ বুখারী').get();
+    const groupIds = hgSnap.docs.map(d => d.id);
+
+    const plSnap = await db.collection('playlists').where('name', '==', 'ওহীর সূচনা অধ্যায়').get();
+    const matches = plSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (matches.length === 0) {
+      box.innerHTML = '<p>কোনো "ওহীর সূচনা অধ্যায়" Playlist পাওয়া যায়নি।</p>';
+      return;
+    }
+
+    box.innerHTML = '<p style="margin-bottom:14px;">নিচে সব কপি দেখানো হলো। যেটার পাশে <b>Delete</b> চাপবি সেটাই মুছে যাবে — বাকিগুলো সেফ থাকবে।</p>';
+
+    for (const m of matches) {
+      const postsSnap = await db.collection('posts').where('playlistId', '==', m.id).get();
+      const isInBukhari = m.hadithGroupId && groupIds.includes(m.hadithGroupId);
+      const div = document.createElement('div');
+      div.className = 'item';
+      let metaText = '';
+      if (m.hadithGroupId) metaText = isInBukhari ? '📖 Al Hadith → সহিহ বুখারী (এটা সঠিক জায়গায় আছে, ভালো)' : '📖 Al Hadith → (অন্য Group)';
+      else if (m.section) metaText = '📁 Inside: ' + m.section;
+      else metaText = '⚠️ Standalone (কোনো Group/Section নেই — এইটাই সাধারণত duplicate)';
+      if (m.rangeStart || m.rangeEnd) metaText += ' | রেঞ্জ: ' + m.rangeStart + '-' + m.rangeEnd;
+      metaText += ' | Doc ID: ' + m.id + ' | এই Playlist-এ Post আছে: ' + postsSnap.size + 'টা';
+
+      div.innerHTML = `
+        <div class="name">ওহীর সূচনা অধ্যায়</div>
+        <div class="meta">${metaText}</div>
+        <button class="del-btn" data-id="${m.id}">🗑 এইটা Delete করো</button>
+      `;
+      div.querySelector('.del-btn').addEventListener('click', async () => {
+        if (!confirm('তুমি কি নিশ্চিত এই কপিটা ডিলিট করতে চাও? (Doc ID: ' + m.id + ')')) return;
+        try {
+          // এর সাথে যুক্ত কোনো Post থাকলে সেটা মুছে যাওয়ার আগে সতর্ক করা হচ্ছে
+          if (postsSnap.size > 0) {
+            const proceed = confirm('এই Playlist-এ ' + postsSnap.size + 'টা Post যুক্ত আছে। ডিলিট করলে সেই Post গুলো কোনো Playlist ছাড়া হয়ে যাবে। তবুও কি এগোতে চাও?');
+            if (!proceed) return;
+          }
+          await db.collection('playlists').doc(m.id).delete();
+          log('✅ Deleted playlist doc: ' + m.id);
+          div.style.opacity = '0.4';
+          div.querySelector('.del-btn').disabled = true;
+          div.querySelector('.del-btn').innerText = 'Deleted ✓';
+        } catch (err) {
+          log('❌ Error: ' + err.message);
+        }
+      });
+      box.appendChild(div);
+    }
+  }
+</script>
+</body>
+</html>
