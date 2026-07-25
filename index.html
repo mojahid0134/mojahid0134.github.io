@@ -677,7 +677,7 @@
         <div class="hadith-badge" style="background:${groupColor};">${pl.chapterNum !== '' ? pl.chapterNum : ''}</div>
         <div class="hadith-book-info">
           <div class="hadith-book-name">${pl.name}</div>
-          ${hasRange ? `<div class="hadith-book-author">হাদিসের রেঞ্জ: ${pl.rangeStart} - ${pl.rangeEnd}</div>` : ''}
+          ${''}
         </div>
       `;
       card.onclick = () => pushFilterAndGo({ type: 'playlistById', id: pl.id });
@@ -863,9 +863,6 @@
 
   function navSection(name) {
     if (CATEGORY_SECTIONS.includes(name)) {
-      // এই Section-এর ভেতরে যদি মাত্র ১টাই Playlist থাকে (যেমন: মাসআলা,
-      // প্রচলিত ভুল, মাসনুন আমল, কুরআনের শিক্ষা), তাহলে মাঝের "folder list"
-      // স্ক্রিন না দেখিয়ে সরাসরি সেই Playlist-এর Post ফিডে নিয়ে যাওয়া হবে।
       const items = allPlaylists.filter(p => p.section === name);
       if (items.length === 1) freshNav({ type: 'playlistById', id: items[0].id });
       else freshNav({ type: 'sectionBrowse', section: name });
