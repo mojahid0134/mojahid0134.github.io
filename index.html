@@ -475,7 +475,7 @@
   // ব্যবহার করতে, যেটা WebView-তে অনেক বেশি দ্রুত ও নির্ভরযোগ্যভাবে কানেক্ট
   // হয় — এটা enablePersistence()-এর আগেই কল করতে হয়।
   // ================================
-  db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+  db.settings({ experimentalForceLongPolling: true, merge: true });
 
   // Offline persistence চালু করা হচ্ছে — এতে App একবার ডেটা লোড করার পর
   // Firestore নিজে থেকেই ডিভাইসে (IndexedDB) cache রাখে, ফলে পরের বার App
