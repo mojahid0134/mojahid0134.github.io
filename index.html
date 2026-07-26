@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NoorFeed</title>
 
+<!-- Speed: এই দুইটা ডোমেইনের সাথে connection আগে থেকেই খুলে (warm করে)
+     রাখা হচ্ছে, যাতে Firebase SDK লোড হওয়া আর Firestore-এ কানেক্ট হওয়া —
+     দুটোই দ্রুত শুরু হয়, প্রতিটার জন্য আলাদা করে DNS/TLS handshake-এর
+     জন্য অপেক্ষা করতে না হয়। -->
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="https://www.gstatic.com">
+<link rel="dns-prefetch" href="https://firestore.googleapis.com">
+
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
@@ -974,7 +983,7 @@
     return { id: doc.id, name: d.name || 'Group', color: d.color || '#90CAF9', order: d.order || 0 };
   }
 
-  db.collection('posts').orderBy('time', 'desc').onSnapshot(snap => {
+  db.collection('posts').orderBy('time', 'desc').limit(60).onSnapshot(snap => {
     allPosts = snap.docs.map(mapPostDoc).filter(isVisibleNow)
       .sort((a, b) => (b.rawPublishAt || b.rawTime || 0) - (a.rawPublishAt || a.rawTime || 0));
     try { localStorage.setItem(CACHE_POSTS_KEY, JSON.stringify(allPosts)); } catch (e) {}
@@ -1005,7 +1014,7 @@
   // তাই এটা আগের মতো ভারী/ধীর না, খুবই দ্রুত শেষ হয়।
   function refreshData() {
     Promise.all([
-      db.collection('posts').orderBy('time', 'desc').get({ source: 'server' }),
+      db.collection('posts').orderBy('time', 'desc').limit(60).get({ source: 'server' }),
       db.collection('playlists').get({ source: 'server' }),
       db.collection('hadithGroups').get({ source: 'server' }),
       db.collection('quranGroups').get({ source: 'server' })
