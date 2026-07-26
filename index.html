@@ -455,6 +455,19 @@
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+
+  // ================================
+  // WEBVIEW CONNECTION FIX (গুরুত্বপূর্ণ):
+  // App প্রথমবার Install করে খোলার সময় Post আসতে অনেক সময় (কয়েক মিনিট)
+  // লাগছিল — এর কারণ ছিল Firestore ডিফল্টভাবে WebSocket-এর মতো একটা
+  // connection ব্যবহার করে, যেটা কিছু Android WebView (Sketchware/Kodular
+  // অ্যাপে ব্যবহৃত)-তে ঠিকমতো/দ্রুত কাজ করে না। নিচের settings Firestore-কে
+  // বলে দিচ্ছে প্রয়োজনে স্বয়ংক্রিয়ভাবে বিকল্প (long-polling) পদ্ধতি
+  // ব্যবহার করতে, যেটা WebView-তে অনেক বেশি দ্রুত ও নির্ভরযোগ্যভাবে কানেক্ট
+  // হয় — এটা enablePersistence()-এর আগেই কল করতে হয়।
+  // ================================
+  db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+
   // Offline persistence চালু করা হচ্ছে — এতে App একবার ডেটা লোড করার পর
   // Firestore নিজে থেকেই ডিভাইসে (IndexedDB) cache রাখে, ফলে পরের বার App
   // খোলার সাথে সাথেই সব দেখাবে (কোনো delay ছাড়া), আর ডেটা বদলালে/মুছলে
