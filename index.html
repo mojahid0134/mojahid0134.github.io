@@ -9,79 +9,40 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-  /* =========================================================
-     NoorFeed — Premium Glassmorphism Theme
-     টোকেন সিস্টেম: গভীর রাতের আকাশ (navy→purple→teal) ব্যাকগ্রাউন্ডের
-     উপর সোনালী (gold) ও আকাশী (sky-blue) accent সহ frosted-glass card।
-     ========================================================= */
-  :root {
-    --glass-bg: rgba(255,255,255,0.68);
-    --glass-bg-strong: rgba(255,255,255,0.82);
-    --glass-bg-soft: rgba(255,255,255,0.5);
-    --glass-border: rgba(255,255,255,0.55);
-    --glass-shadow: 0 10px 34px rgba(10,8,32,0.22), 0 1px 0 rgba(255,255,255,0.55) inset;
-    --glass-shadow-sm: 0 6px 18px rgba(10,8,32,0.16), 0 1px 0 rgba(255,255,255,0.5) inset;
-    --gold: #d9b878;
-    --sky: #0EA5E9;
-    --ink: #1a1a2e;
-  }
-
   * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Roboto, sans-serif;
     -webkit-text-size-adjust:100%; text-size-adjust:100%; }
-
-  html { background:#0d0b26; }
-  body {
-    min-height:100vh; padding-bottom:128px; position:relative; overflow-x:hidden;
-    background:
-      radial-gradient(circle at 12% -5%, rgba(122,90,190,0.55) 0%, transparent 42%),
-      radial-gradient(circle at 92% 8%, rgba(14,165,233,0.30) 0%, transparent 40%),
-      radial-gradient(circle at 30% 105%, rgba(217,184,120,0.16) 0%, transparent 45%),
-      linear-gradient(165deg, #0f0c29 0%, #1c1548 40%, #16233f 75%, #0f1e33 100%);
-    background-attachment: fixed;
-  }
-  /* Ambient glow orbs — premium glass এর পেছনের আলোর উৎস */
-  body::before, body::after {
-    content:''; position:fixed; border-radius:50%; filter:blur(70px); z-index:0; pointer-events:none;
-  }
-  body::before { width:260px; height:260px; background:rgba(217,184,120,0.30); top:-50px; right:-50px; }
-  body::after { width:300px; height:300px; background:rgba(14,165,233,0.22); bottom:160px; left:-90px; }
-
+  body { background:#f4f5f7; padding-bottom:128px; }
   svg.icon { width:16px; height:16px; flex-shrink:0; }
 
   /* ===== Header (Image Background, 1280x563 Ratio) ===== */
   .topbar { position:relative; overflow:hidden; aspect-ratio: 3264 / 1437; width:100%;
-    padding:12px 16px; background:#1a1a2e; z-index:1; }
+    padding:12px 16px; background:#1a1a2e; }
   .topbar-bg-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
-  .topbar-overlay { position:absolute; inset:0; z-index:2; pointer-events:none;
-    background:linear-gradient(180deg, rgba(15,12,41,0.15) 0%, rgba(15,12,41,0.05) 40%, rgba(15,12,41,0.55) 100%); }
+  .topbar-overlay { position:absolute; inset:0; z-index:2; background:none; pointer-events:none; }
   .topbar-content { position:relative; z-index:3; height:100%; display:flex; flex-direction:column; }
 
   .top-toprow { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:auto; }
   .top-left-btns { display:flex; gap:8px; }
   .hamburger-wrap { position:relative; }
-  .hamburger-btn { background:rgba(255,255,255,0.22); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-    border:1px solid rgba(255,255,255,0.3); color:#fff;
-    width:36px; height:36px; border-radius:12px; font-size:18px; display:flex; align-items:center; justify-content:center; }
+  .hamburger-btn { background:rgba(255,255,255,0.18); border:none; color:#fff;
+    width:36px; height:36px; border-radius:10px; font-size:18px; display:flex; align-items:center; justify-content:center; }
   .topbar-dropdown { display:none; position:absolute; top:42px; left:0;
-    background:var(--glass-bg-strong); backdrop-filter:blur(18px) saturate(180%); -webkit-backdrop-filter:blur(18px) saturate(180%);
-    border:1px solid var(--glass-border); border-radius:14px; box-shadow:var(--glass-shadow);
+    background:#fff; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.25);
     min-width:150px; z-index:50; overflow:hidden; }
   .topbar-dropdown.open { display:block; }
   .topbar-dropdown div { padding:12px 16px; font-size:14px; color:#1a1a2e; font-weight:700;
     display:flex; align-items:center; gap:8px; }
 
   .top-right-info { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
-  .timer { background:rgba(255,255,255,0.22); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border:1px solid rgba(255,255,255,0.28); padding:4px 10px; border-radius:16px;
+  .timer { background:rgba(255,255,255,0.2); padding:4px 10px; border-radius:16px;
     font-size:11px; font-weight:700; display:flex; align-items:center; gap:4px; color:#fff; }
   .timer svg { width:12px; height:12px; }
-  .date-pill { background:rgba(255,255,255,0.16); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border:1px solid rgba(255,255,255,0.22); padding:4px 9px; border-radius:12px;
+  .date-pill { background:rgba(255,255,255,0.12); padding:4px 9px; border-radius:12px;
     font-size:10px; font-weight:600; color:#fff; }
 
   .digital-clock {
-    background:rgba(255,255,255,0.18); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-    border:1px solid rgba(255,255,255,0.32); border-radius:10px;
+    background:rgba(255,255,255,0.15); backdrop-filter:blur(4px);
+    border:1px solid rgba(255,255,255,0.3); border-radius:10px;
     padding:4px 10px; color:#fff; font-size:12px; font-weight:700; letter-spacing:0.5px;
     font-variant-numeric:tabular-nums;
   }
@@ -89,136 +50,120 @@
   .topbar h1 { font-size:22px; font-weight:800; color:#fff; line-height:1; text-shadow:0 2px 8px rgba(0,0,0,0.55); }
   .topbar .subtitle { font-size:11px; color:#efe6ff; margin-top:4px; line-height:1.3; text-shadow:0 1px 6px rgba(0,0,0,0.55); }
   .divider-ornament { display:flex; align-items:center; gap:6px; margin-top:6px; }
-  .divider-ornament .line { height:1px; width:36px; background:var(--gold); }
-  .divider-ornament .dot { width:5px; height:5px; border-radius:50%; background:var(--gold); }
+  .divider-ornament .line { height:1px; width:36px; background:#d9b878; }
+  .divider-ornament .dot { width:5px; height:5px; border-radius:50%; background:#d9b878; }
 
   /* ===== Modals (Date / Donate / More Sections) ===== */
-  .modal-backdrop { display:none; position:fixed; inset:0; background:rgba(10,8,28,0.55);
-    backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:550;
+  .modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:550;
     align-items:flex-end; justify-content:center; }
   .modal-backdrop.open { display:flex; }
-  .modal-sheet { background:var(--glass-bg-strong); backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
-    border:1px solid var(--glass-border); border-bottom:none;
-    width:100%; max-width:480px; border-radius:24px 24px 0 0; box-shadow:0 -10px 40px rgba(10,8,32,0.35);
+  .modal-sheet { background:#fff; width:100%; max-width:480px; border-radius:20px 20px 0 0;
     padding:20px 20px calc(20px + env(safe-area-inset-bottom, 0px)); max-height:80vh; overflow-y:auto; }
   .modal-title { font-size:17px; font-weight:800; color:#1a1a2e; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; }
-  .modal-close { background:rgba(14,165,233,0.14); border:1px solid rgba(14,165,233,0.2); width:30px; height:30px; border-radius:50%; font-size:16px; color:#1a1a2e; }
-  .date-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid rgba(0,0,0,0.06); }
+  .modal-close { background:#E0F2FE; border:none; width:30px; height:30px; border-radius:50%; font-size:16px; color:#1a1a2e; }
+  .date-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #f0f0f0; }
   .date-row:last-child { border-bottom:none; }
-  .date-row .label { font-size:13px; color:#777; font-weight:600; }
+  .date-row .label { font-size:13px; color:#888; font-weight:600; }
   .date-row .value { font-size:15px; color:#1a1a2e; font-weight:700; }
-  .donate-method { padding:14px; background:rgba(122,90,190,0.08); border:1px solid rgba(122,90,190,0.14); border-radius:14px; margin-bottom:10px; }
+  .donate-method { padding:14px; background:#f9f6ff; border-radius:12px; margin-bottom:10px; }
   .donate-method .name { font-size:14px; font-weight:800; color:#1a1a2e; margin-bottom:4px; }
   .donate-method .num-row { display:flex; justify-content:space-between; align-items:center; }
   .donate-method .num { font-size:16px; font-weight:700; color:#1a1a2e; }
-  .copy-btn { background:linear-gradient(135deg,#0EA5E9,#38BDF8); color:#fff; border:none; padding:6px 12px; border-radius:10px; font-size:12px; font-weight:700; box-shadow:0 4px 12px rgba(14,165,233,0.35); }
+  .copy-btn { background:#0EA5E9; color:#fff; border:none; padding:6px 12px; border-radius:10px; font-size:12px; font-weight:700; }
   .more-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
   .more-item { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
-  .more-item .icon-box { width:54px; height:54px; border-radius:16px; display:flex; align-items:center; justify-content:center;
-    border:1px solid rgba(255,255,255,0.5); box-shadow:var(--glass-shadow-sm); }
+  .more-item .icon-box { width:54px; height:54px; border-radius:14px; display:flex; align-items:center; justify-content:center; }
   .more-item .icon-box svg { width:24px; height:24px; }
   .more-item .lbl { font-size:10.5px; font-weight:700; color:#333; text-align:center; line-height:1.2; }
 
   /* ===== Pull to Refresh ===== */
   .pull-indicator { display:flex; align-items:center; justify-content:center; height:0; overflow:hidden;
-    transition:height 0.15s ease; background:transparent; }
-  .pull-indicator .spinner { width:22px; height:22px; border:3px solid rgba(255,255,255,0.35); border-top-color:var(--gold);
+    transition:height 0.15s ease; background:#fff; }
+  .pull-indicator .spinner { width:22px; height:22px; border:3px solid #dbeefe; border-top-color:#0EA5E9;
     border-radius:50%; animation:spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ===== Section Cards ===== */
-  .section-panel { position:relative; z-index:3; margin-top:0;
-    background:var(--glass-bg); backdrop-filter:blur(22px) saturate(180%); -webkit-backdrop-filter:blur(22px) saturate(180%);
-    border:1px solid var(--glass-border); border-bottom:none;
-    border-radius:28px 28px 0 0; padding:18px 14px 6px; box-shadow:0 -10px 30px rgba(10,8,32,0.18); }
+  .section-panel { position:relative; z-index:3; background:#fff; margin-top:0;
+    border-radius:26px 26px 0 0; padding:18px 14px 6px; box-shadow:0 -6px 16px rgba(0,0,0,0.05); }
   .section-scroll { display:flex; gap:10px; justify-content:space-between; }
   .section-card { flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; min-width:0; }
-  .section-icon-box { width:56px; height:56px; border-radius:18px; display:flex; align-items:center; justify-content:center;
-    border:1px solid rgba(255,255,255,0.55); box-shadow:var(--glass-shadow-sm); }
+  .section-icon-box { width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; }
   .section-icon-box svg { width:26px; height:26px; }
   .section-label { font-size:10.5px; font-weight:700; color:#333; text-align:center; line-height:1.2; }
 
   /* ===== Feed ===== */
-  .feed { padding:14px; display:flex; flex-direction:column; gap:14px; position:relative; z-index:2; }
-  .post-card { background:var(--glass-bg); backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
-    border:1px solid var(--glass-border); border-radius:20px; padding:16px; box-shadow:var(--glass-shadow); }
+  .feed { padding:14px; display:flex; flex-direction:column; gap:14px; }
+  .post-card { background:#fff; border-radius:16px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,0.06); }
   .post-header { display:flex; align-items:flex-start; gap:10px; }
   .post-avatar { width:32px; height:32px; border-radius:50%; flex-shrink:0;
-    background:linear-gradient(135deg,#0EA5E9,#38BDF8); box-shadow:0 4px 12px rgba(14,165,233,0.4);
-    display:flex; align-items:center; justify-content:center; }
+    background:linear-gradient(135deg,#0EA5E9,#38BDF8); display:flex; align-items:center; justify-content:center; }
   .post-avatar svg { width:16px; height:16px; }
   .post-meta { flex:1; }
   .post-section-name { font-size:14.5px; font-weight:800; color:#1a1a2e; }
-  .post-sub { font-size:12px; color:#888; display:flex; align-items:center; gap:5px; margin-top:2px; }
+  .post-sub { font-size:12px; color:#999; display:flex; align-items:center; gap:5px; margin-top:2px; }
 
   .post-link { display:block; color:#1a1a2e; font-size:16px; font-weight:600;
     text-decoration:none; line-height:1.6; margin-top:10px; }
 
   .post-footer { display:flex; gap:6px; margin-top:14px; flex-wrap:wrap; }
-  .action-btn { background:rgba(14,165,233,0.12); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-    border:1px solid rgba(14,165,233,0.18); color:#1a1a2e;
+  .action-btn { background:#E0F2FE; color:#1a1a2e; border:none;
     padding:5px 11px; border-radius:13px; font-size:11.5px; font-weight:700;
     display:flex; align-items:center; gap:5px; }
   .action-btn svg { width:13px; height:13px; }
-  .action-btn.fav-btn.active { background:linear-gradient(135deg,#0EA5E9,#38BDF8); border-color:transparent; color:#fff; box-shadow:0 4px 12px rgba(14,165,233,0.35); }
+  .action-btn.fav-btn.active { background:#0EA5E9; color:#fff; }
   .action-btn.fav-btn.active svg { fill:#fff; }
 
-  .playlist-folder { background:var(--glass-bg); backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
-    border:1px solid var(--glass-border); border-radius:16px; padding:16px 18px;
+  .playlist-folder { background:#fff; border-radius:14px; padding:16px 18px;
     display:flex; align-items:center; gap:10px; font-weight:700; color:#1a1a2e;
-    box-shadow:var(--glass-shadow-sm); cursor:pointer; }
+    box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; }
   .playlist-folder .pf-name { flex:1; min-width:0; }
-  .playlist-folder .pf-count { font-size:12px; color:#777; font-weight:700; flex-shrink:0; }
-  .skeleton { background:linear-gradient(90deg,rgba(255,255,255,0.35) 25%,rgba(255,255,255,0.55) 37%,rgba(255,255,255,0.35) 63%);
-    background-size:400% 100%; animation:skeleton-loading 1.4s ease infinite; border-radius:16px;
-    border:1px solid var(--glass-border); }
+  .playlist-folder .pf-count { font-size:12px; color:#888; font-weight:700; flex-shrink:0; }
+  .skeleton { background:linear-gradient(90deg,#eee 25%,#f5f5f5 37%,#eee 63%); background-size:400% 100%;
+    animation:skeleton-loading 1.4s ease infinite; border-radius:14px; }
   @keyframes skeleton-loading { 0%{background-position:100% 50%;} 100%{background-position:0 50%;} }
 
   /* ===== Al Hadith — Book Cards (Hexagon Badge) ===== */
-  .hadith-book-card { background:var(--glass-bg); backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
-    border:1px solid var(--glass-border); border-radius:18px; padding:14px 16px;
-    display:flex; align-items:center; gap:14px; box-shadow:var(--glass-shadow-sm); cursor:pointer; }
+  .hadith-book-card { background:#fff; border-radius:16px; padding:14px 16px;
+    display:flex; align-items:center; gap:14px; box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; }
   .hadith-badge { width:46px; height:46px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
-    color:#fff; font-weight:800; font-size:13px; box-shadow:0 4px 12px rgba(10,8,32,0.25);
+    color:#fff; font-weight:800; font-size:13px;
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); }
   .hadith-book-info { flex:1; min-width:0; }
   .hadith-book-name { font-size:15px; font-weight:800; color:#1a1a2e; }
   .hadith-book-author { font-size:12px; color:#888; margin-top:2px; }
   .hadith-book-count { text-align:right; flex-shrink:0; }
   .hadith-book-count .count-num { font-size:14.5px; font-weight:800; color:#1a1a2e; }
-  .hadith-book-count .count-lbl { font-size:10.5px; color:#888; margin-top:1px; }
+  .hadith-book-count .count-lbl { font-size:10.5px; color:#999; margin-top:1px; }
 
   /* ===== বিষয়ভিত্তিক কুরআন — Topic Groups (Split Number Block) ===== */
-  .qtopic-group-card { background:var(--glass-bg); backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
-    border:1px solid var(--glass-border); border-radius:16px; overflow:hidden;
-    display:flex; align-items:stretch; box-shadow:var(--glass-shadow-sm); cursor:pointer; }
+  .qtopic-group-card { background:#fff; border-radius:14px; overflow:hidden;
+    display:flex; align-items:stretch; box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; }
   .qtopic-num-block { width:64px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
     font-size:26px; font-weight:800; color:#1a1a2e; }
   .qtopic-group-info { flex:1; min-width:0; display:flex; align-items:center; justify-content:space-between;
     gap:10px; padding:14px 14px; }
   .qtopic-group-name { font-size:15px; font-weight:800; color:#1a1a2e; }
-  .qtopic-group-count { text-align:right; flex-shrink:0; padding-left:12px; border-left:1px solid rgba(14,124,134,0.25);
+  .qtopic-group-count { text-align:right; flex-shrink:0; padding-left:12px; border-left:1px solid #d6ecec;
     font-size:12px; color:#0e7c86; font-weight:700; line-height:1.5; }
 
   /* ===== বিষয়ভিত্তিক কুরআন — Playlists (Accent Border Cards) ===== */
-  .qtopic-playlist-card { background:var(--glass-bg); backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
-    border:1px solid var(--glass-border); border-radius:14px; padding:14px 16px;
-    border-left:5px solid #F9A825; box-shadow:var(--glass-shadow-sm); cursor:pointer; }
+  .qtopic-playlist-card { background:#fff; border-radius:12px; padding:14px 16px;
+    border-left:5px solid #F9A825; box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; }
   .qtopic-playlist-card.alt { border-left-color:#26A69A; }
   .qtopic-playlist-name { font-size:15px; font-weight:800; color:#1a1a2e; }
   .qtopic-playlist-count { font-size:12px; color:#888; margin-top:3px; }
 
-  .empty-msg { text-align:center; color:rgba(255,255,255,0.8); padding:40px 0; font-weight:600; text-shadow:0 2px 8px rgba(0,0,0,0.3); }
-  .section-title { padding:14px 14px 0; font-size:16px; font-weight:800; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,0.35);
+  .empty-msg { text-align:center; color:#999; padding:40px 0; }
+  .section-title { padding:14px 14px 0; font-size:16px; font-weight:800; color:#1a1a2e;
     display:flex; align-items:center; gap:8px; }
-  .back-btn-inline { background:rgba(255,255,255,0.2); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-    border:1px solid rgba(255,255,255,0.35); width:32px; height:32px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff; font-size:18px; font-weight:800; }
+  .back-btn-inline { background:#E0F2FE; border:none; width:32px; height:32px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#1a1a2e; font-size:18px; font-weight:800; }
 
   /* ===== Scroll to Top Button ===== */
   .scroll-top-btn { position:fixed; bottom:144px; right:20px; z-index:150;
-    width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,0.35);
-    background:linear-gradient(135deg,#0EA5E9,#38BDF8); color:#fff; box-shadow:0 8px 22px rgba(14,165,233,0.45);
+    width:44px; height:44px; border-radius:50%; border:none;
+    background:#0EA5E9; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.25);
     display:none; align-items:center; justify-content:center;
     opacity:0; transform:translateY(10px); transition:opacity 0.2s, transform 0.2s; }
   .scroll-top-btn.visible { display:flex; opacity:1; transform:translateY(0); }
@@ -955,13 +900,17 @@
      মুহূর্তে কিছু বদলাবে (add/edit/delete), সাথে সাথে App-এও বদলে যাবে,
      কোনো Manual Refresh ছাড়াই।
 
-     INSTANT PAINT ফিক্স: App খোলার সাথে সাথে Post আসতে সময় নিচ্ছিল কারণ
-     Firestore-এর নিজের IndexedDB cache থেকে ডেটা আসতেও কিছুটা সময় লাগে।
-     তাই এখন localStorage-এ শেষ দেখা ডেটার একটা হালকা কপি রাখা হচ্ছে —
-     Page load হওয়ার সাথে সাথেই (০ সেকেন্ড দেরি করে) সেটা synchronously
+     INSTANT PAINT ফিক্স (App install/open/reopen করার পরে Post দেখা দিতে
+     দেরি হওয়ার সমস্যা): আগে শুধু Firestore-এর নিজের IndexedDB persistence-এর
+     উপর ভরসা করা হতো, কিন্তু সেটা থেকে ডেটা পড়তেও কিছুটা সময় লাগে (বিশেষ করে
+     App প্রথমবার install/open করার পরে, বা কিছুক্ষণ App বন্ধ রেখে আবার খুললে)।
+     তাই এখন localStorage-এ শেষবার দেখা ডেটার একটা হালকা কপি রাখা হচ্ছে —
+     Page load হওয়ার সাথে সাথেই (কোনো অপেক্ষা ছাড়া, synchronously) সেটা
      দেখানো হয়, তারপর onSnapshot লাইভ ডেটা এসে সেটাকে replace/update করে
-     দেয়। ফলে Post একদম সাথে সাথেই দেখা যায়, আবার ডেটা সবসময় up-to-date
-     থাকে। */
+     দেয়। ফলে Post একদম সাথে সাথেই চোখে পড়ে, আবার ডেটাও সবসময় সঠিক/লাইভ
+     থাকে। App প্রথমবার install করে খোলার সময় (কোনো cache নেই) শুধু তখনই
+     Firestore থেকে ডেটা আসা পর্যন্ত সামান্য অপেক্ষা লাগবে — এরপর থেকে
+     প্রতিবার সাথে সাথেই দেখাবে। */
   const CACHE_POSTS_KEY = 'cachedPostsData_v2';
   const CACHE_PLAYLISTS_KEY = 'cachedPlaylistsData_v2';
   const CACHE_HADITH_GROUPS_KEY = 'cachedHadithGroupsData_v2';
@@ -1036,6 +985,7 @@
     try { localStorage.setItem(CACHE_QURAN_GROUPS_KEY, JSON.stringify(allQuranGroups)); } catch (e) {}
     applyFilterState();
   }, err => console.log('quranGroups live-sync error:', err));
+
 
   // Pull-to-refresh এখন শুধু server-এর সাথে জোর করে একবার sync check করে
   // নিশ্চিত হয় যে সব up-to-date — যেহেতু listener গুলো এমনিতেই সবসময় লাইভ,
