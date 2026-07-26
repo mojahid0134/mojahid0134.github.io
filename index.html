@@ -5,10 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NoorFeed</title>
 
-<!-- Speed: এই দুইটা ডোমেইনের সাথে connection আগে থেকেই খুলে (warm করে)
-     রাখা হচ্ছে, যাতে Firebase SDK লোড হওয়া আর Firestore-এ কানেক্ট হওয়া —
-     দুটোই দ্রুত শুরু হয়, প্রতিটার জন্য আলাদা করে DNS/TLS handshake-এর
-     জন্য অপেক্ষা করতে না হয়। -->
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="https://www.gstatic.com">
@@ -126,11 +122,6 @@
   .playlist-folder { background:#fff; border-radius:14px; padding:16px 18px;
     display:flex; align-items:center; gap:10px; font-weight:700; color:#1a1a2e;
     box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; }
-  .playlist-folder .pf-name { flex:1; min-width:0; }
-  .playlist-folder .pf-count { font-size:12px; color:#888; font-weight:700; flex-shrink:0; }
-  .skeleton { background:linear-gradient(90deg,#eee 25%,#f5f5f5 37%,#eee 63%); background-size:400% 100%;
-    animation:skeleton-loading 1.4s ease infinite; border-radius:14px; }
-  @keyframes skeleton-loading { 0%{background-position:100% 50%;} 100%{background-position:0 50%;} }
 
   /* ===== Al Hadith — Book Cards (Hexagon Badge) ===== */
   .hadith-book-card { background:#fff; border-radius:16px; padding:14px 16px;
@@ -390,7 +381,7 @@
   function copyNumber() { navigator.clipboard.writeText('+8801342059227'); }
   document.getElementById('moreModalClose').addEventListener('click', () => document.getElementById('moreModal').classList.remove('open'));
 
-  const CATEGORY_SECTIONS = ['Lives of the Prophets', 'Lives of the Sahabah', 'Dua', 'মাসআলা', 'প্রচলিত ভুল', 'মাসনুন আমল', 'কুরআনের শিক্ষা'];
+  const CATEGORY_SECTIONS = ['Lives of the Prophets', 'Lives of the Sahabah', 'Dua', 'মাসআলা', 'প্রচলিত ভুল', 'মাসনুন আমল', 'কুরআনের শিক্ষা', 'Nasheed'];
 
   const SECTION_STYLES = {
     'Quran': { bg:'#f0ecfb', color:'#4a2a8d', text:'قرآن' },
@@ -409,7 +400,7 @@
     'Bangla Caption': { bg:'#fbeaf1', color:'#c22a72', svg:`<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>` },
     'Nasheed': { bg:'#eaf4e6', color:'#4d8a2e', svg:`<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>` }
   };
-  const SECTION_ORDER = ['Quran','Daily Hadith','Al Hadith','বিষয়ভিত্তিক কুরআন','Lives of the Prophets','Lives of the Sahabah','Dua','99 Names','Tasbih','মাসআলা','প্রচলিত ভুল','মাসনুন আমল','কুরআনের শিক্ষা','Bangla Caption'];
+  const SECTION_ORDER = ['Quran','Daily Hadith','Al Hadith','বিষয়ভিত্তিক কুরআন','Lives of the Prophets','Lives of the Sahabah','Dua','99 Names','Tasbih','মাসআলা','প্রচলিত ভুল','মাসনুন আমল','কুরআনের শিক্ষা','Bangla Caption','Nasheed'];
   const MORE_ICON = { bg:'#efeef2', color:'#555', svg:`<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>` };
 
   function buildIconHtml(st) {
@@ -467,20 +458,18 @@
 
   // ================================
   // WEBVIEW CONNECTION FIX (গুরুত্বপূর্ণ):
-  // App প্রথমবার Install করে খোলার সময় Post আসতে অনেক সময় (কয়েক মিনিট)
-  // লাগছিল — এর কারণ ছিল Firestore ডিফল্টভাবে WebSocket-এর মতো একটা
-  // connection ব্যবহার করে, যেটা কিছু Android WebView (Sketchware/Kodular
-  // অ্যাপে ব্যবহৃত)-তে ঠিকমতো/দ্রুত কাজ করে না। নিচের settings Firestore-কে
-  // বলে দিচ্ছে প্রয়োজনে স্বয়ংক্রিয়ভাবে বিকল্প (long-polling) পদ্ধতি
-  // ব্যবহার করতে, যেটা WebView-তে অনেক বেশি দ্রুত ও নির্ভরযোগ্যভাবে কানেক্ট
-  // হয় — এটা enablePersistence()-এর আগেই কল করতে হয়।
+  // App প্রথমবার Install করে খোলার সময় Post আসতে সময় লাগার মূল কারণ —
+  // Firestore ডিফল্টভাবে WebSocket-এর মতো একটা connection ব্যবহার করে,
+  // যেটা Sketchware Pro-এর Android WebView-তে ঠিকমতো/দ্রুত কাজ করে না।
+  // নিচের setting Firestore-কে বলে দিচ্ছে প্রয়োজনে long-polling ব্যবহার
+  // করতে, যেটা WebView-তে অনেক দ্রুত ও নির্ভরযোগ্যভাবে কানেক্ট হয় —
+  // এটা অবশ্যই enablePersistence()-এর আগে কল করতে হয়।
   // ================================
   db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
 
-  // Offline persistence চালু করা হচ্ছে — এতে App একবার ডেটা লোড করার পর
-  // Firestore নিজে থেকেই ডিভাইসে (IndexedDB) cache রাখে, ফলে পরের বার App
-  // খোলার সাথে সাথেই সব দেখাবে (কোনো delay ছাড়া), আর ডেটা বদলালে/মুছলে
-  // সাথে সাথে সব স্ক্রিনে auto-update হয়ে যাবে — আলাদা করে Refresh লাগবে না।
+  // Offline persistence — একবার ডেটা লোড হওয়ার পর Firestore নিজে থেকেই
+  // ডিভাইসে (IndexedDB) cache রাখে, ফলে পরের বার App খোলার সাথে সাথেই
+  // সব দেখাবে, আর ডেটা বদলালে/মুছলে সব স্ক্রিনে auto-update হয়ে যাবে।
   db.enablePersistence({ synchronizeTabs: true }).catch(err => {
     console.log('Firestore persistence not enabled:', err.code);
   });
@@ -513,6 +502,11 @@
     if (history.length > 200) history = history.slice(0, 200);
     localStorage.setItem('visitHistory', JSON.stringify(history));
   }
+
+  const CACHE_POSTS_KEY = 'cachedPostsData_v2';
+  const CACHE_PLAYLISTS_KEY = 'cachedPlaylistsData_v2';
+  const CACHE_HADITH_GROUPS_KEY = 'cachedHadithGroupsData_v2';
+  const CACHE_QURAN_GROUPS_KEY = 'cachedQuranGroupsData_v2';
 
   let seconds = parseInt(sessionStorage.getItem('appTimerSeconds') || '0', 10);
   let timerInterval = null;
@@ -657,8 +651,7 @@
     items.forEach(pl => {
       const card = document.createElement('div');
       card.className = 'playlist-folder';
-      const postCount = allPosts.filter(p => p.playlistId === pl.id).length;
-      card.innerHTML = `${folderIcon}<div class="pf-name">${pl.name}</div><div class="pf-count">${postCount} Posts</div>`;
+      card.innerHTML = `${folderIcon} ${pl.name}`;
       card.onclick = () => pushFilterAndGo({ type: 'playlistById', id: pl.id });
       feed.appendChild(card);
     });
@@ -672,16 +665,15 @@
     allHadithGroups.forEach(group => {
       const card = document.createElement('div');
       card.className = 'hadith-book-card';
-      const groupPlaylistIds = allPlaylists.filter(p => p.hadithGroupId === group.id).map(p => p.id);
-      const postCount = allPosts.filter(p => groupPlaylistIds.includes(p.playlistId)).length;
       card.innerHTML = `
         <div class="hadith-badge" style="background:${group.color};">${group.badge}</div>
         <div class="hadith-book-info">
           <div class="hadith-book-name">${group.name}</div>
+          <div class="hadith-book-author">${group.author}</div>
         </div>
         <div class="hadith-book-count">
-          <div class="count-num">${toBnNumber(postCount)}</div>
-          <div class="count-lbl">পোস্ট</div>
+          <div class="count-num">${toBnNumber(group.count)}</div>
+          <div class="count-lbl">হাদিস</div>
         </div>
       `;
       card.onclick = () => pushFilterAndGo({ type: 'hadithPlaylists', groupId: group.id, groupName: group.name });
@@ -707,7 +699,7 @@
         <div class="hadith-badge" style="background:${groupColor};">${pl.chapterNum !== '' ? pl.chapterNum : ''}</div>
         <div class="hadith-book-info">
           <div class="hadith-book-name">${pl.name}</div>
-
+          ${hasRange ? `<div class="hadith-book-author">হাদিসের রেঞ্জ: ${pl.rangeStart} - ${pl.rangeEnd}</div>` : ''}
         </div>
       `;
       card.onclick = () => pushFilterAndGo({ type: 'playlistById', id: pl.id });
@@ -892,13 +884,8 @@
   function showFavorites() { freshNav({ type: 'favorite' }); }
 
   function navSection(name) {
-    if (CATEGORY_SECTIONS.includes(name)) {
-      const items = allPlaylists.filter(p => p.section === name);
-      if (items.length === 1) freshNav({ type: 'playlistById', id: items[0].id });
-      else freshNav({ type: 'sectionBrowse', section: name });
-    } else {
-      freshNav({ type: 'playlist', name: name });
-    }
+    if (CATEGORY_SECTIONS.includes(name)) freshNav({ type: 'sectionBrowse', section: name });
+    else freshNav({ type: 'playlist', name: name });
   }
 
   function sharePost(postId) {
@@ -917,26 +904,18 @@
 
   /* ================= REAL-TIME LIVE SYNC =================
      আগে প্রতিবার Manual fetch (get()) করে localStorage cache-এ রাখা হতো,
-     যার কারণে delete করা Post কিছুক্ষণ থেকে যেত আর Al Hadith/কুরআন Topic
-     গুলো late দেখাত। এখন onSnapshot() ব্যবহার করা হচ্ছে — Firestore-এ যেই
-     মুহূর্তে কিছু বদলাবে (add/edit/delete), সাথে সাথে App-এও বদলে যাবে,
-     কোনো Manual Refresh ছাড়াই।
+     যার ফলে নতুন/মোছা Post দেখা দিতেও দেরি হতো। এখন onSnapshot() ব্যবহার
+     করা হচ্ছে — Firestore-এ কিছু বদলালেই (add/edit/delete) সাথে সাথে
+     App-এও বদলে যাবে, কোনো Manual Refresh ছাড়াই।
 
-     INSTANT PAINT ফিক্স (App install/open/reopen করার পরে Post দেখা দিতে
-     দেরি হওয়ার সমস্যা): আগে শুধু Firestore-এর নিজের IndexedDB persistence-এর
-     উপর ভরসা করা হতো, কিন্তু সেটা থেকে ডেটা পড়তেও কিছুটা সময় লাগে (বিশেষ করে
-     App প্রথমবার install/open করার পরে, বা কিছুক্ষণ App বন্ধ রেখে আবার খুললে)।
-     তাই এখন localStorage-এ শেষবার দেখা ডেটার একটা হালকা কপি রাখা হচ্ছে —
-     Page load হওয়ার সাথে সাথেই (কোনো অপেক্ষা ছাড়া, synchronously) সেটা
-     দেখানো হয়, তারপর onSnapshot লাইভ ডেটা এসে সেটাকে replace/update করে
-     দেয়। ফলে Post একদম সাথে সাথেই চোখে পড়ে, আবার ডেটাও সবসময় সঠিক/লাইভ
-     থাকে। App প্রথমবার install করে খোলার সময় (কোনো cache নেই) শুধু তখনই
-     Firestore থেকে ডেটা আসা পর্যন্ত সামান্য অপেক্ষা লাগবে — এরপর থেকে
-     প্রতিবার সাথে সাথেই দেখাবে। */
-  const CACHE_POSTS_KEY = 'cachedPostsData_v2';
-  const CACHE_PLAYLISTS_KEY = 'cachedPlaylistsData_v2';
-  const CACHE_HADITH_GROUPS_KEY = 'cachedHadithGroupsData_v2';
-  const CACHE_QURAN_GROUPS_KEY = 'cachedQuranGroupsData_v2';
+     INSTANT PAINT ফিক্স (Install করার পরে Post দেখা দিতে দেরি হওয়ার আসল
+     সমস্যা): Firestore-এর নিজের IndexedDB persistence থেকেও ডেটা পড়তে
+     কিছুটা সময় লাগে, বিশেষ করে App প্রথমবার install/open করার পরে। তাই
+     localStorage-এ শেষবার দেখা ডেটার একটা হালকা কপি রাখা হচ্ছে — Page
+     load হওয়ার সাথে সাথেই (কোনো অপেক্ষা ছাড়া) সেটা দেখানো হয়, তারপর
+     onSnapshot লাইভ ডেটা এসে সেটাকে replace/update করে দেয়। App একদম
+     প্রথমবার install করে খোলার সময় (কোনো cache নেই) শুধু তখনই সামান্য
+     অপেক্ষা লাগবে — এরপর থেকে প্রতিবার সাথে সাথেই দেখাবে। */
 
   (function instantPaintFromCache() {
     try {
@@ -948,9 +927,19 @@
       if (cpl) allPlaylists = cpl;
       if (chg) allHadithGroups = chg;
       if (cqg) allQuranGroups = cqg;
-      if (cp || cpl) applyFilterState();
     } catch (e) {}
   })();
+
+  const sectionParam = new URLSearchParams(window.location.search).get('section');
+  const filterParam = new URLSearchParams(window.location.search).get('filter');
+  if (sectionParam) {
+    if (CATEGORY_SECTIONS.includes(sectionParam)) currentFilter = { type: 'sectionBrowse', section: sectionParam };
+    else currentFilter = { type: 'playlist', name: sectionParam };
+  } else if (filterParam === 'bookmark') { currentFilter = { type: 'favorite' }; }
+  else if (filterParam === 'history') { currentFilter = { type: 'history' }; }
+
+  if (window.NFNav) window.NFNav.init(filterParam === 'bookmark' ? 'bookmark' : (filterParam === 'history' ? 'history' : 'home'));
+  applyFilterState();
 
   function mapPostDoc(doc) {
     const d = doc.data();
@@ -983,6 +972,9 @@
     return { id: doc.id, name: d.name || 'Group', color: d.color || '#90CAF9', order: d.order || 0 };
   }
 
+  // সর্বশেষ ৬০টা Post live-sync হবে (History/Favourite-এ আগে সেভ করা পুরনো
+  // Post cache-এ থাকলে সেগুলোও দেখাবে)। চাইলে এই limit বাড়ানো/সরানো যায়,
+  // তবে এটা রাখলে App বড় হলেও প্রতিবার সব Post না টেনে দ্রুত ও কম খরচে লোড হয়।
   db.collection('posts').orderBy('time', 'desc').limit(60).onSnapshot(snap => {
     allPosts = snap.docs.map(mapPostDoc).filter(isVisibleNow)
       .sort((a, b) => (b.rawPublishAt || b.rawTime || 0) - (a.rawPublishAt || a.rawTime || 0));
@@ -1012,10 +1004,8 @@
     applyFilterState();
   }, err => console.log('quranGroups live-sync error:', err));
 
-
-  // Pull-to-refresh এখন শুধু server-এর সাথে জোর করে একবার sync check করে
-  // নিশ্চিত হয় যে সব up-to-date — যেহেতু listener গুলো এমনিতেই সবসময় লাইভ,
-  // তাই এটা আগের মতো ভারী/ধীর না, খুবই দ্রুত শেষ হয়।
+  // Pull-to-refresh এখন শুধু server-এর সাথে জোর করে একবার sync নিশ্চিত করে —
+  // listener গুলো এমনিতেই সবসময় লাইভ থাকে, তাই এটা আগের মতো ভারী/ধীর না।
   function refreshData() {
     Promise.all([
       db.collection('posts').orderBy('time', 'desc').limit(60).get({ source: 'server' }),
@@ -1025,17 +1015,6 @@
     ]).catch(err => console.log('force-sync error (live listeners still active):', err))
       .finally(() => { setTimeout(() => { pullIndicator.style.height = '0px'; }, 300); });
   }
-
-  const sectionParam = new URLSearchParams(window.location.search).get('section');
-  const filterParam = new URLSearchParams(window.location.search).get('filter');
-  if (sectionParam) {
-    if (CATEGORY_SECTIONS.includes(sectionParam)) currentFilter = { type: 'sectionBrowse', section: sectionParam };
-    else currentFilter = { type: 'playlist', name: sectionParam };
-  } else if (filterParam === 'bookmark') { currentFilter = { type: 'favorite' }; }
-  else if (filterParam === 'history') { currentFilter = { type: 'history' }; }
-
-  if (window.NFNav) window.NFNav.init(filterParam === 'bookmark' ? 'bookmark' : (filterParam === 'history' ? 'history' : 'home'));
-  applyFilterState();
 
   let touchStartY = 0, pulling = false;
   const pullIndicator = document.getElementById('pullIndicator');
@@ -1055,8 +1034,6 @@
     if (currentHeight >= PULL_THRESHOLD - 5) { pullIndicator.style.height = '50px'; refreshData(); }
     else pullIndicator.style.height = '0px';
   });
-
-  refreshData();
 </script>
 
 </body>
