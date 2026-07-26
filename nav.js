@@ -14,17 +14,28 @@
   style.textContent = `
     .nf-bottom-nav {
       position: fixed; left: 0; right: 0; bottom: 0; z-index: 500;
-      background: #fff; display: flex; justify-content: space-around; align-items: center;
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-top: 1px solid rgba(255,255,255,0.55);
+      display: flex; justify-content: space-around; align-items: center;
       padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px));
-      border-radius: 22px 22px 0 0; box-shadow: 0 -6px 16px rgba(0,0,0,0.08);
+      border-radius: 26px 26px 0 0;
+      box-shadow: 0 -10px 30px rgba(10,8,32,0.16), 0 1px 0 rgba(255,255,255,0.5) inset;
     }
     .nf-nav-item {
       display: flex; flex-direction: column; align-items: center; gap: 3px;
-      border: none; background: none; padding: 6px 10px; border-radius: 14px;
-      color: #888; font-size: 11px; font-weight: 700; min-width: 60px;
+      border: none; background: none; padding: 7px 16px; border-radius: 16px;
+      color: #8a93ab; font-size: 11px; font-weight: 700; min-width: 60px;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
     }
     .nf-nav-item svg { width: 22px; height: 22px; }
-    .nf-nav-item.active { color: #1a1a2e; background: #E0F2FE; }
+    .nf-nav-item.active {
+      color: #1a1a2e;
+      background: linear-gradient(135deg, rgba(217,184,120,0.38), rgba(14,165,233,0.22));
+      box-shadow: 0 4px 14px rgba(14,165,233,0.22);
+      transform: translateY(-2px);
+    }
   `;
   document.head.appendChild(style);
 
