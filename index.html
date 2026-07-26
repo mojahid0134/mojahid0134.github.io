@@ -465,7 +465,11 @@
   // করতে, যেটা WebView-তে অনেক দ্রুত ও নির্ভরযোগ্যভাবে কানেক্ট হয় —
   // এটা অবশ্যই enablePersistence()-এর আগে কল করতে হয়।
   // ================================
-  db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+  try {
+    db.settings({ experimentalForceLongPolling: true, merge: true });
+  } catch (e) {
+    console.log('db.settings() error:', e);
+  }
 
   // Offline persistence — একবার ডেটা লোড হওয়ার পর Firestore নিজে থেকেই
   // ডিভাইসে (IndexedDB) cache রাখে, ফলে পরের বার App খোলার সাথে সাথেই
@@ -474,6 +478,7 @@
     console.log('Firestore persistence not enabled:', err.code);
   });
 
+  let postsSnapshotReceived = false; // Firestore থেকে অন্তত একবার real response এসেছে কিনা — এটা false থাকলে "No posts yet" না দেখিয়ে "Loading posts..." দেখাবে
   let allPosts = [];
   let allPlaylists = [];
   let allHadithGroups = [];
@@ -580,7 +585,10 @@
   function renderPosts(posts, titleHtml) {
     document.getElementById('sectionTitleBox').innerHTML = titleHtml || '';
     const feed = document.getElementById('feedContainer');
-    if (posts.length === 0) { feed.innerHTML = '<div class="empty-msg">No posts yet</div>'; return; }
+    if (posts.length === 0) {
+      feed.innerHTML = '<div class="empty-msg">' + (postsSnapshotReceived ? 'No posts yet' : 'Loading posts...') + '</div>';
+      return;
+    }
     const favs = getFavorites();
     feed.innerHTML = "";
     posts.forEach(post => {
@@ -976,12 +984,18 @@
   // Post cache-এ থাকলে সেগুলোও দেখাবে)। চাইলে এই limit বাড়ানো/সরানো যায়,
   // তবে এটা রাখলে App বড় হলেও প্রতিবার সব Post না টেনে দ্রুত ও কম খরচে লোড হয়।
   db.collection('posts').orderBy('time', 'desc').limit(60).onSnapshot(snap => {
-    allPosts = snap.docs.map(mapPostDoc).filter(isVisibleNow)
-      .sort((a, b) => (b.rawPublishAt || b.rawTime || 0) - (a.rawPublishAt || a.rawTime || 0));
-    try { localStorage.setItem(CACHE_POSTS_KEY, JSON.stringify(allPosts)); } catch (e) {}
-    applyFilterState();
+    try {
+      allPosts = snap.docs.map(mapPostDoc).filter(isVisibleNow)
+        .sort((a, b) => (b.rawPublishAt || b.rawTime || 0) - (a.rawPublishAt || a.rawTime || 0));
+      try { localStorage.setItem(CACHE_POSTS_KEY, JSON.stringify(allPosts)); } catch (e) {}
+      postsSnapshotReceived = true;
+      applyFilterState();
+    } catch (mapErr) {
+      console.log('posts mapping error:', mapErr);
+    }
   }, err => {
     console.log('posts live-sync error:', err);
+    postsSnapshotReceived = true;
     const feed = document.getElementById('feedContainer');
     if (feed) feed.innerHTML = '<div class="empty-msg">⚠️ ডেটা লোড করতে সমস্যা হচ্ছে।<br><span style="font-size:12px;">(' + (err && err.message ? err.message : err) + ')</span></div>';
   });
