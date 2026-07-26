@@ -475,7 +475,7 @@
   // ব্যবহার করতে, যেটা WebView-তে অনেক বেশি দ্রুত ও নির্ভরযোগ্যভাবে কানেক্ট
   // হয় — এটা enablePersistence()-এর আগেই কল করতে হয়।
   // ================================
-  db.settings({ experimentalForceLongPolling: true, merge: true });
+  db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
 
   // Offline persistence চালু করা হচ্ছে — এতে App একবার ডেটা লোড করার পর
   // Firestore নিজে থেকেই ডিভাইসে (IndexedDB) cache রাখে, ফলে পরের বার App
@@ -988,7 +988,11 @@
       .sort((a, b) => (b.rawPublishAt || b.rawTime || 0) - (a.rawPublishAt || a.rawTime || 0));
     try { localStorage.setItem(CACHE_POSTS_KEY, JSON.stringify(allPosts)); } catch (e) {}
     applyFilterState();
-  }, err => console.log('posts live-sync error:', err));
+  }, err => {
+    console.log('posts live-sync error:', err);
+    const feed = document.getElementById('feedContainer');
+    if (feed) feed.innerHTML = '<div class="empty-msg">⚠️ ডেটা লোড করতে সমস্যা হচ্ছে।<br><span style="font-size:12px;">(' + (err && err.message ? err.message : err) + ')</span></div>';
+  });
 
   db.collection('playlists').onSnapshot(snap => {
     allPlaylists = snap.docs.map(mapPlaylistDoc);
