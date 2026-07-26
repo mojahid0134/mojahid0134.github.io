@@ -461,9 +461,8 @@
   // App প্রথমবার Install করে খোলার সময় Post আসতে সময় লাগার মূল কারণ —
   // Firestore ডিফল্টভাবে WebSocket-এর মতো একটা connection ব্যবহার করে,
   // যেটা Sketchware Pro-এর Android WebView-তে ঠিকমতো/দ্রুত কাজ করে না।
-  // নিচের setting Firestore-কে বলে দিচ্ছে প্রয়োজনে long-polling ব্যবহার
-  // করতে, যেটা WebView-তে অনেক দ্রুত ও নির্ভরযোগ্যভাবে কানেক্ট হয় —
-  // এটা অবশ্যই enablePersistence()-এর আগে কল করতে হয়।
+  // নিচের setting Firestore-কে বলে দিচ্ছে সরাসরি long-polling ব্যবহার
+  // করতে (auto-detect না — সেটা try-then-fallback করে যেটাতে দেরি হয়)।
   // ================================
   try {
     db.settings({ experimentalForceLongPolling: true, merge: true });
@@ -471,12 +470,10 @@
     console.log('db.settings() error:', e);
   }
 
-  // Offline persistence — একবার ডেটা লোড হওয়ার পর Firestore নিজে থেকেই
-  // ডিভাইসে (IndexedDB) cache রাখে, ফলে পরের বার App খোলার সাথে সাথেই
-  // সব দেখাবে, আর ডেটা বদলালে/মুছলে সব স্ক্রিনে auto-update হয়ে যাবে।
-  db.enablePersistence({ synchronizeTabs: true }).catch(err => {
-    console.log('Firestore persistence not enabled:', err.code);
-  });
+  // নোট: db.enablePersistence() ইচ্ছাকৃতভাবে বাদ দেওয়া হয়েছে — এটা
+  // IndexedDB-তে multi-tab lock negotiate করে, যেটা একাধিক Tab/App-instance
+  // খোলা থাকলে বরং delay বাড়াতে পারে। নিচে localStorage দিয়ে নিজস্ব
+  // instant-paint cache আছে যেটা একই কাজ অনেক সহজভাবে করে।
 
   let postsSnapshotReceived = false; // Firestore থেকে অন্তত একবার real response এসেছে কিনা — এটা false থাকলে "No posts yet" না দেখিয়ে "Loading posts..." দেখাবে
   let allPosts = [];
@@ -999,6 +996,26 @@
     const feed = document.getElementById('feedContainer');
     if (feed) feed.innerHTML = '<div class="empty-msg">⚠️ ডেটা লোড করতে সমস্যা হচ্ছে।<br><span style="font-size:12px;">(' + (err && err.message ? err.message : err) + ')</span></div>';
   });
+
+  // SAFETY-NET: onSnapshot listener কোনো কারণে connect হতে দেরি করলে (slow
+  // network ইত্যাদি), ৫ সেকেন্ড পরও কোনো response না এলে একটা সরাসরি
+  // one-time fetch try করা হবে, যাতে UI অনির্দিষ্টকালের জন্য আটকে না থাকে।
+  // onSnapshot listener এরপরও চালু থাকবে এবং data এলে live update করবে।
+  setTimeout(() => {
+    if (postsSnapshotReceived) return;
+    db.collection('posts').orderBy('time', 'desc').limit(60).get()
+      .then(snap => {
+        if (postsSnapshotReceived) return; // ততক্ষণে onSnapshot নিজেই জবাব দিয়ে দিয়েছে
+        try {
+          allPosts = snap.docs.map(mapPostDoc).filter(isVisibleNow)
+            .sort((a, b) => (b.rawPublishAt || b.rawTime || 0) - (a.rawPublishAt || a.rawTime || 0));
+          try { localStorage.setItem(CACHE_POSTS_KEY, JSON.stringify(allPosts)); } catch (e) {}
+          postsSnapshotReceived = true;
+          applyFilterState();
+        } catch (mapErr) { console.log('fallback posts mapping error:', mapErr); }
+      })
+      .catch(err => console.log('fallback posts fetch error:', err));
+  }, 5000);
 
   db.collection('playlists').onSnapshot(snap => {
     allPlaylists = snap.docs.map(mapPlaylistDoc);
